@@ -19,6 +19,12 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 
+
+/* products */
+Route::get('/products/featured', 'ProductController@featured');
+
+
+
 /* test */
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
