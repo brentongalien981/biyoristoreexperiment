@@ -20,6 +20,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 /* test */
+// fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
     return [
         'isResultOk' => true,
