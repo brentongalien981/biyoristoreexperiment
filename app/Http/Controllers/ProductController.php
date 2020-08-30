@@ -12,7 +12,7 @@ class ProductController extends Controller
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: featured()",
-            'objs' => ProductResource::collection(Product::take(2)->get())
+            'objs' => ProductResource::collection(Product::take(3)->get())
         ];
     }
 }
