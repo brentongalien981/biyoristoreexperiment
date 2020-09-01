@@ -22,6 +22,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 /* products */
 Route::get('/products/featured', 'ProductController@featured');
+Route::get('/products', 'ProductController@index');
 
 
 

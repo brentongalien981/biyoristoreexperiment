@@ -12,7 +12,17 @@ class ProductController extends Controller
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: featured()",
-            'objs' => ProductResource::collection(Product::take(3)->get())
+            'objs' => ProductResource::collection(Product::take(9)->get())
+        ];
+    }
+
+
+
+    public function index() {
+        return [
+            'isResultOk' => true,
+            'comment' => "CLASS: ProductController, METHOD: index()",
+            'objs' => ProductResource::collection(Product::take(9)->get())
         ];
     }
 }
