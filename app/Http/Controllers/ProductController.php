@@ -30,16 +30,21 @@ class ProductController extends Controller
 
 
         //
-        $numOfProductsPerPage = 9.0;
+        $numOfProductsPerPage = 9;
         $numOfProducts = count(Product::all());
-        $numOfPages = $numOfProducts / $numOfProductsPerPage;
+        $numOfPages = $numOfProducts / ($numOfProductsPerPage * 1.0);
         $roundedNumOfPages = ceil($numOfPages);
+
+        $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
+
+        $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
 
         $paginationData = [
             'numOfProducts' => $numOfProducts,
             'numOfPages' => $numOfPages,
             'roundedNumOfPages' => $roundedNumOfPages,
-            'currentPageNum' => $validatedData['page']
+            'currentPageNum' => $currentPageNum,
+            'numOfSkippedItems' => $numOfSkippedItems
         ];
 
 
@@ -47,7 +52,7 @@ class ProductController extends Controller
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: index()",
-            'objs' => ProductResource::collection(Product::take(9)->get()),
+            'objs' => ProductResource::collection(Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get()),
             'paginationData' => $paginationData,
             'validatedData' => $validatedData,
         ];
