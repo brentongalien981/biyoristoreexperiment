@@ -26,6 +26,11 @@ Route::get('/products', 'ProductController@index');
 
 
 
+/* brands */
+Route::get('/brands', 'BrandController@index');
+
+
+
 /* test */
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
