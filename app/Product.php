@@ -10,4 +10,9 @@ class Product extends Model
     {
         return $this->hasMany('App\ProductPhotoUrl');
     }
+
+    public function brand()
+    {
+        return $this->belongsTo('App\Brand');
+    }
 }

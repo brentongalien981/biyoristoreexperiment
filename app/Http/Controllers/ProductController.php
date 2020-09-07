@@ -26,6 +26,7 @@ class ProductController extends Controller
         $validatedData = $request->validate([
             'page' => 'nullable|numeric',
             'search' => 'nullable|string',
+            'selectedBrandIds' => 'nullable'
         ]);
 
 
@@ -48,11 +49,22 @@ class ProductController extends Controller
         ];
 
 
+        $selectedBrandIds = isset($validatedData['selectedBrandIds']) ? $validatedData['selectedBrandIds'] : null;
+        $products = [];
+
+        if (isset($selectedBrandIds)) {
+            $products = Product::whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+        } else {
+            $products = Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+        }
+
+
         //
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: index()",
-            'objs' => ProductResource::collection(Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get()),
+            'products' => $products,
+            'objs' => ProductResource::collection($products),
             'paginationData' => $paginationData,
             'validatedData' => $validatedData,
         ];
