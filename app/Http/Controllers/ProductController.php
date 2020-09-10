@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Category;
 use App\Product;
 use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
@@ -26,7 +27,8 @@ class ProductController extends Controller
         $validatedData = $request->validate([
             'page' => 'nullable|numeric',
             'search' => 'nullable|string',
-            'selectedBrandIds' => 'nullable'
+            'selectedBrandIds' => 'nullable',
+            'selectedCategoryId' => 'nullable|numeric'
         ]);
 
 
@@ -35,16 +37,32 @@ class ProductController extends Controller
         $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
         $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
         $selectedBrandIds = isset($validatedData['selectedBrandIds']) ? $validatedData['selectedBrandIds'] : null;
+        $selectedCategoryId = isset($validatedData['selectedCategoryId']) ? $validatedData['selectedCategoryId'] : null;
         $products = [];
         $numOfProductsForQuery = 0;
 
-        if (isset($selectedBrandIds)) {
-            $products = Product::whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-            $numOfProductsForQuery = count(Product::whereIn('brand_id', $selectedBrandIds)->get());
-        } else {
-            $products = Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-            $numOfProductsForQuery = count(Product::all());
+
+        if (isset($selectedCategoryId)) {
+            $category = Category::find($selectedCategoryId);
+
+            if (isset($selectedBrandIds)) {
+                $products = $category->products()->whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+                $numOfProductsForQuery = count($category->products()->whereIn('brand_id', $selectedBrandIds)->get());
+            } else {
+                $products = $category->products()->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+                $numOfProductsForQuery = count($category->products()->get());
+            }
+        } 
+        else {
+            if (isset($selectedBrandIds)) {
+                $products = Product::whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+                $numOfProductsForQuery = count(Product::whereIn('brand_id', $selectedBrandIds)->get());
+            } else {
+                $products = Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+                $numOfProductsForQuery = count(Product::all());
+            }
         }
+
 
 
         $numOfPages = $numOfProductsForQuery / ($numOfProductsPerPage * 1.0);
