@@ -21,6 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 /* products */
+// Random comment for testing git branch "Items@show@brentongalien981".
 Route::get('/products/featured', 'ProductController@featured');
 Route::get('/products', 'ProductController@index');
 
