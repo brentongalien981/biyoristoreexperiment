@@ -9,6 +9,26 @@ use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
 {
+    public function show(Request $request)
+    {
+
+        //
+        $validatedData = $request->validate([
+            'productId' => 'nullable|numeric',
+        ]);
+
+
+
+        return [
+            'isResultOk' => true,
+            'comment' => "CLASS: ProductController, METHOD: show()",
+            'objs' => [],
+            'product' => new ProductResource(Product::find($validatedData['productId'])),
+            'validatedData' => $validatedData
+        ];
+
+    }
+
     public function featured()
     {
         return [
