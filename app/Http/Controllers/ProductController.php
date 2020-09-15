@@ -9,6 +9,27 @@ use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
 {
+    public function relatedProducts(Request $request)
+    {
+        //
+        $validatedData = $request->validate([
+            'productId' => 'nullable|numeric',
+        ]);
+
+
+        //
+        $product = Product::find($validatedData['productId']);
+        $category = $product->categories[0];
+        $relatedProducts = ProductResource::collection($category->products()->take(9)->get());
+
+
+        return [
+            'isResultOk' => true,
+            'comment' => "CLASS: ProductController, METHOD: relatedProducts()",
+            'objs' => $relatedProducts
+        ];
+    }
+
     public function show(Request $request)
     {
 
@@ -18,15 +39,21 @@ class ProductController extends Controller
         ]);
 
 
+        //
+        $product = Product::find($validatedData['productId']);
+        $category = $product->categories[0];
+        $relatedProducts = ProductResource::collection($category->products()->take(9)->get());
+
+
 
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: show()",
             'objs' => [],
-            'product' => new ProductResource(Product::find($validatedData['productId'])),
+            'product' => new ProductResource($product),
+            'relatedProducts' => $relatedProducts,
             'validatedData' => $validatedData
         ];
-
     }
 
     public function featured()
@@ -72,8 +99,7 @@ class ProductController extends Controller
                 $products = $category->products()->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
                 $numOfProductsForQuery = count($category->products()->get());
             }
-        } 
-        else {
+        } else {
             if (isset($selectedBrandIds)) {
                 $products = Product::whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
                 $numOfProductsForQuery = count(Product::whereIn('brand_id', $selectedBrandIds)->get());
@@ -87,7 +113,7 @@ class ProductController extends Controller
 
         $numOfPages = $numOfProductsForQuery / ($numOfProductsPerPage * 1.0);
         $roundedNumOfPages = ceil($numOfPages);
-        
+
         $paginationData = [
             'numOfProductsForQuery' => $numOfProductsForQuery,
             'numOfPages' => $numOfPages,
