@@ -39,6 +39,11 @@ Route::get('/categories', 'CategoryController@index');
 
 
 
+/* join */
+Route::post('/join/save', 'JoinController@save');
+
+
+
 /* test */
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
