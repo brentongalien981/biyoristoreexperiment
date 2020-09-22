@@ -45,6 +45,11 @@ Route::post('/join/login', 'JoinController@login');
 
 
 
+/* profile */
+Route::middleware('auth:api')->get('/profile/show', 'ProfileController@show');
+
+
+
 /* test */
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {

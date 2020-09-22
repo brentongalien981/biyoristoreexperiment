@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\User;
+use App\Profile;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -42,6 +43,7 @@ class JoinController extends Controller
         return [
             'isResultOk' => $isResultOk,
             'doesPasswordMatch' => $doesPasswordMatch,
+            'userId' => $possibleUser ? $possibleUser->id : 0,
             'email' => $validatedData['email'],
             'apiToken' => $token,
         ];
@@ -71,10 +73,16 @@ class JoinController extends Controller
         ])->save();
 
 
+        Profile::create([
+            'user_id' => $user->id
+        ]);
+
+
         return [
             'isResultOk' => true,
             'comment' => "CLASS: JoinController, METHOD: save()",
             'validatedData' => $validatedData,
+            'userId' => $user->id,
             'email' => $validatedData['email'],
             'apiToken' => $apiToken
         ];
