@@ -15,12 +15,16 @@ class PaymentInfoController extends Controller
         $isResultOk = false;
         
         $validatedData = $request->validate([
+            'id' => 'nullable|numeric',
             'cardNumber' => 'required|regex:/^[0-9]{16,128}$/',
             'expirationMonth' => 'required|integer|min:1|max:12',
             'expirationYear' => 'required|integer|min:2020|max:2030',
         ]);
 
-        $newPayment = new PaymentInfo();
+        $newPayment = null;
+        if (isset($validatedData['id'])) { $newPayment = PaymentInfo::find($validatedData['id']); }
+        else { $newPayment = new PaymentInfo(); }
+        
         $newPayment->user_id = $user->id;
         $newPayment->type = PaymentInfo::getRandomType();
         $newPayment->card_number = $validatedData['cardNumber'];
