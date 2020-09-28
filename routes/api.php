@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 /* address */
+Route::middleware('auth:api')->post('/address/destroy', 'AddressController@destroy');
 Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
 
 

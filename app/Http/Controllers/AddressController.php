@@ -9,6 +9,24 @@ use Illuminate\Support\Facades\Auth;
 
 class AddressController extends Controller
 {
+    public function destroy(Request $request)
+    {
+        $isResultOk = false;
+        
+        $validatedData = $request->validate([
+            'addressId' => 'required|numeric',
+        ]);
+
+        Address::destroy($validatedData['addressId']);
+
+        $isResultOk = true;
+
+        return [
+            'isResultOk' => $isResultOk,
+            'validatedData' => $validatedData
+        ];
+    }
+
     public function save(Request $request)
     {
         $user = Auth::user();
