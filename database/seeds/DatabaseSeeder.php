@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProfileSeeder::class,
             PaymentInfoSeeder::class,
+            AddressSeeder::class,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AddressResource;
 use App\Http\Resources\PaymentInfoResource;
 use App\Http\Resources\ProfileResource;
 use Illuminate\Http\Request;
@@ -53,7 +54,8 @@ class ProfileController extends Controller
 
         return [
             'profile' => new ProfileResource(Auth::user()->profile),
-            'paymentInfos' => PaymentInfoResource::collection($user->paymentInfos)
+            'paymentInfos' => PaymentInfoResource::collection($user->paymentInfos),
+            'addresses' => AddressResource::collection($user->addresses)
         ];
     }
 }
