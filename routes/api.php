@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+/* address */
+Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
+
+
+
 /* payment-info */
 Route::middleware('auth:api')->post('/paymentInfo/save', 'PaymentInfoController@save');
 
