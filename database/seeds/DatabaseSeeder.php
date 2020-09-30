@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             ProfileSeeder::class,
             PaymentInfoSeeder::class,
             AddressSeeder::class,
+            CartSeeder::class,
+            CartItemSeeder::class,
         ]);
     }
 }

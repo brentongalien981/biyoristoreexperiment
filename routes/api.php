@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+/* cart */
+Route::middleware('auth:api')->get('/cart/show', 'CartController@show');
+
+
+
 /* address */
 Route::middleware('auth:api')->post('/address/destroy', 'AddressController@destroy');
 Route::middleware('auth:api')->post('/address/save', 'AddressController@save');

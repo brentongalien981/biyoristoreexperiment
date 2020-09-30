@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public function cartItem()
+    {
+        return $this->belongsTo('App\CartItem');
+    }
+
     public function productPhotoUrls()
     {
         return $this->hasMany('App\ProductPhotoUrl');
