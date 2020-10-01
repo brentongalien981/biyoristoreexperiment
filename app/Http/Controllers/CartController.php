@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Cart;
+use App\Http\Resources\CartResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,7 +13,8 @@ class CartController extends Controller
     {
         $isResultOk = false;
         $user = Auth::user();
-        $cart = $user->carts()->where('is_active', 1)->take(1)->get()[0];
+        $cart = $user->carts()->where('is_active', 1)->take(1)->get();
+        $cart = count($cart) > 0 ? new CartResource($cart[0]) : null;
         // $cart = Cart::find($cart[]);
 
         $isResultOk = true;
@@ -21,7 +23,6 @@ class CartController extends Controller
             'isResultOk' => $isResultOk,
             'message' => 'From CLASS: CartController, METHOD: show()',
             'obj' => $cart,
-            'items' => $cart->cartItems
         ];
     }
 }
