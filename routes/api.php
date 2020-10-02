@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-/* cart */
+/* cartItem */
+Route::middleware('auth:api')->post('/cartItem/delete', 'CartItemController@destroy');
 Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save');
 
 
