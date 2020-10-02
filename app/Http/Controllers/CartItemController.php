@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Cart;
+use App\Http\Resources\CartResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,18 +11,25 @@ class CartItemController extends Controller
 {
     public function save(Request $request)
     {
+        $validatedData = $request->validate([
+            'productId' => 'required|numeric',
+        ]);
+
+
         $isResultOk = false;
         $user = Auth::user();
-        // $cart = $user->carts()->where('is_active', 1)->take(1)->get();
-        // $cart = count($cart) > 0 ? new CartResource($cart[0]) : null;
-        // $cart = Cart::find($cart[]);
+        $cart = $user->getActiveCart();
+
+        $cart->addItemWithProductId($validatedData['productId']);
+        $cart = Cart::find($cart->id);
 
         $isResultOk = true;
 
         return [
             'isResultOk' => $isResultOk,
             'message' => 'From CLASS: CartItemController, METHOD: save()',
-            'productId' => $request->productId
+            'productId' => $request->productId,
+            'obj' => new CartResource($cart)
         ];
     }
 }

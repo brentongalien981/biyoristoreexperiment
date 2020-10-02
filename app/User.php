@@ -39,6 +39,22 @@ class User extends Authenticatable
 
 
 
+    public function getActiveCart()
+    {
+        $cart = $this->carts()->where('is_active', 1)->take(1)->get();
+
+        if (isset($cart) && count($cart) > 0) { return $cart[0]; }
+
+        $cart = new Cart();
+        $cart->user_id = $this->id;
+        $cart->is_active = 1;
+        $cart->save();
+
+        return $cart;
+    }
+
+
+
     public function carts()
     {
         return $this->hasMany('App\Cart');
