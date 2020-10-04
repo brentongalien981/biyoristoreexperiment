@@ -6,6 +6,7 @@ use App\Cart;
 use App\CartItem;
 use App\Http\Requests\UpdateCartItem;
 use App\Http\Resources\CartResource;
+use App\Rules\NonZeroCartItemQuantity;
 use App\Rules\WithinStockLimit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,7 @@ class CartItemController extends Controller
         $cartItem = CartItem::find($validatedData['cartItemId']);
 
         $validatedData = $request->validate([
-            'quantity' => ['required', 'numeric', new WithinStockLimit($cartItem->product)],
+            'quantity' => ['required', 'numeric', new WithinStockLimit($cartItem->product), new NonZeroCartItemQuantity()],
         ]);
 
 
