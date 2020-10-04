@@ -19,14 +19,14 @@ class CartItemController extends Controller
         $isResultOk = false;
 
         $validatedData = $request->validate([
-            'cartItemId' => 'required|numeric',
+            'cartItemId' => 'required|integer',
         ]);
 
 
         $cartItem = CartItem::find($validatedData['cartItemId']);
 
         $validatedData = $request->validate([
-            'quantity' => ['required', 'numeric', new WithinStockLimit($cartItem->product), new NonZeroCartItemQuantity()],
+            'quantity' => ['required', 'integer', new WithinStockLimit($cartItem->product), new NonZeroCartItemQuantity()],
         ]);
 
 
