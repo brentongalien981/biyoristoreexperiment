@@ -4,12 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Cart;
 use App\CartItem;
+use App\Http\Requests\UpdateCartItem;
 use App\Http\Resources\CartResource;
+use App\Rules\WithinStockLimit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CartItemController extends Controller
 {
+    public function update(Request $request)
+    {
+        //
+        $isResultOk = false;
+
+        $validatedData = $request->validate([
+            'cartItemId' => 'required|numeric',
+        ]);
+
+
+        $cartItem = CartItem::find($validatedData['cartItemId']);
+
+        $validatedData = $request->validate([
+            'quantity' => ['required', 'numeric', new WithinStockLimit($cartItem->product)],
+        ]);
+
+
+        $cartItem->quantity = $validatedData['quantity'];
+        $cartItem->save();
+        $isResultOk = true;
+
+
+
+        return [
+            'isResultOk' => $isResultOk,
+            'message' => 'From CLASS: CartItemController, METHOD: update()',
+            'validatedData' => $validatedData
+        ];
+    }
+
+
+
     public function destroy(Request $request)
     {
         $isResultOk = false;

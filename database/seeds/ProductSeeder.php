@@ -16,11 +16,12 @@ class ProductSeeder extends Seeder
             'name' => "iPhone 11 Pro Max",
             'description' => "lorem ipsum",
             'brand_id' => 1,
-            'price' => 1099
+            'price' => 1099,
+            'quantity' => 21
         ]);
 
         DB::table('products')->insert(['name' => "iMac Pro", 'description' => "lorem ipsum ipsum", 'brand_id' => 1, 'price' => 2099]);
-        DB::table('products')->insert(['name' => "ASUS Zen Book", 'description' => "lorem ipsum ipsum", 'brand_id' => 10, 'price' => 999]);
+        DB::table('products')->insert(['name' => "ASUS Zen Book", 'description' => "lorem ipsum ipsum", 'brand_id' => 10, 'price' => 999, 'quantity' => 3]);
 
 
 
