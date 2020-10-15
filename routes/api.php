@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+
+/* payment */
+Route::post('/paymentIntent', 'PaymentIntentController@create');
+
+
+
 /* cartItem */
 Route::middleware('auth:api')->post('/cartItem/update', 'CartItemController@update');
 Route::middleware('auth:api')->post('/cartItem/delete', 'CartItemController@destroy');

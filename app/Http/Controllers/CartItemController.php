@@ -22,7 +22,7 @@ class CartItemController extends Controller
             'cartItemId' => 'required|integer',
         ]);
 
-
+ 
         $cartItem = CartItem::find($validatedData['cartItemId']);
 
         $validatedData = $request->validate([
