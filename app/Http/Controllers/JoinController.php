@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\User;
 use App\Profile;
+use App\StripeCustomer;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Crypt;
 
 class JoinController extends Controller
 {
@@ -76,6 +78,19 @@ class JoinController extends Controller
         Profile::create([
             'user_id' => $user->id
         ]);
+
+
+        // ish
+        \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
+        $stripeCustomer = \Stripe\Customer::create([
+            'email' => $validatedData['email'],
+            'description' => 'Created from the backend.'
+        ]);
+
+        $stripeCustomerMapObj = new StripeCustomer();
+        $stripeCustomerMapObj->user_id = $user->id;
+        $stripeCustomerMapObj->stripe_customer_id = $stripeCustomer->id;
+        $stripeCustomerMapObj->save();
 
 
         return [
