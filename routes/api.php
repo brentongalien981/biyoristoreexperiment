@@ -17,7 +17,13 @@ use Illuminate\Support\Facades\Route;
 
 
 /* payment */
+Route::post('/stripePaymentMethod/save', 'StripePaymentMethodController@save');
 Route::post('/paymentIntent', 'PaymentIntentController@create');
+
+
+
+/* payment-info */
+Route::middleware('auth:api')->post('/paymentInfo/save', 'PaymentInfoController@save');
 
 
 
@@ -37,10 +43,6 @@ Route::middleware('auth:api')->get('/cart/show', 'CartController@show');
 Route::middleware('auth:api')->post('/address/destroy', 'AddressController@destroy');
 Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
 
-
-
-/* payment-info */
-Route::middleware('auth:api')->post('/paymentInfo/save', 'PaymentInfoController@save');
 
 
 

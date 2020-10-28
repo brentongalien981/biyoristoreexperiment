@@ -39,6 +39,13 @@ class User extends Authenticatable
 
 
 
+    public function stripeCustomer()
+    {
+        return $this->hasOne('App\StripeCustomer');
+    }
+
+
+
     public function getActiveCart()
     {
         $cart = $this->carts()->where('is_active', 1)->take(1)->get();
