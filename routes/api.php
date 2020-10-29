@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 
 /* payment */
-Route::post('/stripePaymentMethod/save', 'StripePaymentMethodController@save');
-Route::post('/paymentIntent', 'PaymentIntentController@create');
+Route::middleware('auth:api')->post('/stripePaymentMethod/save', 'StripePaymentMethodController@save');
+// Route::post('/paymentIntent', 'PaymentIntentController@create');
 
 
 

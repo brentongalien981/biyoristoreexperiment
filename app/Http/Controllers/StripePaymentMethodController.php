@@ -59,6 +59,7 @@ class StripePaymentMethodController extends Controller
                 'stripeCustomerId' => $stripeCustomerId,
                 'stripePaymentMethodId' => $stripePaymentMethod->id
             ];
+            
         } catch (Error $e) {
             return [
                 'isResultOk' => false,
