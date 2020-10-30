@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Error;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,7 @@ class StripePaymentMethodController extends Controller
             'cardNumber' => 'required|regex:/^[0-9]{16,128}$/',
             'expirationMonth' => 'required|integer|min:1|max:12',
             'expirationYear' => 'required|integer|min:2020|max:2030',
-            'cvc' => 'required|integer',
+            'cvc' => 'required|string|max:9',
             'postalCode' => 'required'
         ]);
 
@@ -59,13 +60,12 @@ class StripePaymentMethodController extends Controller
                 'stripeCustomerId' => $stripeCustomerId,
                 'stripePaymentMethodId' => $stripePaymentMethod->id
             ];
-            
-        } catch (Error $e) {
+
+        } catch (Exception $e) {
             return [
                 'isResultOk' => false,
                 'validatedData' => $validatedData,
-                'errors' => $e->getMessage(),
-                'error' => $e->getMessage()
+                'customErrors' => ["Payment Error" => [$e->getMessage()]]
             ];
         }
 
