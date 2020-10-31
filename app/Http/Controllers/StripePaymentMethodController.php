@@ -9,6 +9,57 @@ use Illuminate\Support\Facades\Auth;
 
 class StripePaymentMethodController extends Controller
 {
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $validatedData = $request->validate([
+            'id' => 'required',
+            'expirationMonth' => 'required|integer|min:1|max:12',
+            'expirationYear' => 'required|integer|min:2020|max:2030',
+            'postalCode' => 'required'
+        ]);
+
+
+
+        try {
+
+            $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+            $stripePaymentMethod = $stripe->paymentMethods->update(
+                $validatedData['id'],
+                [
+                    'card' => [
+                        'exp_month' => $validatedData['expirationMonth'],
+                        'exp_year' => $validatedData['expirationYear'],
+                    ],
+                    'billing_details' => [
+                        'address' => [
+                            'postal_code' => $validatedData['postalCode']
+                        ]
+                    ]
+                ]
+            );
+
+
+
+            //
+            return [
+                'isResultOk' => true,
+                'validatedData' => $validatedData,
+                'newPayment' => $stripePaymentMethod
+            ];
+        } catch (Exception $e) {
+            return [
+                'isResultOk' => false,
+                'validatedData' => $validatedData,
+                'customErrors' => ["Payment Error" => [$e->getMessage()]]
+            ];
+        }
+    }
+
+
+
     public function save(Request $request)
     {
         $user = Auth::user();
@@ -58,9 +109,9 @@ class StripePaymentMethodController extends Controller
                 'isResultOk' => true,
                 'validatedData' => $validatedData,
                 'stripeCustomerId' => $stripeCustomerId,
-                'stripePaymentMethodId' => $stripePaymentMethod->id
+                'stripePaymentMethodId' => $stripePaymentMethod->id,
+                'newPayment' => $stripePaymentMethod
             ];
-
         } catch (Exception $e) {
             return [
                 'isResultOk' => false,
@@ -68,6 +119,5 @@ class StripePaymentMethodController extends Controller
                 'customErrors' => ["Payment Error" => [$e->getMessage()]]
             ];
         }
-
     }
 }
