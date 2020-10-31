@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\PaymentInfoResource;
 use App\Http\Resources\ProfileResource;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -52,9 +53,18 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        //
+        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+        $paymentMethods = $stripe->paymentMethods->all([
+            'customer' => $user->stripeCustomer->stripe_customer_id,
+            'type' => 'card',
+        ]);
+
+
         return [
             'profile' => new ProfileResource(Auth::user()->profile),
-            'paymentInfos' => PaymentInfoResource::collection($user->paymentInfos),
+            'paymentInfos' => $paymentMethods['data'],
             'addresses' => AddressResource::collection($user->addresses)
         ];
     }
