@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             AddressSeeder::class,
             CartSeeder::class,
             CartItemSeeder::class,
+            StripeCustomerSeeder::class,
         ]);
     }
 }
