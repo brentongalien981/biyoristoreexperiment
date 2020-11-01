@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 
 
+/* checkout */
+Route::middleware('auth:api')->post('/checkout/readCheckoutRequiredData', 'CheckoutController@readCheckoutRequiredData');
+
+
+
 /* payment */
 Route::middleware('auth:api')->post('/stripePaymentMethod/save', 'StripePaymentMethodController@save');
 Route::middleware('auth:api')->post('/stripePaymentMethod/update', 'StripePaymentMethodController@update');
