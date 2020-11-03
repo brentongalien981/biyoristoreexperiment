@@ -12,10 +12,20 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
 
+        //
+        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+        $paymentMethods = $stripe->paymentMethods->all([
+            'customer' => $user->stripeCustomer->stripe_customer_id,
+            'type' => 'card',
+        ]);
+
+
         return [
             'message' => 'From CLASS: CheckoutController, METHOD: readCheckoutRequiredData()',
             'objs' => [
-                'addresses' => AddressResource::collection($user->addresses)    
+                'addresses' => AddressResource::collection($user->addresses),
+                'paymentInfos' => $paymentMethods['data'],
             ]
         ];
     }
