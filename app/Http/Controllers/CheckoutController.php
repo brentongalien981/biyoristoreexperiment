@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\AddressResource;
+use App\Http\Resources\ProfileResource;
 
 class CheckoutController extends Controller
 {
@@ -24,6 +25,7 @@ class CheckoutController extends Controller
         return [
             'message' => 'From CLASS: CheckoutController, METHOD: readCheckoutRequiredData()',
             'objs' => [
+                'profile' => new ProfileResource($user->profile),
                 'addresses' => AddressResource::collection($user->addresses),
                 'paymentInfos' => $paymentMethods['data'],
             ]
