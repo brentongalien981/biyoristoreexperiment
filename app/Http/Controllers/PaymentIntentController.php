@@ -24,7 +24,7 @@ class PaymentIntentController extends Controller
                 'clientSecret' => $paymentIntent->client_secret,
             ];
         } catch (Error $e) {
-            return ['error' => $e->getMessage()];
+            return ['customError' => $e->getMessage()];
         }
     }
 }
