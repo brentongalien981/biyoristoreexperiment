@@ -16,7 +16,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['name' => 'PAID']);
         DB::table('order_statuses')->insert(['name' => 'CANCELLED']);
         DB::table('order_statuses')->insert(['name' => 'PROCESSING FOR SHIPMENT']);
-        DB::table('order_statuses')->insert(['name' => 'SHIPPED']);
+        DB::table('order_statuses')->insert(['name' => 'BEING SHIPPED']);
         DB::table('order_statuses')->insert(['name' => 'DELIVERED']);
         DB::table('order_statuses')->insert(['name' => 'SHIPPED FOR REFUND']);
         DB::table('order_statuses')->insert(['name' => 'RETURNED']);

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class PaymentIntentController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
 
         // This is your real test secret API key.
@@ -28,6 +28,11 @@ class PaymentIntentController extends Controller
 
             return [
                 'clientSecret' => $paymentIntent->client_secret,
+                'street' => $request->street,
+                'city' => $request->city,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'cartItemsData' => $request->cartItemsData
             ];
         } catch (Exception $e) {
             return ['customError' => $e->getMessage()];
