@@ -15,15 +15,17 @@ class CreateCartsTable extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id')->unsigned();
-            $table->boolean('is_active');
+            $table->bigInteger('user_id')->unsigned()->nullable();
+            // $table->string('stripe_payment_intent_id', 128)->nullable();
+            // $table->bigInteger('payment_info_id')->unsigned()->nullable();
+            $table->boolean('is_active')->default(1);
             $table->timestamps();
         });
 
-        Schema::table('carts', function (Blueprint $table) {
+        // Schema::table('carts', function (Blueprint $table) {
 
-            $table->foreign('user_id')->references('id')->on('users');
-        });
+        //     $table->foreign('user_id')->references('id')->on('users');
+        // });
     }
 
     /**

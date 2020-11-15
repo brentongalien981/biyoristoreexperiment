@@ -2,37 +2,115 @@
 
 namespace App\Http\Controllers;
 
+use App\Cart;
+use App\CartItem;
 use Error;
+use App\Order;
+use App\OrderStatus;
+use App\Product;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentIntentController extends Controller
 {
+    private static function getOrderAmount($items)
+    {
+
+        $orderTotalAmount = 0;
+        $tax = 0.13;
+
+        foreach ($items as $i) {
+            $i = json_decode($i);
+            $product = Product::find($i->productId);
+            $quantity = $i->quantity;
+            $itemTotalPrice = $product->price * $quantity;
+
+            $orderTotalAmount += $itemTotalPrice;
+        }
+
+        $orderTotalAmount = $orderTotalAmount * (1 + $tax);
+
+        $orderTotalAmountInCents = $orderTotalAmount * 100;
+        return $orderTotalAmountInCents;
+    }
+
+
+
+    // // TODO: Create order record with status "waiting-for-payment".
+    // $user = Auth::user();
+
+    // $order = new Order();
+    // $order->user_id = (isset($user) ? $user->id : null);
+    // $order->stripe_payment_intent_id = $paymentIntent->id;
+    // $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
+    // $order->status_id = OrderStatus::WAITING_FOR_PAYMENT;
+
+    // $order->street = $request->street;
+    // $order->city = $request->city;
+    // $order->province = $request->province;
+    // $order->country = $request->country;
+    // $order->postal_code = $request->postalCode;
+    // $order->phone = $request->phone;
+    // $order->email = $request->email;
+    // $order->save();
+
+
+
     public function create(Request $request)
     {
+
+        // TODO:LATER: Validate shipping info when you implement the shipping feature.
+
 
         // This is your real test secret API key.
         \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
 
 
-        // TODO: Create order record with status "waiting-for-payment".
-
-
-
         try {
+
+            //
             $paymentIntent = \Stripe\PaymentIntent::create([
-                'amount' => 69,
-                'currency' => 'cad',
+                'amount' => self::getOrderAmount($request->cartItemsData),
+                'currency' => 'usd',
             ]);
 
 
+
+            // Create / update cart record.
+            $cart = null;
+            if (isset($request->cartId) && $request->cartId != 0) {
+                $cart = Cart::find($request->cartId);
+            } else {
+                $cart = new Cart();
+            }
+            $cart->save();
+
+
+            // Create / update cart-items
+            foreach ($request->cartItemsData as $i) {
+                $i = json_decode($i);
+
+                $updatedCartItem = null;
+                if (isset($i->id)) {
+                    $updatedCartItem = CartItem::find($i->id);
+                } else {
+                    $updatedCartItem = new CartItem();
+                }
+                $updatedCartItem->cart_id = $cart->id;
+                $updatedCartItem->product_id = $i->productId;
+                $updatedCartItem->quantity = $i->quantity;
+                $updatedCartItem->save();
+            }
+
+
+
+            //
             return [
                 'clientSecret' => $paymentIntent->client_secret,
+                'cartId' => $cart->id,
                 'street' => $request->street,
-                'city' => $request->city,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'cartItemsData' => $request->cartItemsData
+                'cartItemsData' => $request->cartItemsData,
             ];
         } catch (Exception $e) {
             return ['customError' => $e->getMessage()];
