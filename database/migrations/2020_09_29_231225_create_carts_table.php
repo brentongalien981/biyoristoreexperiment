@@ -16,7 +16,7 @@ class CreateCartsTable extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id')->unsigned()->nullable();
-            // $table->string('stripe_payment_intent_id', 128)->nullable();
+            $table->string('stripe_payment_intent_id', 128);
             // $table->bigInteger('payment_info_id')->unsigned()->nullable();
             $table->boolean('is_active')->default(1);
             $table->timestamps();

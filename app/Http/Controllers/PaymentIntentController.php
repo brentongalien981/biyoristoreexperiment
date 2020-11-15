@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Cart;
 use App\CartItem;
+use App\Http\Resources\CartResource;
 use Error;
 use App\Order;
 use App\OrderStatus;
@@ -31,13 +32,13 @@ class PaymentIntentController extends Controller
 
         $orderTotalAmount = $orderTotalAmount * (1 + $tax);
 
-        $orderTotalAmountInCents = $orderTotalAmount * 100;
+        $orderTotalAmountInCents = round($orderTotalAmount, 2) * 100;
         return $orderTotalAmountInCents;
     }
 
 
 
-    // // TODO: Create order record with status "waiting-for-payment".
+    // // TODO:LATER Create order record with status "waiting-for-payment".
     // $user = Auth::user();
 
     // $order = new Order();
@@ -57,6 +58,8 @@ class PaymentIntentController extends Controller
 
 
 
+
+
     public function create(Request $request)
     {
 
@@ -70,9 +73,24 @@ class PaymentIntentController extends Controller
         try {
 
             //
+            $user = Auth::user();
+
             $paymentIntent = \Stripe\PaymentIntent::create([
                 'amount' => self::getOrderAmount($request->cartItemsData),
                 'currency' => 'usd',
+                'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
+                'metadata' => [
+                    'storeUserId' => (isset($user) ? $user->id : null),
+                    'firstName' => $request->firstName,
+                    'lastName' => $request->lastName,
+                    'phoneNumber' => $request->phone,
+                    'email' => $request->email,
+                    'street' => $request->street,
+                    'city' => $request->city,
+                    'province' => $request->province,
+                    'country' => $request->country,
+                    'postalCode' => $request->postalCode,
+                ]
             ]);
 
 
@@ -84,6 +102,7 @@ class PaymentIntentController extends Controller
             } else {
                 $cart = new Cart();
             }
+            $cart->stripe_payment_intent_id = $paymentIntent->id;
             $cart->save();
 
 
@@ -108,12 +127,13 @@ class PaymentIntentController extends Controller
             //
             return [
                 'clientSecret' => $paymentIntent->client_secret,
-                'cartId' => $cart->id,
+                'cart' => new CartResource($cart),
                 'street' => $request->street,
                 'cartItemsData' => $request->cartItemsData,
             ];
         } catch (Exception $e) {
-            return ['customError' => $e->getMessage()];
+            throw $e;
+            // return ['customError' => $e->getMessage()];
         }
     }
 }
