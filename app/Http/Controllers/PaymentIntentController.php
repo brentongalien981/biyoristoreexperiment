@@ -38,28 +38,6 @@ class PaymentIntentController extends Controller
 
 
 
-    // // TODO:LATER Create order record with status "waiting-for-payment".
-    // $user = Auth::user();
-
-    // $order = new Order();
-    // $order->user_id = (isset($user) ? $user->id : null);
-    // $order->stripe_payment_intent_id = $paymentIntent->id;
-    // $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
-    // $order->status_id = OrderStatus::WAITING_FOR_PAYMENT;
-
-    // $order->street = $request->street;
-    // $order->city = $request->city;
-    // $order->province = $request->province;
-    // $order->country = $request->country;
-    // $order->postal_code = $request->postalCode;
-    // $order->phone = $request->phone;
-    // $order->email = $request->email;
-    // $order->save();
-
-
-
-
-
     public function create(Request $request)
     {
 
