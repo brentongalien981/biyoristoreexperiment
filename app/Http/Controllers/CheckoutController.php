@@ -10,16 +10,71 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\ProfileResource;
 use App\OrderItem;
+use App\PaymentStatus;
 use Exception;
 
 class CheckoutController extends Controller
 {
     public function finalizeOrder(Request $request)
     {
+        //
+        $user = Auth::user();
+        $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
+        $orderProcessStatusCode = OrderStatus::INVALID_CART;
+
 
         // Create order record with status "PAID".
-        $user = Auth::user();
         $cart = Cart::find($request->cartId);
+
+
+        //
+        try {
+
+            //
+            if (!isset($cart)) {
+                throw new Exception("Invalid cart.");
+            } else {
+                $orderProcessStatusCode = OrderStatus::VALID_CART;
+            }
+
+
+            //
+            if (count($cart->cartItems) == 0) {
+                $orderProcessStatusCode = OrderStatus::CART_HAS_NO_ITEM;
+                throw new Exception("Cart has no item.");
+            } else {
+                $orderProcessStatusCode = OrderStatus::CART_HAS_ITEM;
+            }
+
+
+            // TODO:LATER: Do a more detailed check if the Stripe payment was successful.)
+
+
+            //
+            $orderProcessStatusCode = OrderStatus::PAYMENT_METHOD_CHARGED;
+
+
+
+            //
+            return [
+                'isResultOk' => true,
+                'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
+                'cart' => $cart,
+                'paymentProcessStatusCode' => $paymentProcessStatusCode,
+                'orderProcessStatusCode' => $orderProcessStatusCode,
+                'order' => $order
+            ];
+        } catch (Exception $e) {
+            return [
+                'isResultOk' => true,
+                'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
+                'cart' => $cart,
+                'paymentProcessStatusCode' => $paymentProcessStatusCode,
+                'orderProcessStatusCode' => $orderProcessStatusCode,
+                'customError' => $e->getMessage(),
+                'order' => $order
+            ];
+        }
 
         $order = new Order();
         $order->user_id = (isset($user) ? $user->id : null);
@@ -53,16 +108,6 @@ class CheckoutController extends Controller
         // Update cart record as not-active.
         $cart->is_active = 0;
         $cart->save();
-
-
-
-        //
-        return [
-            'isResultOk' => true,
-            'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
-            'cart' => $cart,
-            'order' => $order
-        ];
     }
 
 

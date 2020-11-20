@@ -15,13 +15,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-
-/* */
-Route::post('/checkout/finalizeOrder', 'CheckoutController@finalizeOrder');
-
-
-
 /* checkout */
+Route::post('/checkout/finalizeOrder', 'CheckoutController@finalizeOrder');
 Route::middleware('auth:api')->post('/checkout/readCheckoutRequiredData', 'CheckoutController@readCheckoutRequiredData');
 
 
