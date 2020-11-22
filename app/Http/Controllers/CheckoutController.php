@@ -27,7 +27,6 @@ class CheckoutController extends Controller
         $cart = Cart::find($request->cartId);
 
 
-        //
         try {
 
             //
@@ -47,11 +46,44 @@ class CheckoutController extends Controller
             }
 
 
-            // TODO:LATER: Do a more detailed check if the Stripe payment was successful.)
+            // Update cart record as not-active.
+            $cart->is_active = 0;
+            $cart->save();
+
+            $orderProcessStatusCode = OrderStatus::CART_CHECKEDOUT_OK;
 
 
             //
-            $orderProcessStatusCode = OrderStatus::PAYMENT_METHOD_CHARGED;
+            $order = new Order();
+            $order->user_id = (isset($user) ? $user->id : null);
+            $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
+            $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
+            $order->status_id = OrderStatus::PAYMENT_METHOD_CHARGED;
+
+            $order->street = $request->street;
+            $order->city = $request->city;
+            $order->province = $request->province;
+            $order->country = $request->country;
+            $order->postal_code = $request->postalCode;
+            $order->phone = $request->phone;
+            $order->email = $request->email;
+            $order->save();
+
+            $orderProcessStatusCode = OrderStatus::ORDER_CREATED;
+
+
+
+            // Create order-items.
+            foreach ($cart->cartItems as $i) {
+                $orderItem = new OrderItem();
+                $orderItem->order_id = $order->id;
+                $orderItem->product_id = $i->product_id;
+                $orderItem->price = $i->product->price;
+                $orderItem->quantity = $i->quantity;
+                $orderItem->save();
+            }
+
+            $orderProcessStatusCode = OrderStatus::ORDER_ITEMS_CREATED;
 
 
 
@@ -66,7 +98,7 @@ class CheckoutController extends Controller
             ];
         } catch (Exception $e) {
             return [
-                'isResultOk' => true,
+                'isResultOk' => false,
                 'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
                 'cart' => $cart,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
@@ -75,39 +107,6 @@ class CheckoutController extends Controller
                 'order' => $order
             ];
         }
-
-        $order = new Order();
-        $order->user_id = (isset($user) ? $user->id : null);
-        $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
-        $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
-        $order->status_id = OrderStatus::PAID;
-
-        $order->street = $request->street;
-        $order->city = $request->city;
-        $order->province = $request->province;
-        $order->country = $request->country;
-        $order->postal_code = $request->postalCode;
-        $order->phone = $request->phone;
-        $order->email = $request->email;
-        $order->save();
-
-
-
-        // Create order-items.
-        foreach ($cart->cartItems as $i) {
-            $orderItem = new OrderItem();
-            $orderItem->order_id = $order->id;
-            $orderItem->product_id = $i->product_id;
-            $orderItem->price = $i->product->price;
-            $orderItem->quantity = $i->quantity;
-            $orderItem->save();
-        }
-
-
-
-        // Update cart record as not-active.
-        $cart->is_active = 0;
-        $cart->save();
     }
 
 
