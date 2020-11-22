@@ -91,7 +91,6 @@ class CheckoutController extends Controller
             return [
                 'isResultOk' => true,
                 'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
-                'cart' => $cart,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'order' => $order
@@ -100,11 +99,10 @@ class CheckoutController extends Controller
             return [
                 'isResultOk' => false,
                 'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
-                'cart' => $cart,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'customError' => $e->getMessage(),
-                'order' => $order
+                // 'order' => $order // TODO:LATER: Depending on the orderProcessStatusCode, decide whether or not to include this.
             ];
         }
     }
