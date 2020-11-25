@@ -26,5 +26,8 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         //
+        // Gate::define('create-stripePaymentMethod', function ($user, $stripePaymentMethod) {
+        //     return $user->id === $post->user_id;
+        // });
     }
 }

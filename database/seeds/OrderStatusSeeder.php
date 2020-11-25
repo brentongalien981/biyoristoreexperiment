@@ -16,6 +16,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['name' => 'VALID CART']);
         DB::table('order_statuses')->insert(['name' => 'CART HAS ITEM']);
         DB::table('order_statuses')->insert(['name' => 'CART HAS NO ITEM']);
+        DB::table('order_statuses')->insert(['name' => 'INVALID PAYMENT METHOD']);
         DB::table('order_statuses')->insert(['name' => 'WAITING FOR PAYMENT']);
         DB::table('order_statuses')->insert(['name' => 'PAYMENT METHOD CHARGED']);
         DB::table('order_statuses')->insert(['name' => 'CART CHECKEDOUT OK']);
