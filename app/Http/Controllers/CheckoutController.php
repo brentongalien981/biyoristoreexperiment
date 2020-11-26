@@ -40,7 +40,10 @@ class CheckoutController extends Controller
     {
 
         $user = Auth::user();
+        $paymentProcessStatusCode = PaymentStatus::WAITING_FOR_PAYMENT;
         $orderProcessStatusCode = OrderStatus::INVALID_CART;
+        $order = null;
+        $cart = null;
         $isResultOk = false;
         $customError = null;
         $customeMsgs = ['invalid cart'];
@@ -130,19 +133,70 @@ class CheckoutController extends Controller
 
 
 
-            // ish: charge customer
+            // //ish
+            // $customeMsgs[] = 'INTENTIONAL EXCEPTION: no payment charged';
+            // throw new Exception("INTENTIONAL EXCEPTION: no payment charged");
+
+
+
+            // charge customer
             $stripe->paymentIntents->confirm(
                 $paymentIntent->id
             );
 
+            $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
             $orderProcessStatusCode = OrderStatus::PAYMENT_METHOD_CHARGED;
             $customeMsgs[] = 'payment-method charged';
 
 
 
+            // set cart to not active
+            $cart->is_active = 0;
+            $cart->save();
+
+            $orderProcessStatusCode = OrderStatus::CART_CHECKEDOUT_OK;
+            $customeMsgs[] = 'cart checkedout ok';
+
+
+
+            // create order-record with status "order-created"
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
+            // $order->payment_info_id = $paymentMethod->id;
+            $order->status_id = OrderStatus::ORDER_CREATED;
+
+            $order->street = $request->street;
+            $order->city = $request->city;
+            $order->province = $request->province;
+            $order->country = $request->country;
+            $order->postal_code = $request->postalCode;
+            $order->phone = $request->phone;
+            $order->email = $request->email;
+            $order->save();
+
+            $orderProcessStatusCode = OrderStatus::ORDER_CREATED;
+            $customeMsgs[] = 'order created';
+
+
+
+            // create order-items
+            foreach ($cart->cartItems as $i) {
+                $orderItem = new OrderItem();
+                $orderItem->order_id = $order->id;
+                $orderItem->product_id = $i->product_id;
+                $orderItem->price = $i->product->price;
+                $orderItem->quantity = $i->quantity;
+                $orderItem->save();
+            }
+
+            $orderProcessStatusCode = OrderStatus::ORDER_ITEMS_CREATED;
+            $customeMsgs[] = 'order-items created';
+
+
+
             //
             $isResultOk = true;
-            
         } catch (Exception $e) {
             $customeMsgs[] = 'inside CATCH clause';
             $customError = $e->getMessage();
@@ -153,12 +207,12 @@ class CheckoutController extends Controller
             return [
                 'isResultOk' => $isResultOk,
                 'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrderWithPredefinedPayment()',
+                'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'customeMsgs' => $customeMsgs,
                 'customeError' => $customError,
-                // 'order' => $order
-                // 'paymentProcessStatusCode' => $paymentProcessStatusCode,
-
+                'order' => $order,
+                'cart' => $cart,
             ];
         }
     }
