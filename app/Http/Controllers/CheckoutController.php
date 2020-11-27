@@ -37,7 +37,7 @@ class CheckoutController extends Controller
 
 
     public function finalizeOrderWithPredefinedPayment(Request $request)
-    {
+    { 
 
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::WAITING_FOR_PAYMENT;
