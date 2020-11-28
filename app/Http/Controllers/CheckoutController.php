@@ -41,7 +41,7 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::WAITING_FOR_PAYMENT;
-        $orderProcessStatusCode = OrderStatus::INVALID_CART;
+        $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
         $order = null;
         $cart = null;
         $isResultOk = false;
@@ -52,7 +52,7 @@ class CheckoutController extends Controller
         try {
 
             // validate payment-method
-            $orderProcessStatusCode = OrderStatus::INVALID_PAYMENT_METHOD;
+            $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_PAYMENT_METHOD');
             $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
 
             $paymentMethod = $stripe->paymentMethods->retrieve(
@@ -64,7 +64,7 @@ class CheckoutController extends Controller
             $customeMsgs[] = 'user->customerId ==> ' . $user->stripeCustomer->stripe_customer_id;
             if ($paymentMethod->customer === $user->stripeCustomer->stripe_customer_id) {
                 $customeMsgs[] = 'payment method is valid';
-                $orderProcessStatusCode = OrderStatus::WAITING_FOR_PAYMENT;
+                $orderProcessStatusCode = OrderStatus::getIdByName('WAITING_FOR_PAYMENT');
             } else {
                 $customeMsgs[] = 'invalid payment method';
                 throw new Exception("INVALID_PAYMENT_METHOD");
@@ -102,7 +102,7 @@ class CheckoutController extends Controller
             $cart->user_id = $user->id;
             $cart->stripe_payment_intent_id = $paymentIntent->id;
             $cart->save();
-            $orderProcessStatusCode = OrderStatus::VALID_CART;
+            $orderProcessStatusCode = OrderStatus::getIdByName('VALID_CART');
 
             $customeMsgs[] = 'cart created';
 
@@ -111,10 +111,10 @@ class CheckoutController extends Controller
 
             // check pseudo-cart-items existence
             if (!self::checkCartItemExistence($request->cartItemsInfo)) {
-                $orderProcessStatusCode = OrderStatus::CART_HAS_NO_ITEM;
+                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_NO_ITEM');
                 throw new Exception("CART_HAS_NO_ITEM");
             }
-            $orderProcessStatusCode = OrderStatus::CART_HAS_ITEM;
+            $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_ITEM');
             $customeMsgs[] = 'cart has at least one item';
 
 
@@ -145,7 +145,7 @@ class CheckoutController extends Controller
             );
 
             $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
-            $orderProcessStatusCode = OrderStatus::PAYMENT_METHOD_CHARGED;
+            $orderProcessStatusCode = OrderStatus::getIdByName('PAYMENT_METHOD_CHARGED');
             $customeMsgs[] = 'payment-method charged';
 
 
@@ -154,7 +154,7 @@ class CheckoutController extends Controller
             $cart->is_active = 0;
             $cart->save();
 
-            $orderProcessStatusCode = OrderStatus::CART_CHECKEDOUT_OK;
+            $orderProcessStatusCode = OrderStatus::getIdByName('CART_CHECKEDOUT_OK');
             $customeMsgs[] = 'cart checkedout ok';
 
 
@@ -164,7 +164,7 @@ class CheckoutController extends Controller
             $order->user_id = $user->id;
             $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
             // $order->payment_info_id = $paymentMethod->id;
-            $order->status_id = OrderStatus::ORDER_CREATED;
+            $order->status_id = OrderStatus::getIdByName('ORDER_CREATED');
 
             $order->street = $request->street;
             $order->city = $request->city;
@@ -175,7 +175,7 @@ class CheckoutController extends Controller
             $order->email = $request->email;
             $order->save();
 
-            $orderProcessStatusCode = OrderStatus::ORDER_CREATED;
+            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_CREATED');
             $customeMsgs[] = 'order created';
 
 
@@ -190,7 +190,7 @@ class CheckoutController extends Controller
                 $orderItem->save();
             }
 
-            $orderProcessStatusCode = OrderStatus::ORDER_ITEMS_CREATED;
+            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_ITEMS_CREATED');
             $customeMsgs[] = 'order-items created';
 
 
@@ -224,7 +224,7 @@ class CheckoutController extends Controller
         //
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
-        $orderProcessStatusCode = OrderStatus::INVALID_CART;
+        $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
 
 
         // Create order record with status "PAID".
@@ -237,16 +237,16 @@ class CheckoutController extends Controller
             if (!isset($cart)) {
                 throw new Exception("Invalid cart.");
             } else {
-                $orderProcessStatusCode = OrderStatus::VALID_CART;
+                $orderProcessStatusCode = OrderStatus::getIdByName('VALID_CART');
             }
 
 
             //
             if (count($cart->cartItems) == 0) {
-                $orderProcessStatusCode = OrderStatus::CART_HAS_NO_ITEM;
+                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_NO_ITEM');
                 throw new Exception("Cart has no item.");
             } else {
-                $orderProcessStatusCode = OrderStatus::CART_HAS_ITEM;
+                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_ITEM');
             }
 
 
@@ -254,7 +254,7 @@ class CheckoutController extends Controller
             $cart->is_active = 0;
             $cart->save();
 
-            $orderProcessStatusCode = OrderStatus::CART_CHECKEDOUT_OK;
+            $orderProcessStatusCode = OrderStatus::getIdByName('CART_CHECKEDOUT_OK');
 
 
             //
@@ -262,7 +262,7 @@ class CheckoutController extends Controller
             $order->user_id = (isset($user) ? $user->id : null);
             $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
             $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
-            $order->status_id = OrderStatus::PAYMENT_METHOD_CHARGED;
+            $order->status_id = OrderStatus::getIdByName('PAYMENT_METHOD_CHARGED');
 
             $order->street = $request->street;
             $order->city = $request->city;
@@ -273,7 +273,7 @@ class CheckoutController extends Controller
             $order->email = $request->email;
             $order->save();
 
-            $orderProcessStatusCode = OrderStatus::ORDER_CREATED;
+            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_CREATED');
 
 
 
@@ -287,7 +287,7 @@ class CheckoutController extends Controller
                 $orderItem->save();
             }
 
-            $orderProcessStatusCode = OrderStatus::ORDER_ITEMS_CREATED;
+            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_ITEMS_CREATED');
 
 
 

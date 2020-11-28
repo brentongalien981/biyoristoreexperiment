@@ -30,6 +30,13 @@ class Order extends Model
 
 
 
+    public function status()
+    {
+        return $this->belongsTo('App\OrderStatus');
+    }
+
+
+
     public function orderItems()
     {
         return $this->hasMany('App\OrderItem');
