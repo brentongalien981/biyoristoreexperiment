@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\AddressResource;
+use App\Http\Resources\OrderResource;
 use App\Http\Resources\PaymentInfoResource;
 use App\Http\Resources\ProfileResource;
 use Exception;
@@ -62,10 +63,15 @@ class ProfileController extends Controller
         ]);
 
 
+
+        // TODO: Get the user orders based on the request's order-page-number.
+        $userOrders = null;
+
         return [
             'profile' => new ProfileResource(Auth::user()->profile),
             'paymentInfos' => $paymentMethods['data'],
-            'addresses' => AddressResource::collection($user->addresses)
+            'addresses' => AddressResource::collection($user->addresses),
+            'orders' => OrderResource::collection($user->orders)
         ];
     }
 }

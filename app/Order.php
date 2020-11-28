@@ -27,4 +27,11 @@ class Order extends Model
         $orderTotalAmountInCents = round($orderTotalAmount, 2) * 100;
         return $orderTotalAmountInCents;
     }
+
+
+
+    public function orderItems()
+    {
+        return $this->hasMany('App\OrderItem');
+    }
 }
