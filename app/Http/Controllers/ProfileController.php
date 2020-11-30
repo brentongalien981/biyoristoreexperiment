@@ -6,6 +6,7 @@ use App\Http\Resources\AddressResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\PaymentInfoResource;
 use App\Http\Resources\ProfileResource;
+use App\Order;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,9 +65,9 @@ class ProfileController extends Controller
 
 
 
-        // TODO: Get the user orders based on the request's order-page-number.
+        // Get the user orders based on the request's order-page-number.
         $totalNumOfItems = count($user->orders);
-        $numOfItemsPerPage = 3;
+        $numOfItemsPerPage = Order::NUM_OF_ITEMS_PER_PAGE;
         $userOrders = $user->orders()->orderBy('created_at', 'desc')->take($numOfItemsPerPage)->get();
 
         return [
@@ -75,7 +76,8 @@ class ProfileController extends Controller
             'addresses' => AddressResource::collection($user->addresses),
             'orders' => OrderResource::collection($userOrders),
             'ordersMetaData' => [
-                'totalNumOfItems' => $totalNumOfItems
+                'totalNumOfItems' => $totalNumOfItems,
+                'numOfItemsPerPage' => $numOfItemsPerPage,
             ]
         ];
     }

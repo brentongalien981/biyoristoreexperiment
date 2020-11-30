@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     //
+    const NUM_OF_ITEMS_PER_PAGE = 2;
+
+
+
+    //
     public static function getOrderAmountInCents($items)
     {
 
