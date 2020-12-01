@@ -10,15 +10,38 @@ use Exception;
 
 class OrderController extends Controller
 {
-    public function show($id) {
+    public function show($id)
+    {
 
         $order = Order::find($id);
+        $paymentInfo = null;
+
+
+
+        // TODO: read stipe-payment-method
+        try {
+            if (isset($order)) {
+
+                $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+                $paymentIntent = $stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
+
+                $paymentMethodId = $paymentIntent->payment_method;
+
+                $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
+                $paymentInfo = $paymentMethod;
+            }
+        } catch (Exception $e) {}
+
+
+
 
         return [
             'message' => 'From CLASS: OrderController, METHOD: show()',
             'orderId' => $id,
             'objs' => [
-                'order' => isset($order) ? new OrderResource($order) : null
+                'order' => isset($order) ? new OrderResource($order) : null,
+                'paymentInfo' => $paymentInfo
             ]
         ];
     }
