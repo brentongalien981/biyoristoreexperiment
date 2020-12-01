@@ -10,6 +10,21 @@ use Exception;
 
 class OrderController extends Controller
 {
+    public function show($id) {
+
+        $order = Order::find($id);
+
+        return [
+            'message' => 'From CLASS: OrderController, METHOD: show()',
+            'orderId' => $id,
+            'objs' => [
+                'order' => isset($order) ? new OrderResource($order) : null
+            ]
+        ];
+    }
+
+
+
     public function index(Request $request)
     {
         $user = Auth::user();

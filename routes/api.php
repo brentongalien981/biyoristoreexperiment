@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+
+/* order */
+Route::get('/orders/{id}', 'OrderController@show');
+
+
 /* checkout */
 Route::middleware('auth:api')->get('/orders', 'OrderController@index');
 Route::middleware('auth:api')->post('/checkout/finalizeOrderWithPredefinedPayment', 'CheckoutController@finalizeOrderWithPredefinedPayment');
