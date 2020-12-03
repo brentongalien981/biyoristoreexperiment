@@ -18,7 +18,6 @@ class OrderController extends Controller
 
 
 
-        // TODO: read stipe-payment-method
         try {
             if (isset($order)) {
 
@@ -32,7 +31,6 @@ class OrderController extends Controller
                 $paymentInfo = $paymentMethod;
             }
         } catch (Exception $e) {}
-
 
 
 
