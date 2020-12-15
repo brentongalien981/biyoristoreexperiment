@@ -29,7 +29,7 @@ class OrderResource extends JsonResource
             'statusId' => $this->status_id,
             'status' => $this->status,
             'orderItems' => OrderItemResource::collection($this->orderItems),
-            'createdAt' => Carbon::parse($this->created_at)->diffForHumans()
+            'createdAt' => Carbon::parse($this->created_at)->diffForHumans() 
         ];
     }
 }
