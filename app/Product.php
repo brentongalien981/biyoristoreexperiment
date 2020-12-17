@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public function sellers()
+    {
+        return $this->belongsToMany('App\Seller');
+    }
+
+
+
     public function cartItem()
     {
         return $this->belongsTo('App\CartItem');

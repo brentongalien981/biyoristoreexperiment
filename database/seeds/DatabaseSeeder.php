@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
             CartItemSeeder::class,
             StripeCustomerSeeder::class,
             OrderStatusSeeder::class,
+            SellerSeeder::class,
+            ProductSellerSeeder::class,
+            SellerAddressSeeder::class,
         ]);
     }
 }
