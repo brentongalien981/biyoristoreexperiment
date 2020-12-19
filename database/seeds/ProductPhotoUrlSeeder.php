@@ -22,5 +22,8 @@ class ProductPhotoUrlSeeder extends Seeder
 
         DB::table('product_photo_urls')->insert(['product_id' => 3, 'url' => "asus1.jpg"]);
         DB::table('product_photo_urls')->insert(['product_id' => 3, 'url' => "asus2.jpg"]);
+
+        DB::table('product_photo_urls')->insert(['product_id' => 4, 'url' => "default-product1.jpg"]);
+        DB::table('product_photo_urls')->insert(['product_id' => 4, 'url' => "default-product2.jpg"]);
     }
 }

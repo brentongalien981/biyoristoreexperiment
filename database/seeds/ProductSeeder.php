@@ -23,6 +23,8 @@ class ProductSeeder extends Seeder
         DB::table('products')->insert(['name' => "iMac Pro", 'description' => "lorem ipsum ipsum", 'brand_id' => 1, 'price' => 2099]);
         DB::table('products')->insert(['name' => "ASUS Zen Book", 'description' => "lorem ipsum ipsum", 'brand_id' => 10, 'price' => 999, 'quantity' => 3]);
 
+        DB::table('products')->insert(['name' => "Microsoft Surface", 'description' => "lorem ipsum ipsum", 'brand_id' => 2, 'price' => 999, 'quantity' => 2]);
+
 
 
         factory(App\Product::class, 50)->create()->each(function ($product) {

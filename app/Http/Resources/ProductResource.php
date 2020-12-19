@@ -22,7 +22,8 @@ class ProductResource extends JsonResource
             'productPhotoUrls' => $this->productPhotoUrls,
             'brand' => $this->brand,
             'categories' => $this->categories,
-            'quantity' => $this->quantity
+            'quantity' => $this->quantity,
+            'sellers' => SellerResource::collection($this->sellers)
         ];
     }
 }

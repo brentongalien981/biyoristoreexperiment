@@ -16,5 +16,7 @@ class SellerSeeder extends Seeder
         DB::table('sellers')->insert(['name' => "Apple", 'alternate_name' => '', 'website' => '']);
         DB::table('sellers')->insert(['name' => "NBA Store", 'alternate_name' => '', 'website' => '']);
         DB::table('sellers')->insert(['name' => "Fanatics", 'alternate_name' => '', 'website' => 'https://www.fanatics.com']);
+        DB::table('sellers')->insert(['name' => "Microsoft", 'alternate_name' => '', 'website' => '']);
+        DB::table('sellers')->insert(['name' => "BestBuy", 'alternate_name' => '', 'website' => '']);
     }
 }
