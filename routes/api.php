@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 
 
+/* customized-easypost */
+Route::get('/customized-easypost/getRates', 'CustomizedEasyPost@getRates');
+
+
+
 /* order */
 Route::get('/orders/{id}', 'OrderController@show');
 
