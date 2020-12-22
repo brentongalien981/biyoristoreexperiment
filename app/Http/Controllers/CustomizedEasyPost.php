@@ -25,12 +25,21 @@ class CustomizedEasyPost extends Controller
 
             $fromAddressParams = [
                 'verify' => [true],
-                'street1' => '417 Montgomery Street',
-                'street2' => '5th Floor',
-                'city' => 'San Francisco',
-                'state' => 'CA',
-                'zip' => '94104',
-                'phone' => '415-528-7555'
+                'street1' => '50 Thorncliffe Park Drive',
+                // 'street2' => '5th Floor',
+                'city' => 'East York',
+                'state' => 'ON',
+                'country' => 'CA',
+                'zip' => 'M4H1K4',
+                // 'phone' => '415-528-7555'
+
+                // 'verify' => [true],
+                // 'street1' => '417 Montgomery Street',
+                // 'street2' => '5th Floor',
+                // 'city' => 'San Francisco',
+                // 'state' => 'CA',
+                // 'country' => 'US'
+                // 'zip' => '94104',
                 // 'phone' => '415-528-7555'
             ];
 
@@ -73,12 +82,19 @@ class CustomizedEasyPost extends Controller
             // Set destination-address.
             $destinationsAddressParams = [
                 'verify' => [true],
-                'name' => 'George Costanza',
-                'company' => 'Vandelay Industries',
-                'street1' => '1 E 161st St.',
-                'city' => 'Bronx',
-                'state' => 'NY',
-                'zip' => '10451'
+                // 'name' => 'George Costanza',
+                // 'company' => 'Vandelay Industries',
+                // 'street1' => '1 E 161st St.',
+                // 'city' => 'Bronx',
+                // 'state' => 'NY',
+                // 'zip' => '10451'
+
+                'street1' => '78 Monkhouse Rd',
+                // 'street2' => '5th Floor',
+                'city' => 'Markham',
+                'state' => 'ON',
+                'country' => 'CA',
+                'zip' => 'L6E1V5',
             ];
 
 
