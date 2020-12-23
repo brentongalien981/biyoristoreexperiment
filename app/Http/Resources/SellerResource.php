@@ -19,7 +19,8 @@ class SellerResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'alternateName' => $this->alternate_name,
-            'address' => $this->sellerAddress
+            'address' => $this->sellerAddress,
+            'productSeller' => $this->pivot
         ];
     }
 }

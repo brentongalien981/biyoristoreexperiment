@@ -15,7 +15,7 @@ class Product extends Model
 {
     public function sellers()
     {
-        return $this->belongsToMany('App\Seller');
+        return $this->belongsToMany('App\Seller')->withPivot('sell_price', 'discount_sell_price', 'restock_days');
     }
 
 

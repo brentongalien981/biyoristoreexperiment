@@ -11,7 +11,6 @@ class CustomizedEasyPost extends Controller
     {
         $isResultOk = false;
         $jsFromAddres = [];
-        $parsedRates = [];
         $jsShipmentObj = [];
         $jsDestinationAddress = [];
         $customErrors = [];
@@ -19,9 +18,10 @@ class CustomizedEasyPost extends Controller
         $entireProcessResultCode = 0;
         $fromAddressErrors = [];
         $parsedRateObjs = [];
+        $efficientShipmentRates = [];
 
         try {
-            \EasyPost\EasyPost::setApiKey(env('EASYPOST_PK'));
+            \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
 
             $fromAddressParams = [
                 'verify' => [true],
@@ -150,7 +150,7 @@ class CustomizedEasyPost extends Controller
                 "parcel" => $parcel
             ]);
 
-            //ish
+
             foreach ($shipment as $sField => $sVal) {
                 $jsShipmentObj[$sField] = $sVal;
             }
@@ -169,15 +169,43 @@ class CustomizedEasyPost extends Controller
                 }
                 
                 $parsedRateObjs[] = $aParsedRateObj;
-                
-                // $parsedRates[] = $r->carrier;
-                // $parsedRates[] = $r->service;
-                // $parsedRates[] = $r->rate;
-                // break;
             }
 
             $entireProcessComments[] = "RETRIEVED_SHIPPING_RATES";
             $entireProcessResultCode = 5;
+
+
+
+
+            // Set the most efficient shipment-rates
+            $cheapestWithFastestRate = null;
+            $cheapestRate = 1000000.0;
+            $fastestDeliveryDays = 365;
+            foreach ($parsedRateObjs as $r) {
+                if ((floatval($r['rate']) < $cheapestRate) ||
+                    (floatval($r['rate']) == $cheapestRate && $r['delivery_days'] < $fastestDeliveryDays)) {
+                    $cheapestRate = floatval($r['rate']);
+                    $fastestDeliveryDays = $r['delivery_days'];
+                    $cheapestWithFastestRate = $r;
+                } 
+            }
+
+
+            $fastestWithCheapestRate = null;
+            $cheapestRate = 1000000.0;
+            $fastestDeliveryDays = 365;
+            foreach ($parsedRateObjs as $r) {
+                if (($r['delivery_days'] < $fastestDeliveryDays) ||
+                    ($r['delivery_days'] == $fastestDeliveryDays && floatval($r['rate']) < $cheapestRate)) {
+                    $cheapestRate = floatval($r['rate']);
+                    $fastestDeliveryDays = $r['delivery_days'];
+                    $fastestWithCheapestRate = $r;
+                }
+            }
+
+            $efficientShipmentRates = [$cheapestWithFastestRate, $fastestWithCheapestRate];
+            $entireProcessComments[] = "HAS_SET_EFFICEINT_SHIPPING_RATES";
+            $entireProcessResultCode = 6;
 
 
             //
@@ -195,8 +223,8 @@ class CustomizedEasyPost extends Controller
                 'jsFromAddres' => $jsFromAddres,
                 'jsDestinationAddress' => $jsDestinationAddress,
                 'jsShipmentObj' => $jsShipmentObj,
-                'parsedRates' => $parsedRates,
                 'parsedRateObjs' => $parsedRateObjs,
+                'efficientShipmentRates' => $efficientShipmentRates,
                 'entireProcessComments' => $entireProcessComments,
                 'entireProcessResultCode' => $entireProcessResultCode,
                 'customErrors' => $customErrors
