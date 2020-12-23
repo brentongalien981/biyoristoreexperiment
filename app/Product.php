@@ -4,6 +4,13 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * buy_price is display-price of product on seller's website (w/o shipping-fee, shipping-fee-tax, item-tax)
+ * sell_price is buy-price + intended-profit-margin (profit_margin is in Filipino "patong")
+ * restock_days is the number of days it takes for ASB Inc. to buy the product from seller and for the product to arrive
+ *      at ASB Inc.
+ */
+
 class Product extends Model
 {
     public function sellers()

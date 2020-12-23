@@ -14,7 +14,9 @@ class AddIsShippingWaivedToProductSellerTable extends Migration
     public function up()
     {
         Schema::table('product_seller', function (Blueprint $table) {
-            $table->boolean('is_shipping_waived')->default(0)->after('quantity');
+            $table->decimal('discount_sell_price', 8, 2)->nullable()->after('sell_price');;
+            $table->tinyInteger('restock_days')->after('quantity');
+            $table->boolean('is_shipping_waived')->default(0)->after('restock_days');
         });
     }
 
