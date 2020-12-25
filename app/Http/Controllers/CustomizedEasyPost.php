@@ -82,19 +82,19 @@ class CustomizedEasyPost extends Controller
             // Set destination-address.
             $destinationsAddressParams = [
                 'verify' => [true],
-                // 'name' => 'George Costanza',
-                // 'company' => 'Vandelay Industries',
-                // 'street1' => '1 E 161st St.',
-                // 'city' => 'Bronx',
-                // 'state' => 'NY',
-                // 'zip' => '10451'
+                'name' => 'George Costanza',
+                'company' => 'Vandelay Industries',
+                'street1' => '1 E 161st St.',
+                'city' => 'Bronx',
+                'state' => 'NY',
+                'zip' => '10451'
 
-                'street1' => '78 Monkhouse Rd',
-                // 'street2' => '5th Floor',
-                'city' => 'Markham',
-                'state' => 'ON',
-                'country' => 'CA',
-                'zip' => 'L6E1V5',
+                // 'street1' => '78 Monkhouse Rd',
+                // // 'street2' => '5th Floor',
+                // 'city' => 'Markham',
+                // 'state' => 'ON',
+                // 'country' => 'CA',
+                // 'zip' => 'L6E1V5',
             ];
 
 
@@ -203,7 +203,13 @@ class CustomizedEasyPost extends Controller
                 }
             }
 
-            $efficientShipmentRates = [$cheapestWithFastestRate, $fastestWithCheapestRate];
+
+            if ($cheapestWithFastestRate['id'] == $fastestWithCheapestRate['id']) {
+                $efficientShipmentRates = [$cheapestWithFastestRate];
+            } else {
+                $efficientShipmentRates = [$cheapestWithFastestRate, $fastestWithCheapestRate];
+            }
+             
             $entireProcessComments[] = "HAS_SET_EFFICEINT_SHIPPING_RATES";
             $entireProcessResultCode = 6;
 
