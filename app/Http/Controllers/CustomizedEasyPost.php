@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\Request;
+use App\ShippingServiceLevel;
 
 class CustomizedEasyPost extends Controller
 {
@@ -19,6 +20,12 @@ class CustomizedEasyPost extends Controller
         $fromAddressErrors = [];
         $parsedRateObjs = [];
         $efficientShipmentRates = [];
+
+        // TODO: Delete thses vars.
+        $shippingServiceLevels = null;
+        $updatedParsedRateObjs = null;
+
+
 
         try {
             \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
@@ -176,6 +183,32 @@ class CustomizedEasyPost extends Controller
 
 
 
+            // For each rate, add value to field "delivery_days" if the retrieved rate has null.
+            // TODO
+            $updatedParsedRateObjs = [];
+            $shippingServiceLevels = ShippingServiceLevel::all();
+
+            foreach ($parsedRateObjs as $r) {
+
+                if ($r['carrier'] != "UPS") { continue; }
+
+                $updatedParsedRateObj = $r;
+                if (!isset($r['delivery_days'])) {
+                    $deliveryDays = ShippingServiceLevel::findDeliveryDaysForService($r['service'], $shippingServiceLevels);
+
+                    if ($deliveryDays == 0) { continue; }
+
+                    $updatedParsedRateObj['delivery_days'] = $deliveryDays;
+                }
+
+                $updatedParsedRateObjs[] = $updatedParsedRateObj;
+            }
+
+            $parsedRateObjs = $updatedParsedRateObjs;
+
+
+
+
 
             // Set the most efficient shipment-rates
             $cheapestWithFastestRate = null;
@@ -233,7 +266,9 @@ class CustomizedEasyPost extends Controller
                 'efficientShipmentRates' => $efficientShipmentRates,
                 'entireProcessComments' => $entireProcessComments,
                 'entireProcessResultCode' => $entireProcessResultCode,
-                'customErrors' => $customErrors
+                'customErrors' => $customErrors,
+                'shippingServiceLevels' => $shippingServiceLevels,
+                'updatedParsedRateObjs' => $updatedParsedRateObjs
             ]
         ];
 
