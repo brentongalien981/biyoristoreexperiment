@@ -1,5 +1,6 @@
 <?php
 
+use App\PackageItemType;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
             SellerSeeder::class,
             ProductSellerSeeder::class,
             SellerAddressSeeder::class,
+            PackageItemTypeSeeder::class,
         ]);
     }
 }

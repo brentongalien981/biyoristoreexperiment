@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\MyHelpers\Shipping\MyShippingPackageManager;
 use Exception;
 use Illuminate\Http\Request;
 use App\ShippingServiceLevel;
@@ -24,6 +25,7 @@ class CustomizedEasyPost extends Controller
         // TODO: Delete thses vars.
         $shippingServiceLevels = null;
         $updatedParsedRateObjs = null;
+        $parcelInJson = null;
 
 
 
@@ -137,16 +139,26 @@ class CustomizedEasyPost extends Controller
 
 
 
-            // Create parcel.
+            // TODO: Create parcel.
+            $testCartItems = [
+                ['id' => 1, 'quantity' => 3, 'product' => ['name' => 'Durant Jersey', 'itemTypeId' => 2]],
+                ['id' => 2, 'quantity' => 2, 'product' => ['name' => 'Lakers Hoodie', 'itemTypeId' => 4]]
+            ];
+            $predefinedPackageName = MyShippingPackageManager::getPredefinedPackage($testCartItems);
             $parcel = \EasyPost\Parcel::create([
                 "length" => 9,
                 "width" => 6,
                 "height" => 2,
-                "weight" => 10
+                "weight" => 1 // TODO
             ]);
 
             $entireProcessComments[] = "CREATED_PARCEL_OBJ";
             $entireProcessResultCode = 3;
+
+
+            foreach ($parcel as $field => $val) {
+                $parcelInJson[$field] = $val;
+            }
 
 
 
@@ -184,7 +196,6 @@ class CustomizedEasyPost extends Controller
 
 
             // For each rate, add value to field "delivery_days" if the retrieved rate has null.
-            // TODO
             $updatedParsedRateObjs = [];
             $shippingServiceLevels = ShippingServiceLevel::all();
 
@@ -261,6 +272,7 @@ class CustomizedEasyPost extends Controller
                 'isResultOk' => $isResultOk,
                 'jsFromAddres' => $jsFromAddres,
                 'jsDestinationAddress' => $jsDestinationAddress,
+                'parcelInJson' => $parcelInJson,
                 'jsShipmentObj' => $jsShipmentObj,
                 'parsedRateObjs' => $parsedRateObjs,
                 'efficientShipmentRates' => $efficientShipmentRates,
@@ -271,33 +283,5 @@ class CustomizedEasyPost extends Controller
                 'updatedParsedRateObjs' => $updatedParsedRateObjs
             ]
         ];
-
-
-
-        // $toAddress = \EasyPost\Address::create(array(
-        //     'name' => 'George Costanza',
-        //     'company' => 'Vandelay Industries',
-        //     'street1' => '1 E 161st St.',
-        //     'city' => 'Bronx',
-        //     'state' => 'NY',
-        //     'zip' => '10451'
-        // ));
-
-
-
-        // $parcel = \EasyPost\Parcel::create(array(
-        //     "length" => 9,
-        //     "width" => 6,
-        //     "height" => 2,
-        //     "weight" => 10
-        //   ));
-
-
-
-        //   $shipment = \EasyPost\Shipment::create(array(
-        //     "to_address" => $toAddress,
-        //     "from_address" => $fromAddress,
-        //     "parcel" => $parcel
-        //   ));
     }
 }
