@@ -9,8 +9,28 @@ use App\ShippingServiceLevel;
 
 class CustomizedEasyPost extends Controller
 {
-    public function getRates()
+    public function checkCartItems(Request $request) {
+
+        $predefinedPackageName = MyShippingPackageManager::getPredefinedPackageName($request->reducedCartItemsData);
+
+        // $modifiedItems = [];
+        // foreach ($request->reducedCartItemsData as $i) {
+        //     $modifiedItems[] = json_decode($i);
+        // }
+
+        return [
+            'msg' => 'In CLASS: CustomizedEasyPost, METHOD: checkCartItems()',
+            'cartItems' => $request->reducedCartItemsData,
+            'predefinedPackageName' => $predefinedPackageName,
+            // 'modifiedItems' => $modifiedItems,
+        ];
+
+    }
+
+    public function getRates(Request $request)
     {
+        $reducedCartItemsData = $request->reducedCartItemsData;
+
         $isResultOk = false;
         $jsFromAddres = [];
         $jsShipmentObj = [];
@@ -139,16 +159,12 @@ class CustomizedEasyPost extends Controller
 
 
 
-            // TODO: Create parcel.
-            $testCartItems = [
-                ['id' => 1, 'quantity' => 3, 'product' => ['name' => 'Durant Jersey', 'itemTypeId' => 2]],
-                ['id' => 2, 'quantity' => 2, 'product' => ['name' => 'Lakers Hoodie', 'itemTypeId' => 4]]
-            ];
-            $predefinedPackageName = MyShippingPackageManager::getPredefinedPackage($testCartItems);
+            // Create parcel.
+            $predefinedPackageName = MyShippingPackageManager::getPredefinedPackageName($reducedCartItemsData);
+            if (!isset($predefinedPackageName)) { throw new Exception("NULL_PREDEFINED_PACKAGE_EXCEPTION"); }
+
             $parcel = \EasyPost\Parcel::create([
-                "length" => 9,
-                "width" => 6,
-                "height" => 2,
+                "predefined_package" => $predefinedPackageName,
                 "weight" => 1 // TODO
             ]);
 
@@ -285,3 +301,5 @@ class CustomizedEasyPost extends Controller
         ];
     }
 }
+
+

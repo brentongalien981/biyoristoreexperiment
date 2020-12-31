@@ -35,21 +35,18 @@ class MyShippingPackageManager
 
     public function test()
     {
-        // TODO: Create parcel.
         $testCartItems = [
             ['id' => 1, 'quantity' => 2, 'product' => ['name' => 'Durant Jersey', 'itemTypeId' => 2]],
             // ['id' => 2, 'quantity' => 1, 'product' => ['name' => 'Lakers Hoodie', 'itemTypeId' => 4]],
             // ['id' => 3, 'quantity' => 3, 'product' => ['name' => 'Kyrie Jersey', 'itemTypeId' => 2]],
             // ['id' => 4, 'quantity' => 8, 'product' => ['name' => 'Kyrie T-Shirt', 'itemTypeId' => 1]],
         ];
-        $convertedTotlaQty = self::getPredefinedPackage($testCartItems);
+        $convertedTotlaQty = self::getPredefinedPackageName($testCartItems);
         return $convertedTotlaQty;
     }
 
-    public static function getPredefinedPackage($items)
+    public static function getPredefinedPackageName($items)
     {
-
-        $predefinePackageName = null;
 
         $itemTypes = PackageItemType::orderByDesc('encompassing_level')->get();
 
@@ -60,7 +57,8 @@ class MyShippingPackageManager
         foreach ($itemTypes as $t) {
 
             foreach ($items as $i) {
-                if ($t->id === $i['product']['itemTypeId']) {
+                $i = json_decode($i);
+                if ($t->id === $i->packageItemTypeId) {
                     $refItemType = $t;
                     $hasFoundRef = true;
                     break;
@@ -83,12 +81,15 @@ class MyShippingPackageManager
          *      4) 3 shirt = 0.72 hoodie
          */
         $allItemsTotalConvertedQty = 0.00;
+
         foreach ($items as $i) {
+
+            $i = json_decode($i);
             $currentItemTotalConvertedQty = 0.00;
             $refConversionRatio = $refItemType->conversion_ratio;
-            $currentItemType = PackageItemType::find($i['product']['itemTypeId']);
+            $currentItemType = PackageItemType::find($i->packageItemTypeId);
             $currentItemConversionRatio = $currentItemType->conversion_ratio;
-            $currentItemQty = $i['quantity'];
+            $currentItemQty = $i->quantity;
 
             $currentItemTotalConvertedQty = $refConversionRatio / $currentItemConversionRatio * $currentItemQty;
             $allItemsTotalConvertedQty += $currentItemTotalConvertedQty;
@@ -96,14 +97,22 @@ class MyShippingPackageManager
 
 
 
-        // Figure-out the cheapest predefine-package that can hold that amount of total-converted-qty.
+        // Figure-out the cheapest predefined-package that can hold that amount of total-converted-qty.
         $selectedPredefinedPackageName = null;
         $UpsPredefinePackages = self::$predefinePackagesByCarrier['UPS'];
 
         foreach ($UpsPredefinePackages as $ppName => $ppDetails) {
-            $ppMaxCapForItemType = $ppDetails['itemTypeLimits'][$refItemType->name];
-            if (isset($ppMaxCapForItemType)) {
-                if ($ppMaxCapForItemType >= $allItemsTotalConvertedQty) {
+
+            $ppItemTypeLimits = $ppDetails['itemTypeLimits'];
+
+            if (array_key_exists($refItemType->name, $ppItemTypeLimits)) {
+
+                $ppMaxCapacityForItemType = $ppItemTypeLimits[$refItemType->name];
+                if (
+                    isset($ppMaxCapacityForItemType) &&
+                    $ppMaxCapacityForItemType >= $allItemsTotalConvertedQty
+                ) {
+
                     $selectedPredefinedPackageName = $ppName;
                     break;
                 }
@@ -115,10 +124,10 @@ class MyShippingPackageManager
 
         //
         // return $allItemsTotalConvertedQty;
-        // return $selectedPredefinedPackageName
-        return [
-            'convertedQty' => $allItemsTotalConvertedQty,
-            'selectedPredefinedPackageName' => $selectedPredefinedPackageName
-        ];
+        // return [
+        //     'convertedQty' => $allItemsTotalConvertedQty,
+        //     'selectedPredefinedPackageName' => $selectedPredefinedPackageName
+        // ];
+        return $selectedPredefinedPackageName;
     }
 }

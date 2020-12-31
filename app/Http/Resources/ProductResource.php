@@ -24,6 +24,7 @@ class ProductResource extends JsonResource
             'brand' => $this->brand,
             'categories' => $this->categories,
             'quantity' => $this->quantity,
+            'packageItemTypeId' => $this->package_item_type_id,
             'sellers' => SellerResource::collection($this->sellers)
         ];
     }
