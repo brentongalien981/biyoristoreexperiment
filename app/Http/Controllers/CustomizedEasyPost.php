@@ -16,6 +16,44 @@ class CustomizedEasyPost extends Controller
 
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
 
+    private const COMPANY_INFO = [
+        'owner_name' => 'Bren Baga',
+        'street1' => '50 Thorncliffe Park Drive',
+        'street2' => 'Unit 105',
+        'city' => 'East York',
+        'state' => 'ON',
+        'country' => 'CA',
+        'zip' => 'M4H1K4',
+        'phone' => '4164604026'
+    ];
+
+
+
+    // TODO:DELETE
+    public function test(Request $request)
+    {
+        \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
+
+        $jsonified = json_decode($request->shippingInfo);
+
+        $params = ['shippingInfo' => $request->shippingInfo];
+        $destinationAddress = null;
+        try {
+            $destinationAddress = $this->setDestinationAddress($params);
+        } catch (Exception $e) {
+        }
+
+
+        return [
+            'msg' => 'In CLASS: CustomizedEasyPost, METHOD: test()',
+            'cartItems' => $request->reducedCartItemsData,
+            'shippingInfo' => $request->shippingInfo,
+            'jsonified' => $jsonified,
+            'createdDestinationAddress' => $destinationAddress,
+            'params' => $params
+        ];
+    }
+
 
 
     public function checkCartItems(Request $request)
@@ -46,16 +84,18 @@ class CustomizedEasyPost extends Controller
 
     public function setOriginAddress(&$params)
     {
-        // TODO: Use actual data.
         $originAddressParams = [
             'verify' => [true],
-            'street1' => '50 Thorncliffe Park Drive',
-            // 'street2' => '5th Floor',
-            'city' => 'East York',
-            'state' => 'ON',
-            'country' => 'CA',
-            'zip' => 'M4H1K4',
-            // 'phone' => '415-528-7555'
+            'name' => self::COMPANY_INFO['owner_name'],
+            // 'company' => self::COMPANY_INFO['company'], // TODO:LATER
+            // 'email' => self::COMPANY_INFO['email'], // TODO:LATER
+            'street1' => self::COMPANY_INFO['street1'],
+            'street2' => self::COMPANY_INFO['street2'],
+            'city' => self::COMPANY_INFO['city'],
+            'state' => self::COMPANY_INFO['state'],
+            'country' => self::COMPANY_INFO['country'],
+            'zip' => self::COMPANY_INFO['zip'],
+            'phone' => self::COMPANY_INFO['phone'],
         ];
 
         $originAddress = \EasyPost\Address::create($originAddressParams);
@@ -98,15 +138,21 @@ class CustomizedEasyPost extends Controller
 
     public function setDestinationAddress(&$params)
     {
-        // TODO: Enter actual data.
+        $shippingInfo = json_decode($params['shippingInfo']);
+        //TODO
+        //ish
         $destinationsAddressParams = [
             'verify' => [true],
-            'name' => 'George Costanza',
-            'company' => 'Vandelay Industries',
-            'street1' => '1 E 161st St.',
-            'city' => 'Bronx',
-            'state' => 'NY',
-            'zip' => '10451'
+            'name' => $shippingInfo->firstName . " " . $shippingInfo->lastName,
+            'email' => $shippingInfo->email,
+            'phone' => $shippingInfo->phone,
+            // 'company' => 'Vandelay Industries',
+            'street1' => $shippingInfo->street,
+            'city' => $shippingInfo->city,
+            'state' => $shippingInfo->province,
+            'country' => $shippingInfo->country,
+            'zip' => $shippingInfo->postalCode
+
         ];
 
         $destinationAddress = \EasyPost\Address::create($destinationsAddressParams);
@@ -267,7 +313,7 @@ class CustomizedEasyPost extends Controller
     public function getRates(Request $request)
     {
         $entireProcessData = [];
-        $entireProcessParams = ['entireProcessComments' => [], 'customErrors' => [], 'resultCode' => 0, 'reducedCartItemsData' => $request->reducedCartItemsData];
+        $entireProcessParams = ['entireProcessComments' => [], 'customErrors' => [], 'resultCode' => 0, 'reducedCartItemsData' => $request->reducedCartItemsData, 'shippingInfo' => $request->shippingInfo];
 
 
         try {
@@ -284,6 +330,10 @@ class CustomizedEasyPost extends Controller
             $entireProcessParams['resultCode'] = self::ENTIRE_PROCESS_OK['code'];
             $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
 
+            // TODO:DELETE
+            $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
+            $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
+            $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
         } catch (Exception $e) {
             if ($entireProcessParams['resultCode'] === 0) {
                 $entireProcessParams['resultCode'] = self::CUSTOM_INTERNAL_EXCEPTION['code'];
@@ -295,7 +345,6 @@ class CustomizedEasyPost extends Controller
         $entireProcessData['entireProcessComments'] = $entireProcessParams['entireProcessComments'];
         $entireProcessData['customErrors'] = $entireProcessParams['customErrors'];
         $entireProcessData['resultCode'] = $entireProcessParams['resultCode'];
-
 
         return [
             'msg' => 'In CLASS: CustomizedEasyPost, METHOD: getRates()',

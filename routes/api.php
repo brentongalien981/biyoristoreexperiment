@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 /* customized-easypost */
 Route::get('/customized-easypost/checkCartItems', 'CustomizedEasyPost@checkCartItems');
 Route::get('/customized-easypost/getRates', 'CustomizedEasyPost@getRates');
+Route::get('/customized-easypost/test', 'CustomizedEasyPost@test');
 
 
 
