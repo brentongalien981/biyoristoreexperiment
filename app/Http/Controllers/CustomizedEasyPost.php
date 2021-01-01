@@ -14,6 +14,8 @@ class CustomizedEasyPost extends Controller
     private const DESTINATION_ADDRESS_EXCEPTION = ['code' => -2, 'name' => 'DESTINATION_ADDRESS_EXCEPTION'];
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
 
+    private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
+
 
 
     public function checkCartItems(Request $request)
@@ -269,7 +271,6 @@ class CustomizedEasyPost extends Controller
 
 
         try {
-
             \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
 
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
@@ -280,6 +281,8 @@ class CustomizedEasyPost extends Controller
             $entireProcessData['modifiedRateObjs'] = $this->getModifiedRateObjs($entireProcessData['parsedRateObjs']);
             $entireProcessData['efficientShipmentRates'] = $this->getEfficientShipmentRates($entireProcessData['modifiedRateObjs']);
             $entireProcessData['isResultOk'] = true;
+            $entireProcessParams['resultCode'] = self::ENTIRE_PROCESS_OK['code'];
+            $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
 
         } catch (Exception $e) {
             if ($entireProcessParams['resultCode'] === 0) {
