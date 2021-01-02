@@ -3,6 +3,7 @@
 namespace App\MyHelpers\Shipping;
 
 use App\PackageItemType;
+use App\Product;
 
 class MyShippingPackageManager
 {
@@ -33,19 +34,36 @@ class MyShippingPackageManager
         'CanadaPost' => []
     ];
 
-    public function test()
-    {
-        $testCartItems = [
-            ['id' => 1, 'quantity' => 2, 'product' => ['name' => 'Durant Jersey', 'itemTypeId' => 2]],
-            // ['id' => 2, 'quantity' => 1, 'product' => ['name' => 'Lakers Hoodie', 'itemTypeId' => 4]],
-            // ['id' => 3, 'quantity' => 3, 'product' => ['name' => 'Kyrie Jersey', 'itemTypeId' => 2]],
-            // ['id' => 4, 'quantity' => 8, 'product' => ['name' => 'Kyrie T-Shirt', 'itemTypeId' => 1]],
-        ];
-        $convertedTotlaQty = self::getPredefinedPackageName($testCartItems);
-        return $convertedTotlaQty;
+
+
+    public static function getOrderTotalWeight($items) {
+
+        $totalWeight = 0.0;
+        foreach ($items as $i) {
+
+            $i = json_decode($i);
+            $p = Product::find($i->productId);
+            $totalWeight += $p->weight * $i->quantity;
+        }
+
+        return $totalWeight;
     }
 
-    public static function getPredefinedPackageName($items)
+
+
+    public function test()
+    {
+        // (new MyShippingPackageManager())->test();
+        $testCartItems = [
+            // ['id' => 1, 'quantity' => 2, 'product' => ['name' => 'Durant Jersey', 'itemTypeId' => 2]],
+            ['id' => 1, 'quantity' => 2, 'productId' => 1, 'itemTypeId' => 1],
+        ];
+        return self::getPackageInfo(json_encode($testCartItems));
+    }
+
+
+
+    public static function getPackageInfo($items)
     {
 
         $itemTypes = PackageItemType::orderByDesc('encompassing_level')->get();
@@ -72,8 +90,8 @@ class MyShippingPackageManager
 
 
 
-        // Figure out the total quantity of all the order-items in an imaginary unit based on the $refItemType.
         /**
+         * Figure out the total quantity of all the order-items in an imaginary unit based on the $refItemType.
          * ie) Convert 3 shirt to x hoodie quantity. The refItemType is hoodie.
          *      1) currentItemTotalConvertedQty = (ref-conversion-ratio) / (current-item-conversion-ratio) * (current-item-qty)
          *      2) x hoode = (12.00 hoodie) / (50.00 shirt) * (3 shirt)
@@ -98,6 +116,7 @@ class MyShippingPackageManager
 
 
         // Figure-out the cheapest predefined-package that can hold that amount of total-converted-qty.
+        $orderTotalWeight = self::getOrderTotalWeight($items);
         $selectedPredefinedPackageName = null;
         $UpsPredefinePackages = self::$predefinePackagesByCarrier['UPS'];
 
@@ -110,7 +129,8 @@ class MyShippingPackageManager
                 $ppMaxCapacityForItemType = $ppItemTypeLimits[$refItemType->name];
                 if (
                     isset($ppMaxCapacityForItemType) &&
-                    $ppMaxCapacityForItemType >= $allItemsTotalConvertedQty
+                    $ppMaxCapacityForItemType >= $allItemsTotalConvertedQty &&
+                    $orderTotalWeight <= $ppDetails['weightLimit']
                 ) {
 
                     $selectedPredefinedPackageName = $ppName;
@@ -123,11 +143,14 @@ class MyShippingPackageManager
 
 
         //
-        // return $allItemsTotalConvertedQty;
-        // return [
-        //     'convertedQty' => $allItemsTotalConvertedQty,
-        //     'selectedPredefinedPackageName' => $selectedPredefinedPackageName
-        // ];
-        return $selectedPredefinedPackageName;
+        if ($orderTotalWeight === 0.0 || !isset($selectedPredefinedPackageName)) {
+            return null;
+        }
+
+        return [
+            'convertedQty' => $allItemsTotalConvertedQty,
+            'totalWeight' => $orderTotalWeight,
+            'predefinedPackageName' => $selectedPredefinedPackageName
+        ];
     }
 }

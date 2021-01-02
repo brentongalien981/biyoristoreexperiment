@@ -13,6 +13,7 @@ class CustomizedEasyPost extends Controller
     private const ORIGIN_ADDRESS_EXCEPTION = ['code' => -1, 'name' => 'ORIGIN_ADDRESS_EXCEPTION'];
     private const DESTINATION_ADDRESS_EXCEPTION = ['code' => -2, 'name' => 'DESTINATION_ADDRESS_EXCEPTION'];
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
+    private const EMPTY_REQUEST_PARAMS = ['code' => -400, 'name' => 'EMPTY_REQUEST_PARAMS'];
 
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
 
@@ -32,38 +33,18 @@ class CustomizedEasyPost extends Controller
     // TODO:DELETE
     public function test(Request $request)
     {
-        \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
-
-        $jsonified = json_decode($request->shippingInfo);
-
-        $params = ['shippingInfo' => $request->shippingInfo];
-        $destinationAddress = null;
-        try {
-            $destinationAddress = $this->setDestinationAddress($params);
-        } catch (Exception $e) {
+        //
+        if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
+            throw new Exception(self::EMPTY_REQUEST_PARAMS['name']);
         }
+    
 
-
-        return [
-            'msg' => 'In CLASS: CustomizedEasyPost, METHOD: test()',
-            'cartItems' => $request->reducedCartItemsData,
-            'shippingInfo' => $request->shippingInfo,
-            'jsonified' => $jsonified,
-            'createdDestinationAddress' => $destinationAddress,
-            'params' => $params
-        ];
-    }
-
-
-
-    public function checkCartItems(Request $request)
-    {
-        $predefinedPackageName = MyShippingPackageManager::getPredefinedPackageName($request->reducedCartItemsData);
+        $packageInfo = MyShippingPackageManager::getPackageInfo($request->reducedCartItemsData);
 
         return [
             'msg' => 'In CLASS: CustomizedEasyPost, METHOD: checkCartItems()',
             'cartItems' => $request->reducedCartItemsData,
-            'predefinedPackageName' => $predefinedPackageName,
+            'packageInfo' => $packageInfo
         ];
     }
 
@@ -139,8 +120,7 @@ class CustomizedEasyPost extends Controller
     public function setDestinationAddress(&$params)
     {
         $shippingInfo = json_decode($params['shippingInfo']);
-        //TODO
-        //ish
+
         $destinationsAddressParams = [
             'verify' => [true],
             'name' => $shippingInfo->firstName . " " . $shippingInfo->lastName,
@@ -188,15 +168,16 @@ class CustomizedEasyPost extends Controller
 
     public function setParcel(&$params)
     {
-        $predefinedPackageName = MyShippingPackageManager::getPredefinedPackageName($params['reducedCartItemsData']);
-        if (!isset($predefinedPackageName)) {
+        $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
+
+        if (!isset($packageInfo)) {
             // $params['resultCode'] = self::NULL_PREDEFINED_PACKAGE_EXCEPTION['code'];
             throw new Exception(self::NULL_PREDEFINED_PACKAGE_EXCEPTION['name']);
         }
 
         $parcel = \EasyPost\Parcel::create([
-            "predefined_package" => $predefinedPackageName,
-            "weight" => 1 // TODO
+            "predefined_package" => $packageInfo,
+            "weight" => $packageInfo['totalWeight']
         ]);
 
         return $parcel;
@@ -312,6 +293,13 @@ class CustomizedEasyPost extends Controller
 
     public function getRates(Request $request)
     {
+        // TODO:LATER Finish all validation of request-params.
+        if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
+            throw new Exception(self::EMPTY_REQUEST_PARAMS['name']);
+        }
+
+
+
         $entireProcessData = [];
         $entireProcessParams = ['entireProcessComments' => [], 'customErrors' => [], 'resultCode' => 0, 'reducedCartItemsData' => $request->reducedCartItemsData, 'shippingInfo' => $request->shippingInfo];
 
