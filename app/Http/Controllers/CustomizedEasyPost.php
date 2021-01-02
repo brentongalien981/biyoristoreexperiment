@@ -13,6 +13,7 @@ class CustomizedEasyPost extends Controller
     private const ORIGIN_ADDRESS_EXCEPTION = ['code' => -1, 'name' => 'ORIGIN_ADDRESS_EXCEPTION'];
     private const DESTINATION_ADDRESS_EXCEPTION = ['code' => -2, 'name' => 'DESTINATION_ADDRESS_EXCEPTION'];
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
+    private const EMPTY_CART_EXCEPTION = ['code' => -4, 'name' => 'EMPTY_CART_EXCEPTION'];
     private const EMPTY_REQUEST_PARAMS = ['code' => -400, 'name' => 'EMPTY_REQUEST_PARAMS'];
 
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
@@ -37,7 +38,7 @@ class CustomizedEasyPost extends Controller
         if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
             throw new Exception(self::EMPTY_REQUEST_PARAMS['name']);
         }
-    
+
 
         $packageInfo = MyShippingPackageManager::getPackageInfo($request->reducedCartItemsData);
 
@@ -293,19 +294,18 @@ class CustomizedEasyPost extends Controller
 
     public function getRates(Request $request)
     {
-        // TODO:LATER Finish all validation of request-params.
-        if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
-            throw new Exception(self::EMPTY_REQUEST_PARAMS['name']);
-        }
-
-
-
         $entireProcessData = [];
         $entireProcessParams = ['entireProcessComments' => [], 'customErrors' => [], 'resultCode' => 0, 'reducedCartItemsData' => $request->reducedCartItemsData, 'shippingInfo' => $request->shippingInfo];
 
+        \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
 
         try {
-            \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
+
+            // TODO:LATER Finish all validation of request-params.
+            if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
+                $entireProcessParams['resultCode'] = self::EMPTY_CART_EXCEPTION['code'];
+                throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
+            }
 
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
             $entireProcessData['destinationAddress'] = $this->setDestinationAddress($entireProcessParams);
