@@ -318,6 +318,9 @@ class CustomizedEasyPost extends Controller
             $entireProcessParams['resultCode'] = self::ENTIRE_PROCESS_OK['code'];
             $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
 
+            $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
+            
+
             // TODO:DELETE
             $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
             $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
