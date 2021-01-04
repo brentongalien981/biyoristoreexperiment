@@ -31,7 +31,7 @@ class CustomizedEasyPost extends Controller
 
 
 
-    // TODO:DELETE
+    // TODO:DELETE-ON-PRODUCTION
     public function test(Request $request)
     {
         //
@@ -69,8 +69,8 @@ class CustomizedEasyPost extends Controller
         $originAddressParams = [
             'verify' => [true],
             'name' => self::COMPANY_INFO['owner_name'],
-            // 'company' => self::COMPANY_INFO['company'], // TODO:LATER
-            // 'email' => self::COMPANY_INFO['email'], // TODO:LATER
+            // 'company' => self::COMPANY_INFO['company'], // TODO:LATER-ON-PRODUCTION
+            // 'email' => self::COMPANY_INFO['email'], // TODO:LATER-ON-PRODUCTION
             'street1' => self::COMPANY_INFO['street1'],
             'street2' => self::COMPANY_INFO['street2'],
             'city' => self::COMPANY_INFO['city'],
@@ -301,7 +301,7 @@ class CustomizedEasyPost extends Controller
 
         try {
 
-            // TODO:LATER Finish all validation of request-params.
+            // TODO:LATER-ON-PRODUCTION Finish all validation of request-params.
             if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
                 $entireProcessParams['resultCode'] = self::EMPTY_CART_EXCEPTION['code'];
                 throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
@@ -321,7 +321,7 @@ class CustomizedEasyPost extends Controller
             $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
             
 
-            // TODO:DELETE
+            // TODO:DELETE-ON-PRODUCTION
             $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
             $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
             $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
