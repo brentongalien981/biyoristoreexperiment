@@ -13,8 +13,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+Route::get('/mycache/has', 'MyCacheController@has');
+Route::get('/mycache/test-get', 'MyCacheController@testGet');
+Route::get('/mycache/test-put', 'MyCacheController@testPut');
+
+
+
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/hello', function () {
+    return "hello";
 });
 
 // Route::post('/payment-intent', 'PaymentIntentController@create');
