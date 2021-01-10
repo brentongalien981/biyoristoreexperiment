@@ -74,6 +74,11 @@ Route::get('/products', 'ProductController@index');
 Route::get('/products/show', 'ProductController@show');
 
 
+/* listing */
+//ish
+Route::get('/listing/read-filters', 'ListingController@readFilters');
+
+
 
 /* brands */
 Route::get('/brands', 'BrandController@index');
