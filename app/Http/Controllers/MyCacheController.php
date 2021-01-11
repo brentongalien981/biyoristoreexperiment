@@ -7,6 +7,16 @@ use Illuminate\Support\Facades\Cache;
 
 class MyCacheController extends Controller
 {
+    public function get($key) {
+
+        $value = Cache::get($key);
+        
+        return $value;
+
+    }
+
+
+
     public function has(Request $request) {
 
         $has = Cache::has($request->key);

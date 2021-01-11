@@ -76,6 +76,7 @@ Route::get('/products/show', 'ProductController@show');
 
 /* listing */
 //ish
+Route::get('/listing/read-products', 'ListingController@readProducts');
 Route::get('/listing/read-filters', 'ListingController@readFilters');
 
 
