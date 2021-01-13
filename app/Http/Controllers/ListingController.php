@@ -21,7 +21,7 @@ class ListingController extends Controller
         $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
         $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
         $selectedBrandIds = isset($validatedData['selectedBrandIds']) ? $validatedData['selectedBrandIds'] : null;
-        $selectedCategoryId = isset($validatedData['selectedCategoryId']) ? $validatedData['selectedCategoryId'] : null;
+        $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
         $products = [];
         $numOfProductsForQuery = 0;
 
@@ -67,11 +67,11 @@ class ListingController extends Controller
     {
 
         $validatedData = $request->validate([
-            'completeUrlQuery' => 'nullable|string',
+            'completeUrlQuery' => 'nullable|string|max:128',
             'page' => 'nullable|numeric',
             'search' => 'nullable|string',
             'selectedBrandIds' => 'nullable',
-            'selectedCategoryId' => 'nullable|numeric'
+            'category' => 'nullable|numeric'
         ]);
 
 
@@ -82,6 +82,7 @@ class ListingController extends Controller
         if (Cache::has($completeUrlQuery)) {
             $dataFromQuery = Cache::get($completeUrlQuery);
         } else {
+            //ish
             $dataFromQuery = $this->readDataFromQuery($validatedData);
             $dataFromQuery['products'] = ProductResource::collection($dataFromQuery['products']);
             Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
