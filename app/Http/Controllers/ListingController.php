@@ -20,7 +20,7 @@ class ListingController extends Controller
         $numOfProductsPerPage = self::NUM_OF_PRODUCTS_PER_PAGE;
         $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
         $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
-        $selectedBrandIds = isset($validatedData['selectedBrandIds']) ? $validatedData['selectedBrandIds'] : null;
+        $selectedBrandIds = isset($validatedData['brands']) ? $validatedData['brands'] : null;
         $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
         $products = [];
         $numOfProductsForQuery = 0;
@@ -70,7 +70,7 @@ class ListingController extends Controller
             'completeUrlQuery' => 'nullable|string|max:128',
             'page' => 'nullable|numeric',
             'search' => 'nullable|string',
-            'selectedBrandIds' => 'nullable',
+            'brands' => 'nullable|array',
             'category' => 'nullable|numeric'
         ]);
 
