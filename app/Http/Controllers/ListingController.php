@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Team;
 use App\Brand;
 use App\Product;
 use App\Category;
