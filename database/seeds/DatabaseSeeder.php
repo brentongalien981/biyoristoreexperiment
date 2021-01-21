@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ProductSellerSeeder::class,
             SellerAddressSeeder::class,
             PackageItemTypeSeeder::class,
+            TeamSeeder::class,
         ]);
     }
 }
