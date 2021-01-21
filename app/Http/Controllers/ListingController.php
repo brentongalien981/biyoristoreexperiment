@@ -106,24 +106,30 @@ class ListingController extends Controller
 
         $brands = [];
         $categories = [];
+        $teams = [];
         $retrievedDataFrom = "db";
 
-        if (Cache::has('brands') && Cache::has('categories')) {
+        if (Cache::has('brands') && Cache::has('categories') && Cache::has('teams')) {
             $brands = Cache::get('brands');
             $categories = Cache::get('categories');
+            $teams = Cache::get('teams');
             $retrievedDataFrom = 'cache';
         } else {
             $brands = Brand::all();
             $categories = Category::all();
+            $teams = Team::all();
+            //ish
 
             Cache::put('brands', $brands, now()->addWeeks(1));
             Cache::put('categories', $categories, now()->addWeeks(1));
+            Cache::put('teams', $teams, now()->addWeeks(1));
         }
 
         return [
             'objs' => [
-                'brands' => Brand::all(),
-                'categories' => Category::all(),
+                'brands' => $brands,
+                'categories' => $categories,
+                'teams' => $teams,
                 'retrievedDataFrom' => $retrievedDataFrom
             ]
         ];
