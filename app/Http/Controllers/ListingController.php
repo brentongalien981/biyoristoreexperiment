@@ -22,30 +22,33 @@ class ListingController extends Controller
         $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
         $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
         $selectedBrandIds = isset($validatedData['brands']) ? $validatedData['brands'] : null;
+        $selectedTeamIds = isset($validatedData['teams']) ? $validatedData['teams'] : null;
         $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
+        $productsEloquentBuilder = Product::where('id', '>', 0);
         $products = [];
-        $numOfProductsForQuery = 0;
+        $numOfProductsForQuery = 0; // Number of all products for that query without restriction of the page number.
 
 
+
+        //
         if (isset($selectedCategoryId)) {
             $category = Category::find($selectedCategoryId);
-
-            if (isset($selectedBrandIds)) {
-                $products = $category->products()->whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-                $numOfProductsForQuery = count($category->products()->whereIn('brand_id', $selectedBrandIds)->get());
-            } else {
-                $products = $category->products()->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-                $numOfProductsForQuery = count($category->products()->get());
-            }
-        } else {
-            if (isset($selectedBrandIds)) {
-                $products = Product::whereIn('brand_id', $selectedBrandIds)->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-                $numOfProductsForQuery = count(Product::whereIn('brand_id', $selectedBrandIds)->get());
-            } else {
-                $products = Product::skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
-                $numOfProductsForQuery = count(Product::all());
-            }
+            $productsEloquentBuilder = $category->products();
         }
+
+
+        if (isset($selectedBrandIds)) {
+            $productsEloquentBuilder = $productsEloquentBuilder->whereIn('brand_id', $selectedBrandIds);
+        }
+
+
+        if (isset($selectedTeamIds)) {
+            $productsEloquentBuilder = $productsEloquentBuilder->whereIn('team_id', $selectedTeamIds);
+        }
+
+
+        $numOfProductsForQuery = count($productsEloquentBuilder->get());
+        $products = $productsEloquentBuilder->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
 
 
         $numOfPages = $numOfProductsForQuery / ($numOfProductsPerPage * 1.0);
@@ -72,6 +75,7 @@ class ListingController extends Controller
             'page' => 'nullable|numeric',
             'search' => 'nullable|string',
             'brands' => 'nullable|array',
+            'teams' => 'nullable|array',
             'category' => 'nullable|numeric'
         ]);
 

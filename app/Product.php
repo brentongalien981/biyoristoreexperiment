@@ -13,6 +13,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public function team()
+    {
+        return $this->belongsTo('App\Team');
+    }
+
+
+
     public function sellers()
     {
         return $this->belongsToMany('App\Seller')->withPivot('sell_price', 'discount_sell_price', 'restock_days');
