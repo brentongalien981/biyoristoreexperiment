@@ -52,7 +52,7 @@ class ProductController extends Controller
             'objs' => [],
             'product' => new ProductResource($product),
             'relatedProducts' => $relatedProducts,
-            'validatedData' => $validatedData
+            // 'validatedData' => $validatedData
         ];
     }
 
@@ -130,7 +130,7 @@ class ProductController extends Controller
             'products' => $products,
             'objs' => ProductResource::collection($products),
             'paginationData' => $paginationData,
-            'validatedData' => $validatedData,
+            // 'validatedData' => $validatedData,
         ];
     }
 }

@@ -87,7 +87,6 @@ class ListingController extends Controller
         if (Cache::has($completeUrlQuery)) {
             $dataFromQuery = Cache::get($completeUrlQuery);
         } else {
-            //ish
             $dataFromQuery = $this->readDataFromQuery($validatedData);
             $dataFromQuery['products'] = ProductResource::collection($dataFromQuery['products']);
             Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
@@ -123,7 +122,6 @@ class ListingController extends Controller
             $brands = Brand::all();
             $categories = Category::all();
             $teams = Team::all();
-            //ish
 
             Cache::put('brands', $brands, now()->addWeeks(1));
             Cache::put('categories', $categories, now()->addWeeks(1));
