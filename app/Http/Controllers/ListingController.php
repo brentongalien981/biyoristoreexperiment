@@ -14,6 +14,11 @@ class ListingController extends Controller
 {
     private const NUM_OF_PRODUCTS_PER_PAGE = 9;
 
+    private const SORT_BY_NAME_ASC = 1;
+    private const SORT_BY_NAME_DESC = 2;
+    private const SORT_BY_PRICE_ASC = 3;
+    private const SORT_BY_PRICE_DESC = 4;
+
 
 
     public function readDataFromQuery($validatedData)
@@ -24,6 +29,7 @@ class ListingController extends Controller
         $selectedBrandIds = isset($validatedData['brands']) ? $validatedData['brands'] : null;
         $selectedTeamIds = isset($validatedData['teams']) ? $validatedData['teams'] : null;
         $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
+        $sortByCodeVal = isset($validatedData['sort']) ? $validatedData['sort'] : null;
         $productsEloquentBuilder = Product::where('id', '>', 0);
         $products = [];
         $numOfProductsForQuery = 0; // Number of all products for that query without restriction of the page number.
@@ -44,6 +50,25 @@ class ListingController extends Controller
 
         if (isset($selectedTeamIds)) {
             $productsEloquentBuilder = $productsEloquentBuilder->whereIn('team_id', $selectedTeamIds);
+        }
+
+
+        switch ($sortByCodeVal) {
+            case self::SORT_BY_NAME_ASC:
+                $productsEloquentBuilder = $productsEloquentBuilder->orderBy('name');
+                break;
+            case self::SORT_BY_NAME_DESC:
+                $productsEloquentBuilder = $productsEloquentBuilder->orderByDesc('name');
+                break;
+            case self::SORT_BY_PRICE_ASC:
+                // TODO
+                break;
+            case self::SORT_BY_PRICE_DESC:
+                // TODO
+                break;
+            default:
+                $productsEloquentBuilder = $productsEloquentBuilder->orderBy('name');
+                break;
         }
 
 
@@ -76,7 +101,8 @@ class ListingController extends Controller
             'search' => 'nullable|string',
             'brands' => 'nullable|array',
             'teams' => 'nullable|array',
-            'category' => 'nullable|numeric'
+            'category' => 'nullable|numeric',
+            'sort' => 'nullable|numeric'
         ]);
 
 
