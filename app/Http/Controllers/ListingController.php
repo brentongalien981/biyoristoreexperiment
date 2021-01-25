@@ -22,19 +22,32 @@ class ListingController extends Controller
 
 
 
-    public function test() {
+    public function test()
+    {
+        $q = DB::table('product_seller')
+            ->select('product_id')
+            ->orderByRaw('LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC');
 
-        $q = DB::table('product_seller')->select('product_id')->orderBy('sell_price')->orderBy('product_id');
-        $q2 = DB::table($q);
-        $q2GetResult = $q2->get();
-        $q2UniqueResult = $q2->get()->unique();
+        $qResult = $q->get();
+
+            
+
+        $qUnique = $qResult->unique();
+        $maxQueriedProducts = $qUnique->count();
+        $pageNum = 1;
+
+
+        $productIds = [];
+        foreach ($qUnique as $entry) {
+            $productIds[] = $entry->product_id;
+        }
 
         return [
-            'q' => $q->get(),
-            'q2GetResult' => $q2GetResult,
-            'q2GetResult-Type' => gettype($q2GetResult),
-            'q2UniqueResult' => $q2UniqueResult,
-            'q2UniqueResult-Type' => gettype($q2UniqueResult),
+            'qResult' => $qResult,
+            'qUnique' => $qUnique,
+            'maxQueriedProducts' => $maxQueriedProducts,
+            'qUnique-Type' => gettype($qUnique),
+            'productIds' => $productIds
         ];
     }
 
