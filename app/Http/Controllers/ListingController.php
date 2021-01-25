@@ -7,6 +7,7 @@ use App\Brand;
 use App\Product;
 use App\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\ProductResource;
 
@@ -18,6 +19,24 @@ class ListingController extends Controller
     private const SORT_BY_NAME_DESC = 2;
     private const SORT_BY_PRICE_ASC = 3;
     private const SORT_BY_PRICE_DESC = 4;
+
+
+
+    public function test() {
+
+        $q = DB::table('product_seller')->select('product_id')->orderBy('sell_price')->orderBy('product_id');
+        $q2 = DB::table($q);
+        $q2GetResult = $q2->get();
+        $q2UniqueResult = $q2->get()->unique();
+
+        return [
+            'q' => $q->get(),
+            'q2GetResult' => $q2GetResult,
+            'q2GetResult-Type' => gettype($q2GetResult),
+            'q2UniqueResult' => $q2UniqueResult,
+            'q2UniqueResult-Type' => gettype($q2UniqueResult),
+        ];
+    }
 
 
 

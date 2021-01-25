@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+
+/** listing */
+Route::get('/listing/test', 'ListingController@test');
+
+
+
 Route::get('/mycache/has', 'MyCacheController@has');
 Route::get('/mycache/test-get', 'MyCacheController@testGet');
 Route::get('/mycache/test-put', 'MyCacheController@testPut');
