@@ -13,6 +13,9 @@ use App\Http\Resources\ProductResource;
 
 class ListingController extends Controller
 {
+    // TODO:DELETE
+    private const TEMP_NUM_OF_PRODUCTS_PER_PAGE = 2;
+
     private const NUM_OF_PRODUCTS_PER_PAGE = 9;
 
     private const SORT_BY_NAME_ASC = 1;
@@ -22,8 +25,11 @@ class ListingController extends Controller
 
 
 
-    public function test()
+    public function getProductIdsSortedByPrice($validatedData)
     {
+        // TODO: Make use of cache.
+
+
         $q = DB::table('product_seller')
             ->select('product_id')
             ->orderByRaw('LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC');
@@ -34,20 +40,75 @@ class ListingController extends Controller
 
         $qUnique = $qResult->unique();
         $maxQueriedProducts = $qUnique->count();
-        $pageNum = 1;
+        $pageNum = 2;
 
 
+        // productIds of all products sorted by price.
         $productIds = [];
         foreach ($qUnique as $entry) {
             $productIds[] = $entry->product_id;
         }
+
+        // TODO: Cache the product-ids based on the sort-order.
+
+        
+        // filter the query further by skipping a number of items based on the page-number selected
+        $numOfSkippedItems = ($pageNum - 1) * self::TEMP_NUM_OF_PRODUCTS_PER_PAGE;
+        $startIndex = $numOfSkippedItems;
+        $toBeDisplayedProductIds = [];
+        for ($i=0; $i < self::TEMP_NUM_OF_PRODUCTS_PER_PAGE; $i++) { 
+            $currentIndex = $startIndex + $i;
+            if ($currentIndex >= count($productIds)) { break; }
+            $toBeDisplayedProductIds[] = $productIds[$currentIndex];
+        }
+
+
+        // query for all the products based on the extracted product-ids
+        $products = [];
+        foreach ($toBeDisplayedProductIds as $productId) {
+            $products[] = new ProductResource(Product::find($productId));
+        }
+
 
         return [
             'qResult' => $qResult,
             'qUnique' => $qUnique,
             'maxQueriedProducts' => $maxQueriedProducts,
             'qUnique-Type' => gettype($qUnique),
-            'productIds' => $productIds
+            'productIds' => $productIds,
+            'toBeDisplayedProductIds' => $toBeDisplayedProductIds,
+            'products' => $products
+        ];
+    }
+
+
+
+    public function readDataFromQueryWithPriceSort($validatedData) {
+        $numOfProductsPerPage = self::NUM_OF_PRODUCTS_PER_PAGE;
+        $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
+        $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
+        $selectedBrandIds = isset($validatedData['brands']) ? $validatedData['brands'] : null;
+        $selectedTeamIds = isset($validatedData['teams']) ? $validatedData['teams'] : null;
+        $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
+        $sortByCodeVal = isset($validatedData['sort']) ? $validatedData['sort'] : null;
+        $productsEloquentBuilder = Product::where('id', '>', 0);
+        $products = [];
+        $numOfProductsForQuery = 0; // Number of all products for that query without restriction of the page number.
+
+
+        //ish
+        $productIdsSortedByPrice = $this->getProductIdsSortedByPrice($validatedData);
+
+
+        return [
+            'products' => $products,
+            'paginationData' => [
+                'numOfProductsForQuery' => $numOfProductsForQuery,
+                'numOfPages' => $numOfPages,
+                'roundedNumOfPages' => $roundedNumOfPages,
+                'currentPageNum' => $currentPageNum,
+                'numOfSkippedItems' => $numOfSkippedItems
+            ]
         ];
     }
 
@@ -86,17 +147,8 @@ class ListingController extends Controller
 
 
         switch ($sortByCodeVal) {
-            case self::SORT_BY_NAME_ASC:
-                $productsEloquentBuilder = $productsEloquentBuilder->orderBy('name');
-                break;
             case self::SORT_BY_NAME_DESC:
                 $productsEloquentBuilder = $productsEloquentBuilder->orderByDesc('name');
-                break;
-            case self::SORT_BY_PRICE_ASC:
-                // TODO
-                break;
-            case self::SORT_BY_PRICE_DESC:
-                // TODO
                 break;
             default:
                 $productsEloquentBuilder = $productsEloquentBuilder->orderBy('name');
@@ -106,6 +158,7 @@ class ListingController extends Controller
 
         $numOfProductsForQuery = count($productsEloquentBuilder->get());
         $products = $productsEloquentBuilder->skip($numOfSkippedItems)->take($numOfProductsPerPage)->get();
+        $products = ProductResource::collection($products);
 
 
         $numOfPages = $numOfProductsForQuery / ($numOfProductsPerPage * 1.0);
@@ -141,14 +194,22 @@ class ListingController extends Controller
         $completeUrlQuery = $validatedData['completeUrlQuery'];
         $dataFromQuery = [];
         $retrievedDataFrom = 'cache';
+        $sortVal = $validatedData['sort'] ?? self::SORT_BY_NAME_ASC;
+
 
         if (Cache::has($completeUrlQuery)) {
             $dataFromQuery = Cache::get($completeUrlQuery);
         } else {
-            $dataFromQuery = $this->readDataFromQuery($validatedData);
-            $dataFromQuery['products'] = ProductResource::collection($dataFromQuery['products']);
-            Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
+
             $retrievedDataFrom = 'db';
+
+            if ($sortVal === self::SORT_BY_NAME_ASC || $sortVal === self::SORT_BY_NAME_DESC) {
+                $dataFromQuery = $this->readDataFromQuery($validatedData);
+            }
+            $dataFromQuery = $this->readDataFromQueryWithPriceSort($validatedData);
+            //ish
+
+            Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
         }
 
 
