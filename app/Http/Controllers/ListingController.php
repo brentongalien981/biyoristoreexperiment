@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Team;
 use App\Brand;
+use Exception;
 use App\Product;
 use App\Category;
 use Illuminate\Http\Request;
@@ -27,63 +28,155 @@ class ListingController extends Controller
 
     public function getProductIdsSortedByPrice($validatedData)
     {
-        // TODO: Make use of cache.
+        // Make use of cache.
+        $productIdsSortedByPrice = [
+            'key' => 'product-ids-sorted-by-price-asc',
+            'val' => null
+        ];
+        $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC';
+        $returnData = [];
 
-
-        $q = DB::table('product_seller')
-            ->select('product_id')
-            ->orderByRaw('LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC');
-
-        $qResult = $q->get();
-
-            
-
-        $qUnique = $qResult->unique();
-        $maxQueriedProducts = $qUnique->count();
-        $pageNum = 2;
-
-
-        // productIds of all products sorted by price.
-        $productIds = [];
-        foreach ($qUnique as $entry) {
-            $productIds[] = $entry->product_id;
+        if ($validatedData['sort'] === self::SORT_BY_NAME_DESC) {
+            $productIdsSortedByPrice['key'] = 'product-ids-sorted-by-price-desc';
+            $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) DESC';
         }
 
-        // TODO: Cache the product-ids based on the sort-order.
 
+
+        if (Cache::has($productIdsSortedByPrice['key'])) {
+            $returnData['productIds'] = Cache::get($productIdsSortedByPrice['key']);
+            $returnData['retrievedFrom'] = 'cache';
+        } else {
+
+            $q = DB::table('product_seller')
+                ->select('product_id')
+                ->orderByRaw($qForFilterOrderByRaw);
+
+            $returnData['qResult'] = $q->get();
+
+
+            $returnData['qUnique'] = $returnData['qResult']->unique();
+            $returnData['maxQueriedProducts'] = $returnData['qUnique']->count();
+
+
+            // productIds of all products sorted by price.
+            $productIds = [];
+            foreach ($returnData['qUnique'] as $entry) {
+                $productIds[] = $entry->product_id;
+            }
+
+            // Cache the product-ids based on the sort-order.
+            Cache::put($productIdsSortedByPrice['key'], $productIds, now()->addHours(6));
+            $returnData['productIds'] = $productIds;
+            $returnData['retrievedFrom'] = 'db';
+
+
+            //
+            // // filter the query further by skipping a number of items based on the page-number selected
+            // $pageNum = 2;
+            // $numOfSkippedItems = ($pageNum - 1) * self::TEMP_NUM_OF_PRODUCTS_PER_PAGE;
+            // $startIndex = $numOfSkippedItems;
+            // $toBeDisplayedProductIds = [];
+            // for ($i = 0; $i < self::TEMP_NUM_OF_PRODUCTS_PER_PAGE; $i++) {
+            //     $currentIndex = $startIndex + $i;
+            //     if ($currentIndex >= count($productIds)) {
+            //         break;
+            //     }
+            //     $toBeDisplayedProductIds[] = $productIds[$currentIndex];
+            // }
+
+
+            // // query for all the products based on the extracted product-ids
+            // $products = [];
+            // foreach ($toBeDisplayedProductIds as $productId) {
+            //     $products[] = new ProductResource(Product::find($productId));
+            // }
+        }
+
+
+
+        return $returnData;
+    }
+
+
+
+    public function test_stringReplace() {
+        $urlQ = "?page=1&brands=1,2,3&sort=2";
+        $parsedUrlQ = $this->getUrlQueryWithoutPageFilterVal($urlQ);
+        return $parsedUrlQ;
+    }
+
+
+
+    public function getUrlQueryWithoutPageFilterVal($urlQ) {
+
+        try {
+            if (strlen($urlQ) === 0) { throw new Exception('URL Query has no value.'); }
+
+            $strToRef = 'page=';
+            $strPosOfStrToRemove = strpos($urlQ, $strToRef, 0);
+    
+            if (!$strPosOfStrToRemove) {
+                return [
+                    'msg' => 'String to remove not found...',
+                    'val' => $urlQ
+                ];
+            }
+    
+            $posOfFirstAmpAfterStrToRemove = strpos($urlQ, '&', $strPosOfStrToRemove);
+            if (!$posOfFirstAmpAfterStrToRemove) {
+                // Meaning the "page=xx" is at the end of the url-query without the "&" at the end.
+                $posOfFirstAmpAfterStrToRemove = strlen($urlQ);
+            }
+    
+            $lengthOfStrToRemove = $posOfFirstAmpAfterStrToRemove - $strPosOfStrToRemove + 1;
+            $strToRemove = substr($urlQ, $strPosOfStrToRemove, $lengthOfStrToRemove);
+            $val = str_replace($strToRemove, "", $urlQ);
+    
+            return [
+                'urlQ' => $urlQ,
+                'strToRef' => $strToRef,
+                'strPosOfStrToRemove' => $strPosOfStrToRemove,
+                'posOfFirstAmpAfterStrToRemove' => $posOfFirstAmpAfterStrToRemove,
+                'lengthOfStrToRemove' => $lengthOfStrToRemove,
+                'strToRemove' => $strToRemove,
+                'val' => $val
+            ];
+        } catch (Exception $e) {
+            return [
+                'msg' => 'Caught EXCEPTION: ' . $e->getMessage(),
+                'val' => 'DEFAULT-URL-QUERY-WITHOUT-PAGE-FILTER'
+            ];
+        }
         
-        // filter the query further by skipping a number of items based on the page-number selected
-        $numOfSkippedItems = ($pageNum - 1) * self::TEMP_NUM_OF_PRODUCTS_PER_PAGE;
-        $startIndex = $numOfSkippedItems;
-        $toBeDisplayedProductIds = [];
-        for ($i=0; $i < self::TEMP_NUM_OF_PRODUCTS_PER_PAGE; $i++) { 
-            $currentIndex = $startIndex + $i;
-            if ($currentIndex >= count($productIds)) { break; }
-            $toBeDisplayedProductIds[] = $productIds[$currentIndex];
-        }
+    }
 
 
-        // query for all the products based on the extracted product-ids
-        $products = [];
-        foreach ($toBeDisplayedProductIds as $productId) {
-            $products[] = new ProductResource(Product::find($productId));
-        }
 
+    public function test_readDataFromQueryWithPriceSort()
+    {
+
+        $validatedData = [
+            'sort' => self::SORT_BY_NAME_ASC,
+            'completeUrlQuery' => "?page=1&brands=1,2,3&sort=2"
+        ];
+
+
+        $productIdsSortedByPrice = $this->getProductIdsSortedByPrice($validatedData);
+        $urlQueryExcludingPageFilter = $this->getUrlQueryWithoutPageFilterVal($validatedData['completeUrlQuery']);
+        //ish
 
         return [
-            'qResult' => $qResult,
-            'qUnique' => $qUnique,
-            'maxQueriedProducts' => $maxQueriedProducts,
-            'qUnique-Type' => gettype($qUnique),
-            'productIds' => $productIds,
-            'toBeDisplayedProductIds' => $toBeDisplayedProductIds,
-            'products' => $products
+            'msg' => 'METHOD: test_readDataFromQueryWithPriceSort',
+            'productIdsSortedByPrice' => $productIdsSortedByPrice,
+            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter
         ];
     }
 
 
 
-    public function readDataFromQueryWithPriceSort($validatedData) {
+    public function readDataFromQueryWithPriceSort($validatedData)
+    {
         $numOfProductsPerPage = self::NUM_OF_PRODUCTS_PER_PAGE;
         $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
         $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
@@ -96,8 +189,13 @@ class ListingController extends Controller
         $numOfProductsForQuery = 0; // Number of all products for that query without restriction of the page number.
 
 
-        //ish
+        //
         $productIdsSortedByPrice = $this->getProductIdsSortedByPrice($validatedData);
+
+
+        // TODO:DELETE
+        $numOfPages = 1;
+        $roundedNumOfPages = 1;
 
 
         return [
@@ -206,8 +304,8 @@ class ListingController extends Controller
             if ($sortVal === self::SORT_BY_NAME_ASC || $sortVal === self::SORT_BY_NAME_DESC) {
                 $dataFromQuery = $this->readDataFromQuery($validatedData);
             }
+            // TODO:
             $dataFromQuery = $this->readDataFromQueryWithPriceSort($validatedData);
-            //ish
 
             Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
         }

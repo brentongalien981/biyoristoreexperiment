@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 
 /** listing */
+Route::get('/listing/test_readDataFromQueryWithPriceSort', 'ListingController@test_readDataFromQueryWithPriceSort');
+Route::get('/listing/test_stringReplace', 'ListingController@test_stringReplace');
 Route::get('/listing/test', 'ListingController@test');
 
 
