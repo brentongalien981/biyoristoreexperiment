@@ -34,10 +34,11 @@ class ListingController extends Controller
             'val' => null
         ];
         $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC';
-        $returnData = [];
+        $returnData['cacheKey'] = 'product-ids-sorted-by-price-asc';
 
-        if ($validatedData['sort'] === self::SORT_BY_NAME_DESC) {
+        if ($validatedData['sort'] === self::SORT_BY_PRICE_DESC) {
             $productIdsSortedByPrice['key'] = 'product-ids-sorted-by-price-desc';
+            $returnData['cacheKey'] = 'product-ids-sorted-by-price-desc';
             $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) DESC';
         }
 
@@ -69,28 +70,6 @@ class ListingController extends Controller
             Cache::put($productIdsSortedByPrice['key'], $productIds, now()->addHours(6));
             $returnData['productIds'] = $productIds;
             $returnData['retrievedFrom'] = 'db';
-
-
-            //
-            // // filter the query further by skipping a number of items based on the page-number selected
-            // $pageNum = 2;
-            // $numOfSkippedItems = ($pageNum - 1) * self::TEMP_NUM_OF_PRODUCTS_PER_PAGE;
-            // $startIndex = $numOfSkippedItems;
-            // $toBeDisplayedProductIds = [];
-            // for ($i = 0; $i < self::TEMP_NUM_OF_PRODUCTS_PER_PAGE; $i++) {
-            //     $currentIndex = $startIndex + $i;
-            //     if ($currentIndex >= count($productIds)) {
-            //         break;
-            //     }
-            //     $toBeDisplayedProductIds[] = $productIds[$currentIndex];
-            // }
-
-
-            // // query for all the products based on the extracted product-ids
-            // $products = [];
-            // foreach ($toBeDisplayedProductIds as $productId) {
-            //     $products[] = new ProductResource(Product::find($productId));
-            // }
         }
 
 
@@ -100,7 +79,8 @@ class ListingController extends Controller
 
 
 
-    public function test_stringReplace() {
+    public function test_stringReplace()
+    {
         $urlQ = "?page=1&brands=1,2,3&sort=2";
         $parsedUrlQ = $this->getUrlQueryWithoutPageFilterVal($urlQ);
         return $parsedUrlQ;
@@ -108,31 +88,34 @@ class ListingController extends Controller
 
 
 
-    public function getUrlQueryWithoutPageFilterVal($urlQ) {
+    public function getUrlQueryWithoutPageFilterVal($urlQ)
+    {
 
         try {
-            if (strlen($urlQ) === 0) { throw new Exception('URL Query has no value.'); }
+            if (strlen($urlQ) === 0) {
+                throw new Exception('URL Query has no value.');
+            }
 
             $strToRef = 'page=';
             $strPosOfStrToRemove = strpos($urlQ, $strToRef, 0);
-    
+
             if (!$strPosOfStrToRemove) {
                 return [
                     'msg' => 'String to remove not found...',
                     'val' => $urlQ
                 ];
             }
-    
+
             $posOfFirstAmpAfterStrToRemove = strpos($urlQ, '&', $strPosOfStrToRemove);
             if (!$posOfFirstAmpAfterStrToRemove) {
                 // Meaning the "page=xx" is at the end of the url-query without the "&" at the end.
                 $posOfFirstAmpAfterStrToRemove = strlen($urlQ);
             }
-    
+
             $lengthOfStrToRemove = $posOfFirstAmpAfterStrToRemove - $strPosOfStrToRemove + 1;
             $strToRemove = substr($urlQ, $strPosOfStrToRemove, $lengthOfStrToRemove);
             $val = str_replace($strToRemove, "", $urlQ);
-    
+
             return [
                 'urlQ' => $urlQ,
                 'strToRef' => $strToRef,
@@ -148,7 +131,143 @@ class ListingController extends Controller
                 'val' => 'DEFAULT-URL-QUERY-WITHOUT-PAGE-FILTER'
             ];
         }
-        
+    }
+
+
+
+    public function getProductIdsForUrlQuery($data)
+    {
+        // Extract product-ids based on the url-query-exluding-page-filter.
+        $dataCacheKey = 'product-ids-for-url-query=' . $data['urlQueryExcludingPageFilter'];
+        $returnData['dataCacheKey'] = $dataCacheKey;
+
+
+        if (Cache::has($dataCacheKey)) {
+            $returnData['productIds'] = Cache::get($dataCacheKey);
+            $returnData['retrievedFrom'] = 'cache';
+        } else {
+
+            $v = $data['validatedData'];
+            $tempProductIdsForUrlQuery = [];
+
+            foreach ($data['productIdsSortedByPrice'] as $sortedProductId) {
+                $sortedProduct = Product::find($sortedProductId);
+
+                // Filter by category.
+                $categoryFilterPassed = false;
+                $selectedCategoryId = $v['category'] ?? null;
+                if ($selectedCategoryId) {
+                    foreach ($sortedProduct->categories as $c) {
+                        if ($c->id == $selectedCategoryId) {
+                            $categoryFilterPassed = true;
+                            break;
+                        }
+                    }
+                } else {
+                    $categoryFilterPassed = true;
+                }
+
+                if (!$categoryFilterPassed) {
+                    continue;
+                }
+
+
+                // Filter by brand.
+                $brandFilterPassed = false;
+                $selectedBrands = $v['brands'] ?? null;
+                if ($selectedBrands) {
+                    foreach ($selectedBrands as $brandId) {
+                        if ($brandId == $sortedProduct->brand_id) {
+                            $brandFilterPassed = true;
+                            break;
+                        }
+                    }
+                } else {
+                    $brandFilterPassed = true;
+                }
+
+                if (!$brandFilterPassed) {
+                    continue;
+                }
+
+
+                // Filter by team.
+                $teamFilterPassed = false;
+                $selectedTeams = $v['teams'] ?? null;
+                if ($selectedTeams) {
+                    foreach ($selectedTeams as $teamId) {
+                        if ($teamId == $sortedProduct->team_id) {
+                            $teamFilterPassed = true;
+                            break;
+                        }
+                    }
+                } else {
+                    $teamFilterPassed = true;
+                }
+
+                if (!$teamFilterPassed) {
+                    continue;
+                }
+
+
+                // If all checks passed, add the product-id to array “product-ids-for-url-query”
+                $tempProductIdsForUrlQuery[] = $sortedProduct->id;
+            }
+
+
+            $returnData['productIds'] = $tempProductIdsForUrlQuery;
+            $returnData['retrievedFrom'] = 'db';
+            Cache::put($dataCacheKey, $tempProductIdsForUrlQuery, now()->addHours(6));
+        }
+
+        return $returnData;
+    }
+
+
+
+    public function getListingPageDataForQueryWithPriceSort($params)
+    {
+
+        $v = $params['validatedData'];
+        $productIdsForUrlQuery = $params['productIdsForUrlQuery'];
+        $numOfProductsForQuery = count($productIdsForUrlQuery);
+        $numOfPages = $numOfProductsForQuery / (self::NUM_OF_PRODUCTS_PER_PAGE * 1.0);
+        $roundedNumOfPages = ceil($numOfPages);
+        $currentPageNum = $v['page'];
+        $numOfSkippedItems = ($currentPageNum - 1) * self::NUM_OF_PRODUCTS_PER_PAGE;
+
+
+        $startIndex = $numOfSkippedItems;
+        $toBeDisplayedProductIds = [];
+        for ($i = 0; $i < self::NUM_OF_PRODUCTS_PER_PAGE; $i++) {
+            $currentIndex = $startIndex + $i;
+            if ($currentIndex >= $numOfProductsForQuery) {
+                break;
+            }
+            $toBeDisplayedProductIds[] = $productIdsForUrlQuery[$currentIndex];
+        }
+
+
+        $products = [];
+        foreach ($toBeDisplayedProductIds as $productId) {
+            $products[] = new ProductResource(Product::find($productId));
+        }
+
+
+        $dataForQuery = [
+            'products' => $products,
+            'paginationData' => [
+                'numOfProductsForQuery' => $numOfProductsForQuery,
+                'numOfPages' => $numOfPages,
+                'roundedNumOfPages' => $roundedNumOfPages,
+                'currentPageNum' => $currentPageNum,
+                'numOfSkippedItems' => $numOfSkippedItems
+            ],
+            'retrievedDataFrom' => 'db'
+        ];
+
+        Cache::put($v['completeUrlQuery'], $dataForQuery, now()->addHours(6));
+        return $dataForQuery;
     }
 
 
@@ -157,19 +276,49 @@ class ListingController extends Controller
     {
 
         $validatedData = [
-            'sort' => self::SORT_BY_NAME_ASC,
-            'completeUrlQuery' => "?page=1&brands=1,2,3&sort=2"
+            'page' => 1,
+            'sort' => self::SORT_BY_PRICE_DESC,
+            // 'completeUrlQuery' => "?page=2&category=5&sort=3",
+            'completeUrlQuery' => "?teams=6,11&sort=4",
+            // 'completeUrlQuery' => "?page=2&category=1&brands=1,2,3&sort=1",
+            // 'category' => 5,
+            // 'brands' => [2],
+            'teams' => [6,11]
         ];
+
+
+        if (Cache::has($validatedData['completeUrlQuery'])) {
+            return [
+                'products' => Cache::get($validatedData['completeUrlQuery']),
+                'retrievedDataFrom' => 'cache'
+            ];
+        }
 
 
         $productIdsSortedByPrice = $this->getProductIdsSortedByPrice($validatedData);
         $urlQueryExcludingPageFilter = $this->getUrlQueryWithoutPageFilterVal($validatedData['completeUrlQuery']);
+
+        $productIdsForUrlQuery = $this->getProductIdsForUrlQuery([
+            'productIdsSortedByPrice' => $productIdsSortedByPrice['productIds'],
+            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter['val'],
+            'validatedData' => $validatedData
+        ]);
+
+        $listingPageData = $this->getListingPageDataForQueryWithPriceSort([
+            'productIdsForUrlQuery' => $productIdsForUrlQuery['productIds'],
+            'validatedData' => $validatedData
+        ]);
         //ish
+
+
 
         return [
             'msg' => 'METHOD: test_readDataFromQueryWithPriceSort',
+            'validatedData' => $validatedData,
             'productIdsSortedByPrice' => $productIdsSortedByPrice,
-            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter
+            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter,
+            'productIdsForUrlQuery' => $productIdsForUrlQuery,
+            'listingPageData' => $listingPageData
         ];
     }
 
