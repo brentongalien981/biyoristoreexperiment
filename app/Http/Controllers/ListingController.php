@@ -14,8 +14,6 @@ use App\Http\Resources\ProductResource;
 
 class ListingController extends Controller
 {
-    // TODO:DELETE
-    private const TEMP_NUM_OF_PRODUCTS_PER_PAGE = 2;
 
     private const NUM_OF_PRODUCTS_PER_PAGE = 9;
 
@@ -36,7 +34,7 @@ class ListingController extends Controller
         $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) ASC';
         $returnData['cacheKey'] = 'product-ids-sorted-by-price-asc';
 
-        if ($validatedData['sort'] === self::SORT_BY_PRICE_DESC) {
+        if ($validatedData['sort'] == self::SORT_BY_PRICE_DESC) {
             $productIdsSortedByPrice['key'] = 'product-ids-sorted-by-price-desc';
             $returnData['cacheKey'] = 'product-ids-sorted-by-price-desc';
             $qForFilterOrderByRaw = 'LEAST(sell_price, IFNULL(discount_sell_price, sell_price)) DESC';
@@ -108,7 +106,7 @@ class ListingController extends Controller
 
             $posOfFirstAmpAfterStrToRemove = strpos($urlQ, '&', $strPosOfStrToRemove);
             if (!$posOfFirstAmpAfterStrToRemove) {
-                // Meaning the "page=xx" is at the end of the url-query without the "&" at the end.
+                // Meaning the "page=[x]" is at the end of the url-query without the "&" at the end.
                 $posOfFirstAmpAfterStrToRemove = strlen($urlQ);
             }
 
@@ -262,11 +260,10 @@ class ListingController extends Controller
                 'roundedNumOfPages' => $roundedNumOfPages,
                 'currentPageNum' => $currentPageNum,
                 'numOfSkippedItems' => $numOfSkippedItems
-            ],
-            'retrievedDataFrom' => 'db'
+            ]
         ];
 
-        Cache::put($v['completeUrlQuery'], $dataForQuery, now()->addHours(6));
+
         return $dataForQuery;
     }
 
@@ -283,7 +280,7 @@ class ListingController extends Controller
             // 'completeUrlQuery' => "?page=2&category=1&brands=1,2,3&sort=1",
             // 'category' => 5,
             // 'brands' => [2],
-            'teams' => [6,11]
+            'teams' => [6, 11]
         ];
 
 
@@ -308,12 +305,11 @@ class ListingController extends Controller
             'productIdsForUrlQuery' => $productIdsForUrlQuery['productIds'],
             'validatedData' => $validatedData
         ]);
-        //ish
 
 
 
         return [
-            'msg' => 'METHOD: test_readDataFromQueryWithPriceSort',
+            'msg' => 'METHOD: test_readDataFromQueryWithPriceSort()',
             'validatedData' => $validatedData,
             'productIdsSortedByPrice' => $productIdsSortedByPrice,
             'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter,
@@ -326,36 +322,29 @@ class ListingController extends Controller
 
     public function readDataFromQueryWithPriceSort($validatedData)
     {
-        $numOfProductsPerPage = self::NUM_OF_PRODUCTS_PER_PAGE;
-        $currentPageNum = isset($validatedData['page']) ? $validatedData['page'] : 1;
-        $numOfSkippedItems = ($currentPageNum - 1) * $numOfProductsPerPage;
-        $selectedBrandIds = isset($validatedData['brands']) ? $validatedData['brands'] : null;
-        $selectedTeamIds = isset($validatedData['teams']) ? $validatedData['teams'] : null;
-        $selectedCategoryId = isset($validatedData['category']) ? $validatedData['category'] : null;
-        $sortByCodeVal = isset($validatedData['sort']) ? $validatedData['sort'] : null;
-        $productsEloquentBuilder = Product::where('id', '>', 0);
-        $products = [];
-        $numOfProductsForQuery = 0; // Number of all products for that query without restriction of the page number.
-
-
-        //
         $productIdsSortedByPrice = $this->getProductIdsSortedByPrice($validatedData);
+        $urlQueryExcludingPageFilter = $this->getUrlQueryWithoutPageFilterVal($validatedData['completeUrlQuery']);
 
+        $productIdsForUrlQuery = $this->getProductIdsForUrlQuery([
+            'productIdsSortedByPrice' => $productIdsSortedByPrice['productIds'],
+            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter['val'],
+            'validatedData' => $validatedData
+        ]);
 
-        // TODO:DELETE
-        $numOfPages = 1;
-        $roundedNumOfPages = 1;
+        $listingPageData = $this->getListingPageDataForQueryWithPriceSort([
+            'productIdsForUrlQuery' => $productIdsForUrlQuery['productIds'],
+            'validatedData' => $validatedData
+        ]);
 
 
         return [
-            'products' => $products,
-            'paginationData' => [
-                'numOfProductsForQuery' => $numOfProductsForQuery,
-                'numOfPages' => $numOfPages,
-                'roundedNumOfPages' => $roundedNumOfPages,
-                'currentPageNum' => $currentPageNum,
-                'numOfSkippedItems' => $numOfSkippedItems
-            ]
+            'msg' => 'METHOD: readDataFromQueryWithPriceSort()',
+            'validatedData' => $validatedData,
+            'productIdsSortedByPrice' => $productIdsSortedByPrice,
+            'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter,
+            'productIdsForUrlQuery' => $productIdsForUrlQuery,
+            'products' => $listingPageData['products'],
+            'paginationData' => $listingPageData['paginationData'],
         ];
     }
 
@@ -426,7 +415,6 @@ class ListingController extends Controller
 
     public function readProducts(Request $request)
     {
-
         $validatedData = $request->validate([
             'completeUrlQuery' => 'nullable|string|max:128',
             'page' => 'nullable|numeric',
@@ -442,6 +430,7 @@ class ListingController extends Controller
         $dataFromQuery = [];
         $retrievedDataFrom = 'cache';
         $sortVal = $validatedData['sort'] ?? self::SORT_BY_NAME_ASC;
+        $extraData = null;
 
 
         if (Cache::has($completeUrlQuery)) {
@@ -450,11 +439,20 @@ class ListingController extends Controller
 
             $retrievedDataFrom = 'db';
 
-            if ($sortVal === self::SORT_BY_NAME_ASC || $sortVal === self::SORT_BY_NAME_DESC) {
-                $dataFromQuery = $this->readDataFromQuery($validatedData);
+            switch ($sortVal) {
+                case self::SORT_BY_PRICE_ASC:
+                case self::SORT_BY_PRICE_DESC:
+                    $data = $this->readDataFromQueryWithPriceSort($validatedData);
+                    $dataFromQuery['products'] = $data['products'];
+                    $dataFromQuery['paginationData'] = $data['paginationData'];
+                    $extraData['productIdsSortedByPrice'] = $data['productIdsSortedByPrice'];
+                    $extraData['urlQueryExcludingPageFilter'] = $data['urlQueryExcludingPageFilter'];
+                    $extraData['productIdsForUrlQuery'] = $data['productIdsForUrlQuery'];
+                    break;
+                default:
+                    $dataFromQuery = $this->readDataFromQuery($validatedData);
+                    break;
             }
-            // TODO:
-            $dataFromQuery = $this->readDataFromQueryWithPriceSort($validatedData);
 
             Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
         }
@@ -464,7 +462,8 @@ class ListingController extends Controller
             'objs' => [
                 'products' => $dataFromQuery['products'],
                 'paginationData' => $dataFromQuery['paginationData'],
-                'retrievedDataFrom' => $retrievedDataFrom
+                'retrievedDataFrom' => $retrievedDataFrom,
+                // 'extraData' => $extraData // FOR-DEBUG
             ]
         ];
     }
