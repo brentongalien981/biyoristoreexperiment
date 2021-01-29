@@ -77,6 +77,16 @@ return [
             'connection' => 'cache',
         ],
 
+        'redisprimary' => [
+            'driver' => 'redis',
+            'connection' => 'primary',
+        ],
+
+        'redisreader' => [
+            'driver' => 'redis',
+            'connection' => 'reader',
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),
