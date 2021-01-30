@@ -463,7 +463,7 @@ class ListingController extends Controller
                 'products' => $dataFromQuery['products'],
                 'paginationData' => $dataFromQuery['paginationData'],
                 'retrievedDataFrom' => $retrievedDataFrom,
-                // 'extraData' => $extraData // FOR-DEBUG
+                // 'extraData' => $extraData // FOR-DEBUG.
             ]
         ];
     }
