@@ -42,8 +42,8 @@ class ListingController extends Controller
 
 
 
-        if (Cache::has($productIdsSortedByPrice['key'])) {
-            $returnData['productIds'] = Cache::get($productIdsSortedByPrice['key']);
+        if (Cache::store('redisreader')->has($productIdsSortedByPrice['key'])) {
+            $returnData['productIds'] = Cache::store('redisreader')->get($productIdsSortedByPrice['key']);
             $returnData['retrievedFrom'] = 'cache';
         } else {
 
@@ -65,7 +65,7 @@ class ListingController extends Controller
             }
 
             // Cache the product-ids based on the sort-order.
-            Cache::put($productIdsSortedByPrice['key'], $productIds, now()->addHours(6));
+            Cache::store('redisprimary')->put($productIdsSortedByPrice['key'], $productIds, now()->addHours(6));
             $returnData['productIds'] = $productIds;
             $returnData['retrievedFrom'] = 'db';
         }
@@ -140,8 +140,8 @@ class ListingController extends Controller
         $returnData['dataCacheKey'] = $dataCacheKey;
 
 
-        if (Cache::has($dataCacheKey)) {
-            $returnData['productIds'] = Cache::get($dataCacheKey);
+        if (Cache::store('redisreader')->has($dataCacheKey)) {
+            $returnData['productIds'] = Cache::store('redisreader')->get($dataCacheKey);
             $returnData['retrievedFrom'] = 'cache';
         } else {
 
@@ -215,7 +215,7 @@ class ListingController extends Controller
 
             $returnData['productIds'] = $tempProductIdsForUrlQuery;
             $returnData['retrievedFrom'] = 'db';
-            Cache::put($dataCacheKey, $tempProductIdsForUrlQuery, now()->addHours(6));
+            Cache::store('redisprimary')->put($dataCacheKey, $tempProductIdsForUrlQuery, now()->addHours(6));
         }
 
         return $returnData;
@@ -284,9 +284,9 @@ class ListingController extends Controller
         ];
 
 
-        if (Cache::has($validatedData['completeUrlQuery'])) {
+        if (Cache::store('redisreader')->has($validatedData['completeUrlQuery'])) {
             return [
-                'products' => Cache::get($validatedData['completeUrlQuery']),
+                'products' => Cache::store('redisreader')->get($validatedData['completeUrlQuery']),
                 'retrievedDataFrom' => 'cache'
             ];
         }
@@ -433,8 +433,8 @@ class ListingController extends Controller
         $extraData = null;
 
 
-        if (Cache::has($completeUrlQuery)) {
-            $dataFromQuery = Cache::get($completeUrlQuery);
+        if (Cache::store('redisreader')->has($completeUrlQuery)) {
+            $dataFromQuery = Cache::store('redisreader')->get($completeUrlQuery);
         } else {
 
             $retrievedDataFrom = 'db';
@@ -454,7 +454,7 @@ class ListingController extends Controller
                     break;
             }
 
-            Cache::put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
+            Cache::store('redisprimary')->put($completeUrlQuery, $dataFromQuery, now()->addHours(6));
         }
 
 
@@ -478,19 +478,19 @@ class ListingController extends Controller
         $teams = [];
         $retrievedDataFrom = "db";
 
-        if (Cache::has('brands') && Cache::has('categories') && Cache::has('teams')) {
-            $brands = Cache::get('brands');
-            $categories = Cache::get('categories');
-            $teams = Cache::get('teams');
+        if (Cache::store('redisreader')->has('brands') && Cache::store('redisreader')->has('categories') && Cache::store('redisreader')->has('teams')) {
+            $brands = Cache::store('redisreader')->get('brands');
+            $categories = Cache::store('redisreader')->get('categories');
+            $teams = Cache::store('redisreader')->get('teams');
             $retrievedDataFrom = 'cache';
         } else {
             $brands = Brand::all();
             $categories = Category::all();
             $teams = Team::all();
 
-            Cache::put('brands', $brands, now()->addWeeks(1));
-            Cache::put('categories', $categories, now()->addWeeks(1));
-            Cache::put('teams', $teams, now()->addWeeks(1));
+            Cache::store('redisprimary')->put('brands', $brands, now()->addWeeks(1));
+            Cache::store('redisprimary')->put('categories', $categories, now()->addWeeks(1));
+            Cache::store('redisprimary')->put('teams', $teams, now()->addWeeks(1));
         }
 
         return [
