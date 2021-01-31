@@ -45,5 +45,6 @@ Route::get('/', function () {
 Route::get('/hello', function () {
     return "hello";
 });
+Route::get('/yo', 'MyTestController@yo');
 
 // Route::post('/payment-intent', 'PaymentIntentController@create');
