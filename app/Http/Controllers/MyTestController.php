@@ -19,7 +19,7 @@ class MyTestController extends Controller
 
     public function flushCache() {
 
-        Cache::flush();
+        Cache::store('redisprimary')->flush();
         
         return [
             'msg' => 'METHOD: flushCache()'
