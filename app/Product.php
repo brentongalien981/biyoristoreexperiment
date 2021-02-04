@@ -22,7 +22,7 @@ class Product extends Model
 
     public function sellers()
     {
-        return $this->belongsToMany('App\Seller')->withPivot('sell_price', 'discount_sell_price', 'restock_days');
+        return $this->belongsToMany('App\Seller')->withPivot('id', 'sell_price', 'discount_sell_price', 'restock_days');
     }
 
 
