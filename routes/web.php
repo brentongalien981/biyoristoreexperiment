@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 /** my-test-controller */
 // FOR-DEBUG
 // TODO: COMMENT-OUT
-// Route::get('/mytest/flush-cache', 'MyTestController@flushCache');
+Route::get('/mytest/flush-cache', 'MyTestController@flushCache');
 Route::get('/test-redis/put', 'TestRedisController@put');
 Route::get('/test-redis/get', 'TestRedisController@get');
 Route::get('/test-redis/get-connection', 'TestRedisController@getConnection');

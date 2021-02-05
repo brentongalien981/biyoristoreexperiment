@@ -18,7 +18,7 @@ class CreateProductSellerTable extends Migration
             $table->bigInteger('seller_id')->unsigned();
             $table->decimal('buy_price', 8, 2);
             $table->decimal('sell_price', 8, 2);
-            $table->integer('quantity');
+            $table->integer('quantity')->nullable();
             $table->timestamps();
         });
 
