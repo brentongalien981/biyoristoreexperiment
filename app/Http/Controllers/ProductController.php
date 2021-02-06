@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Category;
 use App\Product;
+use App\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
@@ -32,26 +33,43 @@ class ProductController extends Controller
 
     public function show(Request $request)
     {
-
-        //
         $validatedData = $request->validate([
+            'requestUrlQ' => 'nullable|string|max:128',
             'productId' => 'nullable|numeric',
         ]);
 
 
-        //
-        $product = Product::find($validatedData['productId']);
-        $category = $product->categories[0];
-        $relatedProducts = ProductResource::collection($category->products()->take(9)->get());
+        $requestUrlQ = $validatedData['requestUrlQ'] ?? 'DEFAULT-REQUEST-URL-Q-FOR-ROUTE=products/show';
+        $retrievedDataFrom = 'db';
+        $data = null;
+
+
+        if (Cache::store('redisreader')->has($requestUrlQ)) {
+            $retrievedDataFrom = 'cache';
+            $data = Cache::store('redisreader')->get($requestUrlQ);
+        } else {
+            $product = Product::find($validatedData['productId']);
+            $category = $product->categories[0];
+            $relatedProducts = ProductResource::collection($category->products()->take(9)->get());
+
+            $data = [
+                'product' => new ProductResource($product),
+                'relatedProducts' => $relatedProducts
+            ];
+
+            Cache::store('redisprimary')->put($requestUrlQ, $data, now()->addHours(6));
+        }
 
 
 
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: show()",
-            'objs' => [],
-            'product' => new ProductResource($product),
-            'relatedProducts' => $relatedProducts,
+            'objs' => [
+                'product' => $data['product'],
+                'relatedProducts' => $data['relatedProducts'],
+                'retrievedDataFrom' => $retrievedDataFrom,
+            ],
             // 'validatedData' => $validatedData
         ];
     }
