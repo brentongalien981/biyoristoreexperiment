@@ -65,6 +65,10 @@ Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
 
 
 
+/** reviews */
+Route::get('/reviews/read', 'ReviewController@read');
+
+
 
 /* products */
 // Random comment for testing git branch "Items@show@brentongalien981".

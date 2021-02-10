@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             SellerAddressSeeder::class,
             PackageItemTypeSeeder::class,
             TeamSeeder::class,
+            ReviewSeeder::class
         ]);
     }
 }

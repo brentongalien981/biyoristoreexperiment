@@ -15,7 +15,8 @@ class ExtraSeeder extends Seeder
             AddPredefinedWeightToProducts::class,
             AddRandomItemTypeIdToProducts::class,
             AddTeamIdToProducts::class,
-            SizeAvailabilitySeeder::class
+            SizeAvailabilitySeeder::class,
+            ReviewSeeder::class
         ]);
     }
 }
