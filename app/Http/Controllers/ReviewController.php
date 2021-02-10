@@ -54,6 +54,7 @@ class ReviewController extends Controller
 
 
     public function read(Request $r) {
+        sleep(3);
         $validatedData = $r->validate([
             'requestUrlQ' => 'nullable|string|max:128',
             'productId' => 'nullable|numeric',
@@ -63,7 +64,7 @@ class ReviewController extends Controller
 
         $p = Product::find($validatedData['productId']);
         $allReviews = $p->reviews;
-        $numOfReviewsPerBatch = 15;
+        $numOfReviewsPerBatch = 2;
         $numOfSkippedReviews = ($validatedData['batchNum'] - 1) * $numOfReviewsPerBatch;
 
         $chunkReviews = $allReviews->skip($numOfSkippedReviews);
