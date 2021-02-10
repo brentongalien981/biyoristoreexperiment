@@ -54,7 +54,6 @@ class ReviewController extends Controller
 
 
     public function read(Request $r) {
-        sleep(3);
         $validatedData = $r->validate([
             'requestUrlQ' => 'nullable|string|max:128',
             'productId' => 'nullable|numeric',
