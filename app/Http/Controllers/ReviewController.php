@@ -9,7 +9,15 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
-    public function test() {
+    public function test2()
+    {
+
+    }
+
+
+
+    public function test()
+    {
 
         $v = [
             'productId' => 2,
@@ -18,10 +26,10 @@ class ReviewController extends Controller
 
         $p = Product::find($v['productId']);
         $allReviews = $p->reviews;
-        $numOfReviewsPerBatch = 15;
+        $numOfReviewsPerBatch = 2;
         $numOfSkippedReviews = ($v['batchNum'] - 1) * $numOfReviewsPerBatch;
 
-        $chunkReviews = $allReviews->skip($numOfSkippedReviews);
+        $chunkReviews = $p->reviews()->skip($numOfSkippedReviews)->take($numOfReviewsPerBatch)->get();
         $chunkReviews = ReviewResource::collection($chunkReviews);
 
         $avgRating = null;
@@ -37,7 +45,6 @@ class ReviewController extends Controller
                 $avgRating = $sumOfProductRatings / $totalNumOfProductReviews;
                 $avgRating = round($avgRating, 1);
             }
-            
         }
 
 
@@ -53,7 +60,8 @@ class ReviewController extends Controller
 
 
 
-    public function read(Request $r) {
+    public function read(Request $r)
+    {
         sleep(3);
         $validatedData = $r->validate([
             'requestUrlQ' => 'nullable|string|max:128',
@@ -64,10 +72,10 @@ class ReviewController extends Controller
 
         $p = Product::find($validatedData['productId']);
         $allReviews = $p->reviews;
-        $numOfReviewsPerBatch = 2;
+        $numOfReviewsPerBatch = 15;
         $numOfSkippedReviews = ($validatedData['batchNum'] - 1) * $numOfReviewsPerBatch;
 
-        $chunkReviews = $allReviews->skip($numOfSkippedReviews);
+        $chunkReviews = $p->reviews()->skip($numOfSkippedReviews)->take($numOfReviewsPerBatch)->get();
         $chunkReviews = ReviewResource::collection($chunkReviews);
 
         $avgRating = null;
@@ -83,7 +91,6 @@ class ReviewController extends Controller
                 $avgRating = $sumOfProductRatings / $totalNumOfProductReviews;
                 $avgRating = round($avgRating, 1);
             }
-            
         }
 
 

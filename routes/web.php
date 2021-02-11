@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 /** my-test-controller */
 // FOR-DEBUG
 // TODO: COMMENT-OUT
+Route::get('/reviews/test2', 'ReviewController@test2');
 Route::get('/reviews/test', 'ReviewController@test');
 Route::get('/mytest/flush-cache', 'MyTestController@flushCache');
 Route::get('/test-redis/put', 'TestRedisController@put');
