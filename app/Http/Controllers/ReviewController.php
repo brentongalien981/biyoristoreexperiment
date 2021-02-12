@@ -6,9 +6,11 @@ use App\Http\Resources\ReviewResource;
 use App\Product;
 use App\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
+    /** EXPERIMENT FUNCS */
     public function test2()
     {
 
@@ -60,9 +62,9 @@ class ReviewController extends Controller
 
 
 
+    /** MAIN FUNCS */
     public function read(Request $r)
     {
-        sleep(3);
         $validatedData = $r->validate([
             'requestUrlQ' => 'nullable|string|max:128',
             'productId' => 'nullable|numeric',
@@ -100,6 +102,34 @@ class ReviewController extends Controller
                 'msg' => 'In CLASS: ReviewController, METHOD: read()',
                 'reviews' => $chunkReviews,
                 'avgRating' => $avgRating
+            ]
+        ];
+    }
+
+
+
+    public function save(Request $r) {
+
+        $v = $r->validate([
+            'productId' => 'numeric|min:1',
+            'rating' => 'numeric|min:1|max:5',
+            'message' => 'string|min:1|max:1024',
+        ]);
+
+
+        $review = new Review();
+        $review->product_id = $v['productId'];
+        $review->user_id = Auth::user()->id;
+        $review->rating = $v['rating'];
+        $review->message = $v['message'];
+        $review->save();
+
+
+        return [
+            'isResultOk' => true,
+            'msg' => 'In CLASS: ReviewController, METHOD: save()',
+            'objs' => [
+                'validatedData' => $v
             ]
         ];
     }

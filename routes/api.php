@@ -66,6 +66,7 @@ Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
 
 
 /** reviews */
+Route::middleware('auth:api')->post('/reviews/save', 'ReviewController@save');
 Route::get('/reviews/read', 'ReviewController@read');
 
 
