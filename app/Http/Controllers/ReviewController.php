@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ReviewResource;
-use App\Product;
 use App\Review;
+use App\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Resources\ReviewResource;
 
 class ReviewController extends Controller
 {
     /** EXPERIMENT FUNCS */
     public function test2()
     {
-
     }
 
 
@@ -72,47 +72,68 @@ class ReviewController extends Controller
         ]);
 
 
-        $p = Product::find($validatedData['productId']);
-        $allReviews = $p->reviews;
-        $numOfReviewsPerBatch = 15;
-        $numOfSkippedReviews = ($validatedData['batchNum'] - 1) * $numOfReviewsPerBatch;
-
-        $chunkReviews = $p->reviews()->skip($numOfSkippedReviews)->take($numOfReviewsPerBatch)->get();
-        $chunkReviews = ReviewResource::collection($chunkReviews);
-
+        $requestUrlQ = $validatedData['requestUrlQ'] ?? 'DEFAULT-REQUEST-URL-Q-FOR-ROUTE=reviews/read';
+        $productRatingUrlQ = 'product-rating?productId=' . $validatedData['productId'];
+        $retrievedDataFrom = 'db';
+        $chunkReviews = [];
         $avgRating = null;
 
-        if ($validatedData['batchNum'] == 1) {
-            $totalNumOfProductReviews = count($allReviews);
-            $sumOfProductRatings = 0;
-            foreach ($allReviews as $r) {
-                $sumOfProductRatings += $r->rating;
+        if (Cache::store('redisreader')->has($requestUrlQ)) {
+            $retrievedDataFrom = 'cache';
+            $chunkReviews = Cache::store('redisreader')->get($requestUrlQ);
+            $avgRating = Cache::store('redisreader')->get($productRatingUrlQ);
+        } else {
+            /** Get product-reviews. */
+            $p = Product::find($validatedData['productId']);
+            $allReviews = $p->reviews;
+            $numOfReviewsPerBatch = 15;
+            $numOfSkippedReviews = ($validatedData['batchNum'] - 1) * $numOfReviewsPerBatch;
+
+            $chunkReviews = $p->reviews()->skip($numOfSkippedReviews)->take($numOfReviewsPerBatch)->get();
+            $chunkReviews = ReviewResource::collection($chunkReviews);
+
+
+            /** Get product-rating. */
+            if (Cache::store('redisreader')->has($productRatingUrlQ)) {
+                $avgRating = Cache::store('redisreader')->get($productRatingUrlQ);
+            } else if ($validatedData['batchNum'] == 1) {
+                $totalNumOfProductReviews = count($allReviews);
+                $sumOfProductRatings = 0;
+                foreach ($allReviews as $r) {
+                    $sumOfProductRatings += $r->rating;
+                }
+
+                if ($sumOfProductRatings != 0) {
+                    $avgRating = $sumOfProductRatings / $totalNumOfProductReviews;
+                    $avgRating = round($avgRating, 1);
+                }
             }
 
-            if ($sumOfProductRatings != 0) {
-                $avgRating = $sumOfProductRatings / $totalNumOfProductReviews;
-                $avgRating = round($avgRating, 1);
-            }
+
+            /** Save data in cache. */
+            Cache::store('redisprimary')->put($requestUrlQ, $chunkReviews, now()->addDays(1));
+            Cache::store('redisprimary')->put($productRatingUrlQ, $avgRating, now()->addDays(1));
         }
-
 
 
         return [
             'objs' => [
                 'msg' => 'In CLASS: ReviewController, METHOD: read()',
                 'reviews' => $chunkReviews,
-                'avgRating' => $avgRating
+                'avgRating' => $avgRating,
+                'retrievedDataFrom' => $retrievedDataFrom,
             ]
         ];
     }
 
 
 
-    public function save(Request $r) {
+    public function save(Request $r)
+    {
 
         // TODO:DELETE
         sleep(3);
-        
+
         $v = $r->validate([
             'productId' => 'numeric|min:1',
             'rating' => 'numeric|min:1|max:5',
