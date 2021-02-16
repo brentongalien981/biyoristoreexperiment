@@ -65,13 +65,11 @@ class ProductController extends Controller
 
         return [
             'isResultOk' => true,
-            'comment' => "CLASS: ProductController, METHOD: show()",
             'objs' => [
                 'product' => $data['product'],
                 'relatedProducts' => $data['relatedProducts'],
                 'retrievedDataFrom' => $retrievedDataFrom,
             ],
-            // 'validatedData' => $validatedData
         ];
     }
 
@@ -149,7 +147,6 @@ class ProductController extends Controller
             'products' => $products,
             'objs' => ProductResource::collection($products),
             'paginationData' => $paginationData,
-            // 'validatedData' => $validatedData,
         ];
     }
 }

@@ -80,7 +80,6 @@ class JoinController extends Controller
         ]);
 
 
-        // ish
         \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
         $stripeCustomer = \Stripe\Customer::create([ 
             'email' => $validatedData['email'],

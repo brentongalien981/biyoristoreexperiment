@@ -12,12 +12,6 @@ use App\Http\Resources\ReviewResource;
 class ReviewController extends Controller
 {
     /** EXPERIMENT FUNCS */
-    public function test2()
-    {
-    }
-
-
-
     public function test()
     {
 
@@ -130,10 +124,6 @@ class ReviewController extends Controller
 
     public function save(Request $r)
     {
-
-        // TODO:DELETE
-        sleep(3);
-
         $v = $r->validate([
             'productId' => 'numeric|min:1',
             'rating' => 'numeric|min:1|max:5',
@@ -152,9 +142,6 @@ class ReviewController extends Controller
         return [
             'isResultOk' => true,
             'msg' => 'In CLASS: ReviewController, METHOD: save()',
-            'objs' => [
-                'validatedData' => $v
-            ]
         ];
     }
 }

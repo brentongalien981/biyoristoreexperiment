@@ -133,12 +133,6 @@ class CheckoutController extends Controller
 
 
 
-            // //ish
-            // $customeMsgs[] = 'INTENTIONAL EXCEPTION: no payment charged';
-            // throw new Exception("INTENTIONAL EXCEPTION: no payment charged");
-
-
-
             // charge customer
             $stripe->paymentIntents->confirm(
                 $paymentIntent->id
