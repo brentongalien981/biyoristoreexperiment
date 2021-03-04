@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\AuthProviderType;
 use App\User;
 use Exception;
 use App\BmdAuth;
 use App\Profile;
 use App\StripeCustomer;
+use App\AuthProviderType;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -59,21 +60,30 @@ class JoinController extends Controller
 
     public function save(Request $request)
     {
-        // 1) Validate
+        // 0) Validate
         $validatedData = $request->validate([
             'email' => 'email|min:8|max:64|unique:users',
             'password' => 'alpha_num|min:8|max:32',
         ]);
 
 
+        $stripeInstance = null;
+        $stripeCustomer = null;
+        $overallProcessLogs = [];
 
         try {
+
+            // 1) 
+            DB::beginTransaction();
+            $overallProcessLogs[] = 'began db-transaction';
+
 
             // 2) 
             $user = User::create([
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
             ]);
+            $overallProcessLogs[] = 'created user';
 
 
 
@@ -93,6 +103,7 @@ class JoinController extends Controller
             );
 
             $response = Route::dispatch($tokenRequest);;
+            $overallProcessLogs[] = 'dispatched oauth-token request';
 
 
 
@@ -113,6 +124,7 @@ class JoinController extends Controller
             $bmdAuth->expires_in = $convertedObj['expires_in'];
             $bmdAuth->auth_provider_type_id = AuthProviderType::BMD;
             $bmdAuth->save();
+            $overallProcessLogs[] = 'created bmd-auth obj';
 
 
 
@@ -120,23 +132,42 @@ class JoinController extends Controller
             $profile = Profile::create([
                 'user_id' => $user->id
             ]);
+            $overallProcessLogs[] = 'created profile obj';
 
 
-            // 7)
-            \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
-            $stripeCustomer = \Stripe\Customer::create([
+            // 7) Create stripe-objs.
+            // \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
+
+            // $stripeCustomer = \Stripe\Customer::create([
+            //     'email' => $user->email,
+            //     'description' => 'Created from the backend.'
+            // ]);
+
+            $stripeInstance = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+            $stripeCustomer = $stripeInstance->customers->create([
                 'email' => $user->email,
                 'description' => 'Created from the backend.'
             ]);
+
+            $overallProcessLogs[] = 'created stripe obj';
+
+
 
             $stripeCustomerMapObj = new StripeCustomer();
             $stripeCustomerMapObj->user_id = $user->id;
             $stripeCustomerMapObj->stripe_customer_id = $stripeCustomer->id;
             $stripeCustomerMapObj->save();
+            $overallProcessLogs[] = 'created stripe-map obj';
 
 
 
-            // 8)
+            // 8) 
+            DB::commit();
+            $overallProcessLogs[] = 'commited db-transaction';
+
+
+            // 9)
             return [
                 'isResultOk' => true,
                 'comment' => "CLASS: JoinController, METHOD: save()",
@@ -144,6 +175,7 @@ class JoinController extends Controller
                 'profile' => $profile,
                 'stripeCustomer' => $stripeCustomer,
                 'stripeCustomerMapObj' => $stripeCustomerMapObj,
+                'overallProcessLogs' => $overallProcessLogs,
                 'objs' => [
                     'email' => $user->email,
                     'bmdToken' => $bmdAuth->token,
@@ -153,8 +185,33 @@ class JoinController extends Controller
             ];
         } catch (Exception $e) {
 
+            DB::rollBack();
+            $overallProcessLogs[] = 'rolled-back db-transaction';
+
+
+            $caughtCustomErrors[] = $e->getMessage();
+            $overallProcessLogs[] = 'caught custom-error';
+
+            try {
+                // Delete the stripe-obj.
+                if (isset($stripeCustomer)) {
+                    $stripeInstance->customers->delete(
+                        $stripeCustomer->id,
+                        []
+                    );
+
+                    $overallProcessLogs[] = 'deleted stripe obj';
+                }
+            } catch (Exception $e) {
+                $caughtCustomErrors[] = $e->getMessage();
+                $overallProcessLogs[] = 'caught custom-error';
+            }
+
+
             return [
-                'bmd-error-msg' => $e->getMessage()
+                'isResultOk' => false,
+                'caughtCustomErrors' => $caughtCustomErrors,
+                'overallProcessLogs' => $overallProcessLogs,
             ];
         }
     }
