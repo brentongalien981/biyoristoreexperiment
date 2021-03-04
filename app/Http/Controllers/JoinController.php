@@ -161,7 +161,6 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created stripe-map obj';
 
 
-
             // 8) 
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
