@@ -6,6 +6,7 @@ use App\User;
 use Exception;
 use App\BmdAuth;
 use App\AuthProviderType;
+use App\TestSocialiteUser;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,7 @@ use Laravel\Socialite\Facades\Socialite;
 class BmdSocialiteController extends Controller
 {
     // TODO:ON-DEPLOYMENT: Edit this.
+    private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
     private const APP_FRONTEND_SIGNUP_RESULT_URL = 'https://bmd.com/bmd-socialite-signup-result';
 
 
@@ -60,8 +62,17 @@ class BmdSocialiteController extends Controller
             // Maybe use session->put() for this.
 
 
+            $providerType = [
+                'id' => ($r->provider == 'google' ? 2 : 3),
+                'name' => $r->provider,
+            ];
 
-            $socialiteUser = Socialite::driver('google')->user();
+
+            $socialiteUser = new TestSocialiteUser();
+            $socialiteUser->email = Str::random(8) . '@' . $providerType['name'] . '.com';
+            $socialiteUser->token = Str::random(32);
+            $socialiteUser->refresh_token = Str::random(32);
+            $socialiteUser->expires_in = 345678;
 
 
             /** 2) Create a reference-only-type user-obj (not really signed-up user using Laravel app). */
@@ -77,17 +88,17 @@ class BmdSocialiteController extends Controller
             $bmdAuth->token = $socialiteUser->token;
             $bmdAuth->refresh_token = $socialiteUser->refresh_token;
             $bmdAuth->expires_in = $socialiteUser->expires_in;
-            $bmdAuth->auth_provider_type_id = AuthProviderType::GOOGLE;
+            $bmdAuth->auth_provider_type_id = $providerType['id'];
             $bmdAuth->save();
 
 
             /** 4) */
             $urlParams = '?accessToken=' . $socialiteUser->token;
-            $urlParams .= '&refreshToken=' . $socialiteUser->refreshToken;
-            $urlParams .= '&expiresIn=' . $socialiteUser->expiresIn;
-            $urlParams .= '&authProviderId=2';
+            $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
+            $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
+            $urlParams .= '&authProviderId=' . $providerType['id'];
 
-            $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
+            $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
 
             return Redirect::to($url);
         } catch (Exception $e) {
@@ -96,7 +107,7 @@ class BmdSocialiteController extends Controller
             $urlParams = '?customError=' . $customError;
             $urlParams .= '&exception=' . $e->getMessage();
 
-            $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
+            $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
 
             return Redirect::to($url);
         }
@@ -136,8 +147,8 @@ class BmdSocialiteController extends Controller
 
             /** 4) */
             $urlParams = '?accessToken=' . $socialiteUser->token;
-            $urlParams .= '&refreshToken=' . $socialiteUser->refreshToken;
-            $urlParams .= '&expiresIn=' . $socialiteUser->expiresIn;
+            $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
+            $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
             $urlParams .= '&authProviderId=2';
 
             $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
