@@ -15,6 +15,16 @@ use Illuminate\Support\Facades\Route;
 
 
 
+/** socialite */
+Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
+Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromGoogle');
+// TODO:DEPLOYMENT: UNCOMMENT
+// Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
+// TODO:DEPLOYMENT: COMMENT-OUT
+Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
+
+
+
 /** my-test-controller */
 // FOR-DEBUG
 // TODO:DEPLOYMENT: COMMENT-OUT
@@ -35,6 +45,7 @@ Route::get('/test-redis/get-connection', 'TestRedisController@getConnection');
 
 
 
+// TODO:ON-DEPLOYMENT: COMMENT-OUT
 Route::get('/mycache/has', 'MyCacheController@has');
 Route::get('/mycache/test-get', 'MyCacheController@testGet');
 Route::get('/mycache/test-put', 'MyCacheController@testPut');
