@@ -16,12 +16,15 @@ use Illuminate\Support\Facades\Route;
 
 
 /** socialite */
+Route::middleware(['allow-frontend-only', 'throttle:20,1'])->group(function () {
+    // TODO:DEPLOYMENT: UNCOMMENT
+    // Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
+    // TODO:DEPLOYMENT: COMMENT-OUT
+    Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
+});
 Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
 Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromGoogle');
-// TODO:DEPLOYMENT: UNCOMMENT
-// Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
-// TODO:DEPLOYMENT: COMMENT-OUT
-Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
+
 
 
 
