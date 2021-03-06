@@ -108,6 +108,7 @@ Route::middleware('auth:api')->post('/profile/save', 'ProfileController@save');
 
 
 /* test */
+// TODO:ON-DEPLOYMENT COMMENT-OUT
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
     return [
@@ -116,3 +117,4 @@ Route::get('/test', function (Request $request) {
         'comment' => 'random shit bruh'
     ];
 });
+Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo')->middleware('allow-frontend-only');
