@@ -93,10 +93,11 @@ class BmdSocialiteController extends Controller
 
 
             /** 4) */
-            $urlParams = '?accessToken=' . $socialiteUser->token;
+            $urlParams = '?bmdToken=' . $socialiteUser->token;
             $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
             $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
             $urlParams .= '&authProviderId=' . $providerType['id'];
+            $urlParams .= '&email=' . $socialiteUser->email;
 
             $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
 

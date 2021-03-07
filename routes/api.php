@@ -96,6 +96,7 @@ Route::get('/categories', 'CategoryController@index');
 
 
 /* join */
+Route::post('/join/verify', 'JoinController@verify')->middleware('bmdauth');
 Route::post('/join/save', 'JoinController@save');
 Route::post('/join/login', 'JoinController@login');
 

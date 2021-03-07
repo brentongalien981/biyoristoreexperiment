@@ -8,6 +8,7 @@ use App\BmdAuth;
 use App\Profile;
 use App\StripeCustomer;
 use App\AuthProviderType;
+use App\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,31 @@ use Illuminate\Support\Facades\Route;
 
 class JoinController extends Controller
 {
+    public function verify(Request $r) {
+
+        $bmdAuth = BmdAuthProvider::getInstance();
+        $user = BmdAuthProvider::user();
+        
+        return [
+            'isResultOk' => $r->bmdToken === $bmdAuth->token ? true : false,
+            'comment' => "CLASS: JoinController, METHOD: verify()",
+            'validatedData' => [
+                'bmdToken' => $r->bmdToken,
+                'authProviderId' => $r->authProviderId,
+            ],
+            'objs' => [
+                'bmdAuth' => $bmdAuth,
+                'user' => $user,
+                'email' => $user->email,
+                'bmdToken' => $bmdAuth->token,
+                'expiresIn' => $bmdAuth->expires_in,
+                'authProviderId' => $bmdAuth->auth_provider_type_id,
+            ],    
+        ];
+    }
+
+
+
     public function login(Request $request)
     {
         //

@@ -54,7 +54,9 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
+        'bmdauth' => \App\Http\Middleware\BmdAuth::class,
         'allow-frontend-only' => \App\Http\Middleware\AllowFrontendOnly::class,
+        'allow-frontend-referer-only' => \App\Http\Middleware\AllowFrontendRefererOnly::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 
 /** socialite */
-Route::middleware(['allow-frontend-only', 'throttle:20,1'])->group(function () {
+Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
     // TODO:DEPLOYMENT: UNCOMMENT
     // Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
     // TODO:DEPLOYMENT: COMMENT-OUT
@@ -33,6 +33,7 @@ Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handle
 // TODO:DEPLOYMENT: COMMENT-OUT
 Route::get('/reviews/test2', 'ReviewController@test2');
 Route::get('/reviews/test', 'ReviewController@test');
+Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo');
 Route::get('/mytest/flush-cache', 'MyTestController@flushCache');
 Route::get('/test-redis/put', 'TestRedisController@put');
 Route::get('/test-redis/get', 'TestRedisController@get');
