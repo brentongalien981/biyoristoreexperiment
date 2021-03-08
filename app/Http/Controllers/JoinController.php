@@ -161,6 +161,7 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created profile obj';
 
 
+            // TODO:ON-DEPLOYMENT: Use the production-key here.
             // 7) Create stripe-objs.
             // \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
 

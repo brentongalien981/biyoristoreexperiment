@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\User;
 use Exception;
 use App\BmdAuth;
+use App\Profile;
+use App\StripeCustomer;
 use App\AuthProviderType;
 use App\TestSocialiteUser;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Laravel\Socialite\Facades\Socialite;
@@ -23,10 +26,6 @@ class BmdSocialiteController extends Controller
 
     public function testsignupWithAuthProvider(Request $r)
     {
-        // TODO:ON-ITERATION-003: Use a bmd-signup-hash-code for this workflow to allow only legit signups.
-        // Maybe use session->put() for this.
-
-
         return $this->testhandleProviderCallback($r);
     }
 
@@ -34,10 +33,6 @@ class BmdSocialiteController extends Controller
 
     public function signupWithAuthProvider(Request $r)
     {
-        // TODO:ON-ITERATION-003: Use a bmd-signup-hash-code for this workflow to allow only legit signups.
-        // Maybe use session->put() for this.
-
-
         $provider = $r->provider;
 
         switch ($provider) {
@@ -55,34 +50,52 @@ class BmdSocialiteController extends Controller
 
     public function testhandleProviderCallback(Request $r)
     {
+        $stripeInstance = null;
+        $stripeCustomer = null;
+        $overallProcessLogs = [];
+
+
         try {
-            /** 1) TODO: Make sure the dynamodb session/cache driver is configured. */
-
-            // TODO:ON-ITERATION-003: Use a bmd-signup-hash-code for this workflow to allow only legit signups.
-            // Maybe use session->put() for this.
-
 
             $providerType = [
                 'id' => ($r->provider == 'google' ? 2 : 3),
                 'name' => $r->provider,
             ];
 
+            $email = Str::random(8) . '@' . $providerType['name'] . '.com';
 
+            
+            // TODO: Check if email already exists.
+            if (User::doesExistWithEmail($email)) {
+                return $this->handleCallbackForExistingBmdSocialiteEmail($email);
+            }
+            //ish
+
+
+            //
             $socialiteUser = new TestSocialiteUser();
-            $socialiteUser->email = Str::random(8) . '@' . $providerType['name'] . '.com';
+            $socialiteUser->email = $email;
             $socialiteUser->token = Str::random(32);
             $socialiteUser->refresh_token = Str::random(32);
             $socialiteUser->expires_in = 345678;
 
 
-            /** 2) Create a reference-only-type user-obj (not really signed-up user using Laravel app). */
+
+            //
+            DB::beginTransaction();
+            $overallProcessLogs[] = 'began db-transaction';
+
+
+            // Create a reference-only-type user-obj (not really signed-up user using Laravel app).
             $uObj = new User();
             $uObj->email = $socialiteUser->email;
             $uObj->password = Hash::make(Str::random(16)); // random-password
             $uObj->save();
 
+            $overallProcessLogs[] = 'created user';
 
-            /** 3) */
+
+            //
             $bmdAuth = new BmdAuth();
             $bmdAuth->user_id = $uObj->id;
             $bmdAuth->token = $socialiteUser->token;
@@ -91,8 +104,39 @@ class BmdSocialiteController extends Controller
             $bmdAuth->auth_provider_type_id = $providerType['id'];
             $bmdAuth->save();
 
+            $overallProcessLogs[] = 'created bmd-auth obj';
 
-            /** 4) */
+
+            //
+            $profile = Profile::create([
+                'user_id' => $uObj->id
+            ]);
+            $overallProcessLogs[] = 'created profile obj';
+
+
+
+            // Create stripe-objs.
+            // TODO:ON-DEPLOYMENT: Use the production-key here.
+            $stripeInstance = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+            $stripeCustomer = $stripeInstance->customers->create([
+                'email' => $uObj->email,
+                'description' => 'Created from the backend.'
+            ]);
+
+            $overallProcessLogs[] = 'created stripe obj';
+
+
+
+            //
+            $stripeCustomerMapObj = new StripeCustomer();
+            $stripeCustomerMapObj->user_id = $uObj->id;
+            $stripeCustomerMapObj->stripe_customer_id = $stripeCustomer->id;
+            $stripeCustomerMapObj->save();
+            $overallProcessLogs[] = 'created stripe-map obj';
+
+
+            //
             $urlParams = '?bmdToken=' . $socialiteUser->token;
             $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
             $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
@@ -100,9 +144,24 @@ class BmdSocialiteController extends Controller
             $urlParams .= '&email=' . $socialiteUser->email;
 
             $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
+            $overallProcessLogs[] = 'created url-params';
 
+
+            //
+            DB::commit();
+            $overallProcessLogs[] = 'commited db-transaction';
+
+
+            //
             return Redirect::to($url);
         } catch (Exception $e) {
+
+            DB::rollBack();
+            $overallProcessLogs[] = 'rolled-back db-transaction';
+
+
+            $caughtCustomErrors[] = $e->getMessage();
+            $overallProcessLogs[] = 'caught custom-error';
 
             $customError = "Oops, there's a problem on our end. Please try again.";
             $urlParams = '?customError=' . $customError;
@@ -119,13 +178,11 @@ class BmdSocialiteController extends Controller
     public function handleProviderCallbackFromGoogle(Request $r)
     {
         try {
-            /** 1) TODO: Make sure the dynamodb session/cache driver is configured. */
 
-            // TODO:ON-ITERATION-003: Use a bmd-signup-hash-code for this workflow to allow only legit signups.
-            // Maybe use session->put() for this.
+            // TODO: Make sure the dynamodb session/cache driver is configured.
+            // TODO: Add the missing steps from the METHOD: testhandleProviderCallback().
 
-
-
+            /** 1) */
             $socialiteUser = Socialite::driver('google')->user();
 
 
