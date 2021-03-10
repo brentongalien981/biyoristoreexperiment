@@ -39,6 +39,18 @@ class User extends Authenticatable
 
 
 
+    public static function doesExistWithEmail($email) {
+        $possibleUsers = self::where('email', $email)->get();
+
+        if (isset($possibleUsers) && count($possibleUsers) === 1 && isset($possibleUsers[0])) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
     public function orders()
     {
         return $this->hasMany('App\Order');
