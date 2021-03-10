@@ -20,7 +20,12 @@ class BmdSocialiteController extends Controller
 {
     // TODO:ON-DEPLOYMENT: Edit this.
     private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
-    private const APP_FRONTEND_SIGNUP_RESULT_URL = 'https://bmd.com/bmd-socialite-signup-result';
+    private const APP_FRONTEND_SIGNUP_RESULT_URL = env('APP_FRONTEND_URL') . '/bmd-socialite-signup-result';
+    private const APP_FRONTEND_LOGIN_RESULT_URL = env('APP_FRONTEND_URL') . '/bmd-socialite-login-result';
+
+    private const AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER = 1;
+    private const AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP = 2;
+    private const AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP = 3;
 
 
 
@@ -48,6 +53,50 @@ class BmdSocialiteController extends Controller
 
 
 
+    public function redirectForAuthResult($data)
+    {
+        $urlParams = '';
+
+        switch ($data['authResult']) {
+            case self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER:
+            case self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP:
+
+                $socialiteUser = $data['socialiteUser'];
+                $providerTypeId = $data['providerTypeId'];
+
+                $urlParams .= '?bmdToken=' . $socialiteUser->token;
+                $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
+                $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
+                $urlParams .= '&authProviderId=' . $providerTypeId;
+                $urlParams .= '&email=' . $socialiteUser->email;
+                break;
+
+            case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
+                $urlParams .= '?caughtCustomError=' . $data['caughtCustomError'];
+                break;
+        }
+
+
+        $urlParams .= '&authResult' . $data['authResult'];
+        $urlParams .= '&overallProcessLogs' . implode(':::', $data['overallProcessLogs']);
+        $url = null;
+
+        switch ($data['authResult']) {
+            case self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER:
+                $url = self::APP_FRONTEND_LOGIN_RESULT_URL . $urlParams;
+                break;
+            case self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP:
+            case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
+                $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
+                break;
+        }
+
+
+        return Redirect::to($url);
+    }
+
+
+
     public function testhandleProviderCallback(Request $r)
     {
         $stripeInstance = null;
@@ -64,20 +113,27 @@ class BmdSocialiteController extends Controller
 
             $email = Str::random(8) . '@' . $providerType['name'] . '.com';
 
-            
-            // TODO: Check if email already exists.
-            if (User::doesExistWithEmail($email)) {
-                return $this->handleCallbackForExistingBmdSocialiteEmail($email);
-            }
-            //ish
-
-
-            //
             $socialiteUser = new TestSocialiteUser();
             $socialiteUser->email = $email;
             $socialiteUser->token = Str::random(32);
             $socialiteUser->refresh_token = Str::random(32);
             $socialiteUser->expires_in = 345678;
+
+
+            // Check if email already exists.
+            // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
+            if (User::doesExistWithEmail($email)) {
+                $overallProcessLogs[] = 'socialite-user already exists';
+
+                $data = [
+                    'authResult' => self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER,
+                    'socialiteUser' => $socialiteUser,
+                    'providerTypeId' => $providerType['id'],
+                    'overallProcessLogs' => $overallProcessLogs,
+                ];
+
+                return $this->redirectForAuthResult($data);
+            }
 
 
 
@@ -137,39 +193,29 @@ class BmdSocialiteController extends Controller
 
 
             //
-            $urlParams = '?bmdToken=' . $socialiteUser->token;
-            $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
-            $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
-            $urlParams .= '&authProviderId=' . $providerType['id'];
-            $urlParams .= '&email=' . $socialiteUser->email;
-
-            $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
-            $overallProcessLogs[] = 'created url-params';
-
-
-            //
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
 
 
-            //
-            return Redirect::to($url);
+            // 
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP,
+                'socialiteUser' => $socialiteUser,
+                'providerTypeId' => $providerType['id'],
+                'overallProcessLogs' => $overallProcessLogs,
+            ]);
         } catch (Exception $e) {
 
             DB::rollBack();
+            $overallProcessLogs[] = 'caught exxception';
             $overallProcessLogs[] = 'rolled-back db-transaction';
 
 
-            $caughtCustomErrors[] = $e->getMessage();
-            $overallProcessLogs[] = 'caught custom-error';
-
-            $customError = "Oops, there's a problem on our end. Please try again.";
-            $urlParams = '?customError=' . $customError;
-            $urlParams .= '&exception=' . $e->getMessage();
-
-            $url = self::TEST_APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
-
-            return Redirect::to($url);
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP,
+                'overallProcessLogs' => $overallProcessLogs,
+                'caughtCustomError' => $e->getMessage(),
+            ]);
         }
     }
 
