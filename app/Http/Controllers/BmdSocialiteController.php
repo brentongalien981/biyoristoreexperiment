@@ -19,9 +19,10 @@ use Laravel\Socialite\Facades\Socialite;
 class BmdSocialiteController extends Controller
 {
     // TODO:ON-DEPLOYMENT: Edit this.
-    private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
-    private const APP_FRONTEND_SIGNUP_RESULT_URL = env('APP_FRONTEND_URL') . '/bmd-socialite-signup-result';
-    private const APP_FRONTEND_LOGIN_RESULT_URL = env('APP_FRONTEND_URL') . '/bmd-socialite-login-result';
+    // private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
+    private const APP_FRONTEND_URL = 'http://localhost:3000';
+    private const APP_FRONTEND_SIGNUP_RESULT_URL = self::APP_FRONTEND_URL . '/bmd-socialite-signup-result';
+    private const APP_FRONTEND_LOGIN_RESULT_URL = self::APP_FRONTEND_URL . '/bmd-socialite-login-result';
 
     private const AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER = 1;
     private const AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP = 2;
@@ -77,8 +78,8 @@ class BmdSocialiteController extends Controller
         }
 
 
-        $urlParams .= '&authResult' . $data['authResult'];
-        $urlParams .= '&overallProcessLogs' . implode(':::', $data['overallProcessLogs']);
+        $urlParams .= '&authResult=' . $data['authResult'];
+        $urlParams .= '&overallProcessLogs=' . implode(':::', $data['overallProcessLogs']);
         $url = null;
 
         switch ($data['authResult']) {
