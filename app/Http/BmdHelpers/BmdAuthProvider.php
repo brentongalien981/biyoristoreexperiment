@@ -47,7 +47,6 @@ class BmdAuthProvider
 
     public static function user()
     {
-        // return $this->hasOne(User::class, 'id', 'user_id');
         return self::$instance->user;
     }
 }
