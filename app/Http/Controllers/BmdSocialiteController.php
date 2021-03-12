@@ -232,8 +232,9 @@ class BmdSocialiteController extends Controller
     {
         try {
 
-            // TODO: Make sure the dynamodb session/cache driver is configured.
-            // TODO: Add the missing steps from the METHOD: testhandleProviderCallback().
+            // TODO:ON-DEPLOYMENT: Make sure the dynamodb session/cache driver is configured.
+            // TODO:ON-DEPLOYMENT: Add the missing steps from the METHOD: testhandleProviderCallback().
+            // TODO:ON-DEPLOYMENT: Modify this method to resemble the method above "testhandleProviderCallback()".
 
             /** 1) */
             $socialiteUser = Socialite::driver('google')->user();

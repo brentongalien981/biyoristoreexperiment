@@ -25,14 +25,14 @@ class JoinController extends Controller
         
         return [
             'isResultOk' => $r->bmdToken === $bmdAuth->token ? true : false,
-            'comment' => "CLASS: JoinController, METHOD: verify()",
-            'validatedData' => [
-                'bmdToken' => $r->bmdToken,
-                'authProviderId' => $r->authProviderId,
-            ],
+            // 'comment' => "CLASS: JoinController, METHOD: verify()",
+            // 'validatedData' => [
+            //     'bmdToken' => $r->bmdToken,
+            //     'authProviderId' => $r->authProviderId,
+            // ],
             'objs' => [
-                'bmdAuth' => $bmdAuth,
-                'user' => $user,
+                // 'bmdAuth' => $bmdAuth,
+                // 'user' => $user,
                 'email' => $user->email,
                 'bmdToken' => $bmdAuth->token,
                 'expiresIn' => $bmdAuth->expires_in,
@@ -219,12 +219,12 @@ class JoinController extends Controller
             // 9)
             return [
                 'isResultOk' => true,
-                'comment' => "CLASS: JoinController, METHOD: save()",
-                'validatedData' => $validatedData,
-                'profile' => $profile,
-                'stripeCustomer' => $stripeCustomer,
-                'stripeCustomerMapObj' => $stripeCustomerMapObj,
-                'overallProcessLogs' => $overallProcessLogs,
+                // 'comment' => "CLASS: JoinController, METHOD: save()",
+                // 'validatedData' => $validatedData,
+                // 'profile' => $profile,
+                // 'stripeCustomer' => $stripeCustomer,
+                // 'stripeCustomerMapObj' => $stripeCustomerMapObj,
+                // 'overallProcessLogs' => $overallProcessLogs,
                 'objs' => [
                     'email' => $user->email,
                     'bmdToken' => $bmdAuth->token,
