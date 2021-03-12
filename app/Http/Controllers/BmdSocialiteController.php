@@ -103,6 +103,7 @@ class BmdSocialiteController extends Controller
         $stripeInstance = null;
         $stripeCustomer = null;
         $overallProcessLogs = [];
+        
 
 
         try {
@@ -165,7 +166,7 @@ class BmdSocialiteController extends Controller
 
 
             //
-            $profile = Profile::create([
+            Profile::create([
                 'user_id' => $uObj->id
             ]);
             $overallProcessLogs[] = 'created profile obj';
@@ -197,6 +198,7 @@ class BmdSocialiteController extends Controller
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
 
+            
 
             // 
             return $this->redirectForAuthResult([
@@ -207,9 +209,13 @@ class BmdSocialiteController extends Controller
             ]);
         } catch (Exception $e) {
 
-            DB::rollBack();
             $overallProcessLogs[] = 'caught exxception';
+            DB::rollBack();
             $overallProcessLogs[] = 'rolled-back db-transaction';
+
+            // Delete the created stripe.com's customer-obj.
+            $deletionData = JoinController::deleteStripeDotComCustomer($stripeInstance, $stripeCustomer);
+            $overallProcessLogs[] = $deletionData['resultMsg'];
 
 
             return $this->redirectForAuthResult([

@@ -84,8 +84,36 @@ class JoinController extends Controller
 
 
 
+    public static function deleteStripeDotComCustomer($stripeInstance, $stripeCustomer) {
+        $returnData = [
+            'isResultOk' => false,
+            'resultMsg' => 'DEFAULT-MSG: CLASS: JoinController, METHOD: deleteStripeDotComCustomer()',
+        ];
+
+
+        try {
+            if (isset($stripeCustomer)) {
+                $stripeInstance->customers->delete(
+                    $stripeCustomer->id,
+                    []
+                );
+
+                $returnData['isResultOk'] = true;
+                $returnData['resultMsg'] = 'stripe.com customer successfully deleted';
+            }
+        } catch (Exception $e) {
+            $returnData['resultMsg'] = 'stripe.com customer failed to delete ==> ' . $e->getMessage();
+        }
+
+
+        return $returnData;
+    }
+
+
+
     public function save(Request $request)
     {
+        
         // 0) Validate
         $validatedData = $request->validate([
             'email' => 'email|min:8|max:64|unique:users',
@@ -154,22 +182,15 @@ class JoinController extends Controller
 
 
 
-            // 6)
+            // 6) Create profile.
             $profile = Profile::create([
                 'user_id' => $user->id
             ]);
             $overallProcessLogs[] = 'created profile obj';
 
 
+            // 7) Create stripe objs.
             // TODO:ON-DEPLOYMENT: Use the production-key here.
-            // 7) Create stripe-objs.
-            // \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
-
-            // $stripeCustomer = \Stripe\Customer::create([
-            //     'email' => $user->email,
-            //     'description' => 'Created from the backend.'
-            // ]);
-
             $stripeInstance = new \Stripe\StripeClient(env('STRIPE_SK'));
 
             $stripeCustomer = $stripeInstance->customers->create([
@@ -181,6 +202,7 @@ class JoinController extends Controller
 
 
 
+            // 8) Create stripe-map-objs.
             $stripeCustomerMapObj = new StripeCustomer();
             $stripeCustomerMapObj->user_id = $user->id;
             $stripeCustomerMapObj->stripe_customer_id = $stripeCustomer->id;
@@ -188,6 +210,7 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created stripe-map obj';
 
 
+            
             // 8) 
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
@@ -218,20 +241,8 @@ class JoinController extends Controller
             $caughtCustomErrors[] = $e->getMessage();
             $overallProcessLogs[] = 'caught custom-error';
 
-            try {
-                // Delete the stripe-obj.
-                if (isset($stripeCustomer)) {
-                    $stripeInstance->customers->delete(
-                        $stripeCustomer->id,
-                        []
-                    );
-
-                    $overallProcessLogs[] = 'deleted stripe obj';
-                }
-            } catch (Exception $e) {
-                $caughtCustomErrors[] = $e->getMessage();
-                $overallProcessLogs[] = 'caught custom-error';
-            }
+            $deletionData = self::deleteStripeDotComCustomer($stripeInstance, $stripeCustomer);
+            $overallProcessLogs[] = $deletionData['resultMsg'];
 
 
             return [
