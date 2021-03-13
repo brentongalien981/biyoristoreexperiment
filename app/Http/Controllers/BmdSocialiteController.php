@@ -117,9 +117,9 @@ class BmdSocialiteController extends Controller
 
             $socialiteUser = new TestSocialiteUser();
             $socialiteUser->email = $email;
-            $socialiteUser->token = Str::random(32);
+            $socialiteUser->token = Str::random(1024);
             $socialiteUser->refresh_token = Str::random(32);
-            $socialiteUser->expires_in = 345678;
+            $socialiteUser->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;;
 
 
             // Check if email already exists.
@@ -252,7 +252,7 @@ class BmdSocialiteController extends Controller
             $bmdAuth->user_id = $uObj->id;
             $bmdAuth->token = $socialiteUser->token;
             $bmdAuth->refresh_token = $socialiteUser->refresh_token;
-            $bmdAuth->expires_in = $socialiteUser->expires_in;
+            $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
             $bmdAuth->auth_provider_type_id = AuthProviderType::GOOGLE;
             $bmdAuth->save();
 

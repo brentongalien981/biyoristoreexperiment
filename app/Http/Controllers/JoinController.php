@@ -8,11 +8,12 @@ use App\BmdAuth;
 use App\Profile;
 use App\StripeCustomer;
 use App\AuthProviderType;
-use App\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,9 @@ class JoinController extends Controller
 
         $bmdAuth = BmdAuthProvider::getInstance();
         $user = BmdAuthProvider::user();
+
+        $bmdAuthCacheRecordKey = 'bmdAuth?token=' . $r->bmdToken . '&authProviderId=' . $r->authProviderId;
+        $bmdAuthCacheRecordVal = Cache::store('redisreader')->get($bmdAuthCacheRecordKey);
         
         return [
             'isResultOk' => $r->bmdToken === $bmdAuth->token ? true : false,
@@ -37,6 +41,8 @@ class JoinController extends Controller
                 'bmdToken' => $bmdAuth->token,
                 'expiresIn' => $bmdAuth->expires_in,
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
+                'kate' => Cache::store('redisreader')->get('kate'),
+                'bmdAuthCacheRecordVal' => Cache::store('redisreader')->get($bmdAuthCacheRecordKey),
             ],    
         ];
     }
@@ -175,7 +181,7 @@ class JoinController extends Controller
             $bmdAuth->user_id = $user->id;
             $bmdAuth->token = $convertedObj['access_token'];
             $bmdAuth->refresh_token = $convertedObj['refresh_token'];
-            $bmdAuth->expires_in = $convertedObj['expires_in'];
+            $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
             $bmdAuth->auth_provider_type_id = AuthProviderType::BMD;
             $bmdAuth->save();
             $overallProcessLogs[] = 'created bmd-auth obj';
