@@ -66,7 +66,7 @@ class BmdSocialiteController extends Controller
                 $providerTypeId = $data['providerTypeId'];
 
                 $urlParams .= '?bmdToken=' . $socialiteUser->token;
-                $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
+                $urlParams .= '&bmdRefreshToken=' . $socialiteUser->refresh_token;
                 $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
                 $urlParams .= '&authProviderId=' . $providerTypeId;
                 $urlParams .= '&email=' . $socialiteUser->email;
@@ -259,7 +259,7 @@ class BmdSocialiteController extends Controller
 
             /** 4) */
             $urlParams = '?accessToken=' . $socialiteUser->token;
-            $urlParams .= '&refreshToken=' . $socialiteUser->refresh_token;
+            $urlParams .= '&bmdRefreshToken=' . $socialiteUser->refresh_token;
             $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
             $urlParams .= '&authProviderId=2';
 

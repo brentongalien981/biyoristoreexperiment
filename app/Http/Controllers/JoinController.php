@@ -46,10 +46,11 @@ class JoinController extends Controller
                 // 'user' => $user,
                 'email' => $user->email,
                 'bmdToken' => $bmdAuth->token,
+                'bmdRefreshToken' => $bmdAuth->refresh_token,
                 'expiresIn' => $bmdAuth->expires_in,
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
                 'kate' => Cache::store('redisreader')->get('kate'),
-                'bmdAuthCacheRecordVal' => Cache::store('redisreader')->get($bmdAuthCacheRecordKey),
+                'bmdAuthCacheRecordVal' => $bmdAuthCacheRecordVal,
             ],
         ];
     }
@@ -122,46 +123,44 @@ class JoinController extends Controller
 
 
         try {
-            
+
+            // Check if BmdAuth has auth-provider-type Bmd.
+            $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0];
+            if ($bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
+                $resultCode = self::LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER;
+                throw new Exception('Invalid bmd-auth provider');
+            }
+
+
             if (Hash::check($validatedData['password'], $possibleUser->password)) {
                 $overallProcessLogs[] = 'password ok';
 
-                    
-                // Check if BmdAuth has auth-provider-type Bmd.
-                $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0];
-                if ($bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
-                    $resultCode = self::LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER;
-                    throw new Exception('Invalid bmd-auth provider');
-                }
-    
 
                 // Revoke all user's old tokens.
                 self::revokeAllPassportTokens($possibleUser->id);
                 $overallProcessLogs[] = 'user-tokens revoked';
-    
+
                 // Create a new oauth-token record for user.
                 $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
                 $overallProcessLogs[] = 'created new user-token';
 
-    
+
                 // Update BmdAuth's token.
                 $bmdAuth->token = $oauthProps['access_token'];
                 $bmdAuth->refresh_token = $oauthProps['refresh_token'];
                 $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
                 $bmdAuth->save();
                 $overallProcessLogs[] = 'updated bmd-auth record';
-                
-    
+
+
                 $resultCode = self::LOGIN_RESULT_CODE_SUCCESS;
                 $isResultOk = true;
             } else {
                 $overallProcessLogs[] = 'invalid password';
                 $resultCode = self::LOGIN_RESULT_CODE_INVALID_PASSWORD;
             }
-
         } catch (Exception $e) {
             $overallProcessLogs[] = 'caught-custom-error: ' . $e->getMessage();
-            
         }
 
 
@@ -174,7 +173,11 @@ class JoinController extends Controller
             'overallProcessLogs' => $overallProcessLogs,
             'resultCode' => $resultCode,
             'objs' => [
-                'bmdAuth' => $bmdAuth,
+                'email' => $possibleUser->email,
+                'bmdToken' => $bmdAuth->token,
+                'bmdRefreshToken' => $bmdAuth->refresh_token,
+                'expiresIn' => $bmdAuth->expires_in,
+                'authProviderId' => $bmdAuth->auth_provider_type_id,
             ],
         ];
         //ish
@@ -302,6 +305,7 @@ class JoinController extends Controller
                 'objs' => [
                     'email' => $user->email,
                     'bmdToken' => $bmdAuth->token,
+                    'bmdRefreshToken' => $bmdAuth->refresh_token,
                     'expiresIn' => $bmdAuth->expires_in,
                     'authProviderId' => $bmdAuth->auth_provider_type_id,
                 ],
