@@ -19,14 +19,21 @@ use Illuminate\Support\Facades\Route;
 
 class JoinController extends Controller
 {
-    public function verify(Request $r) {
+    private const LOGIN_RESULT_CODE_INVALID_PASSWORD = -1;
+    private const LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER = -2;
+    private const LOGIN_RESULT_CODE_SUCCESS = 1;
+
+
+
+    public function verify(Request $r)
+    {
 
         $bmdAuth = BmdAuthProvider::getInstance();
         $user = BmdAuthProvider::user();
 
         $bmdAuthCacheRecordKey = 'bmdAuth?token=' . $r->bmdToken . '&authProviderId=' . $r->authProviderId;
         $bmdAuthCacheRecordVal = Cache::store('redisreader')->get($bmdAuthCacheRecordKey);
-        
+
         return [
             'isResultOk' => $r->bmdToken === $bmdAuth->token ? true : false,
             // 'comment' => "CLASS: JoinController, METHOD: verify()",
@@ -43,37 +50,118 @@ class JoinController extends Controller
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
                 'kate' => Cache::store('redisreader')->get('kate'),
                 'bmdAuthCacheRecordVal' => Cache::store('redisreader')->get($bmdAuthCacheRecordKey),
-            ],    
+            ],
         ];
+    }
+
+
+
+    private static function revokeAllPassportTokens($userId)
+    {
+        $tokens = DB::table('oauth_access_tokens')->where('user_id', $userId)->get();
+
+        foreach ($tokens as $t) {
+            $tokenRepository = app('Laravel\Passport\TokenRepository');
+            $refreshTokenRepository = app('Laravel\Passport\RefreshTokenRepository');
+
+            // Revoke an access token...
+            $tokenRepository->revokeAccessToken($t->id);
+
+            // Revoke all of the token's refresh tokens...
+            $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($t->id);
+        }
+    }
+
+
+
+    private static function createPasswordAccessPassportToken($email, $password, $request)
+    {
+        // 3) Create Passport-Password-Access-Token.
+        $request->request->add([
+            'grant_type' => 'password',
+            'client_id' => env('PASSPORT_GRANT_PASSWORD_CLIENT_ID'),
+            'client_secret' => env('PASSPORT_GRANT_PASSWORD_CLIENT_SECRET'),
+            'username' => $email,
+            'password' => $password,
+            'scope' => '*',
+        ]);
+
+        $tokenRequest = Request::create(
+            url('oauth/token'),
+            'post'
+        );
+
+        $response = Route::dispatch($tokenRequest);;
+
+
+        $rawObjs = json_decode($response->original);
+
+        $oauthProps = [];
+        foreach ($rawObjs as $k => $v) {
+            $oauthProps[$k] = $v;
+        }
+
+        return $oauthProps;
     }
 
 
 
     public function login(Request $request)
     {
-        //
         $validatedData = $request->validate([
-            'email' => 'email|min:8|max:64|exists:users',
-            'password' => 'alpha_num|min:4|max:32',
+            'email' => 'email|exists:users',
+            'password' => 'max:32',
         ]);
-
 
         $possibleUser = User::where('email', $validatedData['email'])->get()[0];
 
-        $doesPasswordMatch = false;
-        $token = '';
         $isResultOk = false;
+        $bmdAuth = [];
+        $overallProcessLogs = [];
+        $resultCode = 0;
 
-        if (Hash::check($request->password, $possibleUser->password)) {
-            $doesPasswordMatch = true;
 
-            $token = Str::random(80);
+        try {
+            
+            if (Hash::check($validatedData['password'], $possibleUser->password)) {
+                $overallProcessLogs[] = 'password ok';
 
-            $possibleUser->forceFill([
-                'api_token' => hash('sha256', $token),
-            ])->save();
+                    
+                // Check if BmdAuth has auth-provider-type Bmd.
+                $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0];
+                if ($bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
+                    $resultCode = self::LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER;
+                    throw new Exception('Invalid bmd-auth provider');
+                }
+    
 
-            $isResultOk = true;
+                // Revoke all user's old tokens.
+                self::revokeAllPassportTokens($possibleUser->id);
+                $overallProcessLogs[] = 'user-tokens revoked';
+    
+                // Create a new oauth-token record for user.
+                $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
+                $overallProcessLogs[] = 'created new user-token';
+
+    
+                // Update BmdAuth's token.
+                $bmdAuth->token = $oauthProps['access_token'];
+                $bmdAuth->refresh_token = $oauthProps['refresh_token'];
+                $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+                $bmdAuth->save();
+                $overallProcessLogs[] = 'updated bmd-auth record';
+                
+    
+                $resultCode = self::LOGIN_RESULT_CODE_SUCCESS;
+                $isResultOk = true;
+            } else {
+                $overallProcessLogs[] = 'invalid password';
+                $resultCode = self::LOGIN_RESULT_CODE_INVALID_PASSWORD;
+            }
+
+        } catch (Exception $e) {
+            $overallProcessLogs[] = 'caught-custom-error: ' . $e->getMessage();
+            
         }
 
 
@@ -81,16 +169,21 @@ class JoinController extends Controller
         //
         return [
             'isResultOk' => $isResultOk,
-            'doesPasswordMatch' => $doesPasswordMatch,
-            'userId' => $possibleUser ? $possibleUser->id : 0,
-            'email' => $validatedData['email'],
-            'apiToken' => $token,
+            'validatedData' => $validatedData,
+            'possibleUser' => $possibleUser,
+            'overallProcessLogs' => $overallProcessLogs,
+            'resultCode' => $resultCode,
+            'objs' => [
+                'bmdAuth' => $bmdAuth,
+            ],
         ];
+        //ish
     }
 
 
 
-    public static function deleteStripeDotComCustomer($stripeInstance, $stripeCustomer) {
+    public static function deleteStripeDotComCustomer($stripeInstance, $stripeCustomer)
+    {
         $returnData = [
             'isResultOk' => false,
             'resultMsg' => 'DEFAULT-MSG: CLASS: JoinController, METHOD: deleteStripeDotComCustomer()',
@@ -119,7 +212,7 @@ class JoinController extends Controller
 
     public function save(Request $request)
     {
-        
+
         // 0) Validate
         $validatedData = $request->validate([
             'email' => 'email|min:8|max:64|unique:users',
@@ -146,41 +239,16 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created user';
 
 
-
-            // 3) Create Passport-Password-Access-Token.
-            $request->request->add([
-                'grant_type' => 'password',
-                'client_id' => env('PASSPORT_GRANT_PASSWORD_CLIENT_ID'),
-                'client_secret' => env('PASSPORT_GRANT_PASSWORD_CLIENT_SECRET'),
-                'username' => $user->email,
-                'password' => $request->password,
-                'scope' => '*',
-            ]);
-
-            $tokenRequest = Request::create(
-                url('oauth/token'),
-                'post'
-            );
-
-            $response = Route::dispatch($tokenRequest);;
+            //
+            $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
             $overallProcessLogs[] = 'dispatched oauth-token request';
 
 
-
-            // 4) Parse the Passport response.
-            $rawObjs = json_decode($response->original);
-
-            $convertedObj = [];
-            foreach ($rawObjs as $k => $v) {
-                $convertedObj[$k] = $v;
-            }
-
-
-            // 5) Create BmdAuth obj.
+            // Create BmdAuth obj.
             $bmdAuth = new BmdAuth();
             $bmdAuth->user_id = $user->id;
-            $bmdAuth->token = $convertedObj['access_token'];
-            $bmdAuth->refresh_token = $convertedObj['refresh_token'];
+            $bmdAuth->token = $oauthProps['access_token'];
+            $bmdAuth->refresh_token = $oauthProps['refresh_token'];
             $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
             $bmdAuth->auth_provider_type_id = AuthProviderType::BMD;
             $bmdAuth->save();
@@ -188,7 +256,7 @@ class JoinController extends Controller
 
 
 
-            // 6) Create profile.
+            // Create profile.
             $profile = Profile::create([
                 'user_id' => $user->id
             ]);
@@ -216,7 +284,7 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created stripe-map obj';
 
 
-            
+
             // 8) 
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
