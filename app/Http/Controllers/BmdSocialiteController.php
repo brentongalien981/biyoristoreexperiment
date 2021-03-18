@@ -165,6 +165,9 @@ class BmdSocialiteController extends Controller
 
             $overallProcessLogs[] = 'created bmd-auth obj';
 
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
+
 
             //
             Profile::create([
@@ -257,6 +260,9 @@ class BmdSocialiteController extends Controller
             $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
             $bmdAuth->auth_provider_type_id = AuthProviderType::GOOGLE;
             $bmdAuth->save();
+
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
 
 
             /** 4) */

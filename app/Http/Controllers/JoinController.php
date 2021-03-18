@@ -153,6 +153,9 @@ class JoinController extends Controller
                 $bmdAuth->save();
                 $overallProcessLogs[] = 'updated bmd-auth record';
 
+                $bmdAuth->saveToCache();
+                $overallProcessLogs[] = 'saved bmd-auth to cache';
+
 
                 $resultCode = self::LOGIN_RESULT_CODE_SUCCESS;
                 $isResultOk = true;
@@ -259,6 +262,8 @@ class JoinController extends Controller
             $bmdAuth->save();
             $overallProcessLogs[] = 'created bmd-auth obj';
 
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
 
 
             // Create profile.
