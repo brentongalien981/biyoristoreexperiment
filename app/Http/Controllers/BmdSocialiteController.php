@@ -75,12 +75,15 @@ class BmdSocialiteController extends Controller
 
                 $bmdAuth = $data['bmdAuth'];
                 $socialiteUser = $data['socialiteUser'];
+                $stayLoggedIn = $data['stayLoggedIn'] ? 1 : 0;
 
                 $urlParams .= '?bmdToken=' . $bmdAuth->token;
                 $urlParams .= '&bmdRefreshToken=' . $bmdAuth->refresh_token;
                 $urlParams .= '&expiresIn=' . $bmdAuth->expires_in;
                 $urlParams .= '&authProviderId=' . $bmdAuth->auth_provider_type_id;
                 $urlParams .= '&email=' . $socialiteUser->email;
+                $urlParams .= '&stayLoggedIn=' . $stayLoggedIn;
+                if (isset($data['resultCode'])) { $urlParams .= '&resultCode=' . $data['resultCode']; }
                 break;
 
             case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
@@ -115,11 +118,12 @@ class BmdSocialiteController extends Controller
     public function testhandleSocialiteLoginCallback(Request $r, $isComingFromSignupWorkflow = false)
     {
         $overallProcessLogs[] = 'In METHOD: testhandleSocialiteLoginCallback()';
-        $overallProcessLogs[] = ($isComingFromSignupWorkflow ? 'isComingFromSignupWorkflow' : null);
+        if ($isComingFromSignupWorkflow) {
+            $overallProcessLogs[] = 'Oops! User was trying to sign-up with existing record...';
+        }
 
 
         //ish
-        // Reference a random existing user with appropriate email for google or facebook.
         $providerType = [
             'id' => ($r->provider == 'google' ? 2 : 3),
             'name' => $r->provider,
@@ -127,7 +131,19 @@ class BmdSocialiteController extends Controller
 
 
         try {
-            $user = User::where('email', 'like', '%' . $providerType['name'] . '%')->get()[0];
+            // Reference a random existing user with appropriate email for google or facebook.
+            $possibleUsers = User::where('email', 'like', '%' . $providerType['name'] . '%')->get();
+
+            // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
+            // If the user has no existing record, redirect him to a sign-up workflow.
+            if (!isset($possibleUsers) 
+                || count($possibleUsers) === 0 // TODO:ON-DEPLOYMENT: This should be just ==> count() !== 1
+                || !isset($possibleUsers[0])) {
+                    $isComingFromLoginWorkflow = true;
+                    return $this->testhandleProviderCallback($r, $isComingFromLoginWorkflow);
+            }
+
+            $user = $possibleUsers[0];
             $overallProcessLogs[] = 'referenced an existing user with ' . $providerType['name'] . ' as provider';
 
 
@@ -164,6 +180,8 @@ class BmdSocialiteController extends Controller
                 'bmdAuth' => $bmdAuth,
                 'socialiteUser' => $socialiteUser,
                 'overallProcessLogs' => $overallProcessLogs,
+                'stayLoggedIn' => $stayLoggedIn,
+                'resultCode' => JoinController::LOGIN_RESULT_CODE_SUCCESS,
             ]);
         } catch (Exception $e) {
 
@@ -173,18 +191,23 @@ class BmdSocialiteController extends Controller
                 'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN,
                 'overallProcessLogs' => $overallProcessLogs,
                 'caughtCustomError' => $e->getMessage(),
+                'resultCode' => JoinController::LOGIN_RESULT_CODE_FAIL,
             ]);
         }
     }
 
 
 
-    public function testhandleProviderCallback(Request $r)
+    public function testhandleProviderCallback(Request $r, $isComingFromLoginWorkflow = false)
     {
+
+        $overallProcessLogs[] = 'In METHOD: testhandleProviderCallback()';
+        if ($isComingFromLoginWorkflow) {
+            $overallProcessLogs[] = 'Oops! User was trying to sign-in without existing record';
+        }
+        
         $stripeInstance = null;
         $stripeCustomer = null;
-        $overallProcessLogs = [];
-
 
 
         try {
@@ -203,9 +226,9 @@ class BmdSocialiteController extends Controller
             $socialiteUser->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
 
 
-            // Check if email already exists.
+            // If the user already exists, redirect him to a log-in workflow.
             // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
-            if (User::doesExistWithEmail($email)) {    
+            if (User::doesExistWithEmail($email)) {
                 return $this->testhandleSocialiteLoginCallback($r, true);
             }
 

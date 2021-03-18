@@ -19,9 +19,10 @@ use Illuminate\Support\Facades\Route;
 
 class JoinController extends Controller
 {
-    private const LOGIN_RESULT_CODE_INVALID_PASSWORD = -1;
-    private const LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER = -2;
-    private const LOGIN_RESULT_CODE_SUCCESS = 1;
+    public const LOGIN_RESULT_CODE_INVALID_PASSWORD = -1;
+    public const LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER = -2;
+    public const LOGIN_RESULT_CODE_FAIL = -3;
+    public const LOGIN_RESULT_CODE_SUCCESS = 1;
 
 
 
