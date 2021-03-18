@@ -27,6 +27,16 @@ class BmdSocialiteController extends Controller
     private const AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER = 1;
     private const AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP = 2;
     private const AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP = 3;
+    private const AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN = 4;
+    private const AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN = 5;
+
+
+
+    public function testloginWithAuthProvider(Request $r)
+    {
+        return $this->testhandleSocialiteLoginCallback($r);
+    }
+
 
 
 
@@ -61,18 +71,20 @@ class BmdSocialiteController extends Controller
         switch ($data['authResult']) {
             case self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER:
             case self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP:
+            case self::AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN:
 
+                $bmdAuth = $data['bmdAuth'];
                 $socialiteUser = $data['socialiteUser'];
-                $providerTypeId = $data['providerTypeId'];
 
-                $urlParams .= '?bmdToken=' . $socialiteUser->token;
-                $urlParams .= '&bmdRefreshToken=' . $socialiteUser->refresh_token;
-                $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
-                $urlParams .= '&authProviderId=' . $providerTypeId;
+                $urlParams .= '?bmdToken=' . $bmdAuth->token;
+                $urlParams .= '&bmdRefreshToken=' . $bmdAuth->refresh_token;
+                $urlParams .= '&expiresIn=' . $bmdAuth->expires_in;
+                $urlParams .= '&authProviderId=' . $bmdAuth->auth_provider_type_id;
                 $urlParams .= '&email=' . $socialiteUser->email;
                 break;
 
             case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
+            case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN:
                 $urlParams .= '?caughtCustomError=' . $data['caughtCustomError'];
                 break;
         }
@@ -84,6 +96,8 @@ class BmdSocialiteController extends Controller
 
         switch ($data['authResult']) {
             case self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER:
+            case self::AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN:
+            case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN:
                 $url = self::APP_FRONTEND_LOGIN_RESULT_URL . $urlParams;
                 break;
             case self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP:
@@ -98,12 +112,79 @@ class BmdSocialiteController extends Controller
 
 
 
+    public function testhandleSocialiteLoginCallback(Request $r, $isComingFromSignupWorkflow = false)
+    {
+        $overallProcessLogs[] = 'In METHOD: testhandleSocialiteLoginCallback()';
+        $overallProcessLogs[] = ($isComingFromSignupWorkflow ? 'isComingFromSignupWorkflow' : null);
+
+
+        //ish
+        // Reference a random existing user with appropriate email for google or facebook.
+        $providerType = [
+            'id' => ($r->provider == 'google' ? 2 : 3),
+            'name' => $r->provider,
+        ];
+
+
+        try {
+            $user = User::where('email', 'like', '%' . $providerType['name'] . '%')->get()[0];
+            $overallProcessLogs[] = 'referenced an existing user with ' . $providerType['name'] . ' as provider';
+
+
+            $socialiteUser = new TestSocialiteUser();
+            $socialiteUser->email = $user->email;
+            $socialiteUser->token = Str::random(1024);
+            $socialiteUser->refresh_token = Str::random(32);
+            $socialiteUser->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+            $overallProcessLogs[] = 'using a fake-pre-existing socialite-user';
+
+
+            // Delete the old bmd-auth cache-record
+            $bmdAuth = BmdAuth::where('user_id', $user->id)->get()[0];
+            $bmdAuth->deleteOldCacheRecord();
+            $overallProcessLogs[] = 'deleted old-bmd-auth cache-record';
+
+
+            // Update BmdAuth's token.
+            $bmdAuth->token = $socialiteUser->token;
+            $bmdAuth->refresh_token = $socialiteUser->refresh_token;
+            $bmdAuth->expires_in = $socialiteUser->expires_in;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
+            $bmdAuth->save();
+            $overallProcessLogs[] = 'updated bmd-auth record';
+
+            // saved bmd-auth to cache
+            $stayLoggedIn = ($r->stayLoggedIn == 1 ? true : false);
+            $bmdAuth->saveToCache($stayLoggedIn);
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
+
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN,
+                'bmdAuth' => $bmdAuth,
+                'socialiteUser' => $socialiteUser,
+                'overallProcessLogs' => $overallProcessLogs,
+            ]);
+        } catch (Exception $e) {
+
+            $overallProcessLogs[] = 'caught exxception';
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN,
+                'overallProcessLogs' => $overallProcessLogs,
+                'caughtCustomError' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
+
     public function testhandleProviderCallback(Request $r)
     {
         $stripeInstance = null;
         $stripeCustomer = null;
         $overallProcessLogs = [];
-        
+
 
 
         try {
@@ -119,22 +200,13 @@ class BmdSocialiteController extends Controller
             $socialiteUser->email = $email;
             $socialiteUser->token = Str::random(1024);
             $socialiteUser->refresh_token = Str::random(32);
-            $socialiteUser->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;;
+            $socialiteUser->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
 
 
             // Check if email already exists.
             // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
-            if (User::doesExistWithEmail($email)) {
-                $overallProcessLogs[] = 'socialite-user already exists';
-
-                $data = [
-                    'authResult' => self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER,
-                    'socialiteUser' => $socialiteUser,
-                    'providerTypeId' => $providerType['id'],
-                    'overallProcessLogs' => $overallProcessLogs,
-                ];
-
-                return $this->redirectForAuthResult($data);
+            if (User::doesExistWithEmail($email)) {    
+                return $this->testhandleSocialiteLoginCallback($r, true);
             }
 
 
@@ -202,11 +274,12 @@ class BmdSocialiteController extends Controller
             DB::commit();
             $overallProcessLogs[] = 'commited db-transaction';
 
-            
+
 
             // 
             return $this->redirectForAuthResult([
                 'authResult' => self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP,
+                'bmdAuth' => $bmdAuth,
                 'socialiteUser' => $socialiteUser,
                 'providerTypeId' => $providerType['id'],
                 'overallProcessLogs' => $overallProcessLogs,

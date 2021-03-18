@@ -190,7 +190,6 @@ class JoinController extends Controller
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
             ],
         ];
-        //ish
     }
 
 
