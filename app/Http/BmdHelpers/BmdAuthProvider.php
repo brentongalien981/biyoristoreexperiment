@@ -13,7 +13,7 @@ class BmdAuthProvider
     private static $instance = null;
     private static $user = null;
 
-    
+
     private function __construct()
     {
         // PRIVATE
@@ -32,7 +32,7 @@ class BmdAuthProvider
                 self::$instance = $bmdAuthCacheRecordVal;
                 return;
             }
-            
+
 
             // Or read from db.
             $possibleAccounts = BmdAuth::where('token', $token)->where('auth_provider_type_id', $authProviderId)->get();
@@ -47,14 +47,21 @@ class BmdAuthProvider
 
 
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         return self::$instance;
     }
 
 
 
-    public static function check() {
-        if (isset(self::$instance) && self::$instance->expires_in > time()) { return true; }
+    public static function check()
+    {
+        if (
+            isset(self::$instance)
+            && (self::$instance->frontend_pseudo_expires_in > time() || self::$instance->expires_in > time())
+        ) {
+            return true;
+        }
         return false;
     }
 

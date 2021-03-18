@@ -149,6 +149,7 @@ class JoinController extends Controller
                 $bmdAuth->token = $oauthProps['access_token'];
                 $bmdAuth->refresh_token = $oauthProps['refresh_token'];
                 $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+                $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
                 $bmdAuth->save();
                 $overallProcessLogs[] = 'updated bmd-auth record';
 
@@ -253,6 +254,7 @@ class JoinController extends Controller
             $bmdAuth->token = $oauthProps['access_token'];
             $bmdAuth->refresh_token = $oauthProps['refresh_token'];
             $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
             $bmdAuth->auth_provider_type_id = AuthProviderType::BMD;
             $bmdAuth->save();
             $overallProcessLogs[] = 'created bmd-auth obj';

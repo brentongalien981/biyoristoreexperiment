@@ -159,6 +159,7 @@ class BmdSocialiteController extends Controller
             $bmdAuth->token = $socialiteUser->token;
             $bmdAuth->refresh_token = $socialiteUser->refresh_token;
             $bmdAuth->expires_in = $socialiteUser->expires_in;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
             $bmdAuth->auth_provider_type_id = $providerType['id'];
             $bmdAuth->save();
 
@@ -253,6 +254,7 @@ class BmdSocialiteController extends Controller
             $bmdAuth->token = $socialiteUser->token;
             $bmdAuth->refresh_token = $socialiteUser->refresh_token;
             $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
             $bmdAuth->auth_provider_type_id = AuthProviderType::GOOGLE;
             $bmdAuth->save();
 

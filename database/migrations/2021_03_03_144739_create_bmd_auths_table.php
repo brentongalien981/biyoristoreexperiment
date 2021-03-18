@@ -18,7 +18,7 @@ class CreateBmdAuthsTable extends Migration
             $table->unsignedBigInteger('user_id')->unique();
             $table->string('token', 1024);
             $table->string('refresh_token', 1024)->nullable();
-            $table->string('expires_in', 32)->nullable();
+            $table->string('expires_in', 32);
             $table->unsignedBigInteger('auth_provider_type_id');
             $table->string('oauth_external_user_id', 128)->nullable();
             $table->timestamps();
