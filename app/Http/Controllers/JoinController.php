@@ -112,6 +112,7 @@ class JoinController extends Controller
         $validatedData = $request->validate([
             'email' => 'email|exists:users',
             'password' => 'max:32',
+            'stayLoggedIn' => 'boolean',
         ]);
 
         $possibleUser = User::where('email', $validatedData['email'])->get()[0];
@@ -144,6 +145,10 @@ class JoinController extends Controller
                 $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
                 $overallProcessLogs[] = 'created new user-token';
 
+                // Delete the old bmd-auth cache-record
+                $bmdAuth->deleteOldCacheRecord();
+                $overallProcessLogs[] = 'deleted old-bmd-auth cache-record';
+
 
                 // Update BmdAuth's token.
                 $bmdAuth->token = $oauthProps['access_token'];
@@ -153,7 +158,8 @@ class JoinController extends Controller
                 $bmdAuth->save();
                 $overallProcessLogs[] = 'updated bmd-auth record';
 
-                $bmdAuth->saveToCache();
+                $stayLoggedIn = $validatedData['stayLoggedIn'] ?? false;
+                $bmdAuth->saveToCache($stayLoggedIn);
                 $overallProcessLogs[] = 'saved bmd-auth to cache';
 
 
