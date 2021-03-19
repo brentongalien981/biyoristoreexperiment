@@ -119,3 +119,4 @@ Route::get('/test', function (Request $request) {
     ];
 });
 Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo')->middleware('allow-frontend-only');
+Route::post('/mytest/testbmdauth', 'MyTestController@testbmdauth')->middleware('bmdauth');

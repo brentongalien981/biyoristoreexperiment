@@ -58,7 +58,8 @@ class BmdAuthProvider
     {
         if (
             isset(self::$instance)
-            && (self::$instance->frontend_pseudo_expires_in > time() || self::$instance->expires_in > time())
+            && self::$instance->frontend_pseudo_expires_in > time()
+            && self::$instance->expires_in > time()
         ) {
             return true;
         }

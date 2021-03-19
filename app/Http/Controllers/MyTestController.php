@@ -2,11 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\BmdHelpers\BmdAuthProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class MyTestController extends Controller
 {
+    public function testbmdauth(Request $r) {
+        $bmdAuth = BmdAuthProvider::getInstance();
+
+        return [
+            'msg' => 'In CLASS: MyTestController, METHOD: testbmdauth()',
+            '$r->bmdToken' => $r->bmdToken,
+            '$r->authProviderId' => $r->authProviderId,
+            'bmdAuth' => $bmdAuth,
+        ];
+    }
+
+
+
     public function getHttpInfo(Request $r) {
         $theHeaders = getallheaders();
 

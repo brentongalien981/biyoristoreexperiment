@@ -32,26 +32,14 @@ class JoinController extends Controller
         $bmdAuth = BmdAuthProvider::getInstance();
         $user = BmdAuthProvider::user();
 
-        $bmdAuthCacheRecordKey = 'bmdAuth?token=' . $r->bmdToken . '&authProviderId=' . $r->authProviderId;
-        $bmdAuthCacheRecordVal = Cache::store('redisreader')->get($bmdAuthCacheRecordKey);
-
         return [
             'isResultOk' => $r->bmdToken === $bmdAuth->token ? true : false,
-            // 'comment' => "CLASS: JoinController, METHOD: verify()",
-            // 'validatedData' => [
-            //     'bmdToken' => $r->bmdToken,
-            //     'authProviderId' => $r->authProviderId,
-            // ],
             'objs' => [
-                // 'bmdAuth' => $bmdAuth,
-                // 'user' => $user,
                 'email' => $user->email,
                 'bmdToken' => $bmdAuth->token,
                 'bmdRefreshToken' => $bmdAuth->refresh_token,
                 'expiresIn' => $bmdAuth->expires_in,
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
-                // 'kate' => Cache::store('redisreader')->get('kate'),
-                // 'bmdAuthCacheRecordVal' => $bmdAuthCacheRecordVal,
             ],
         ];
     }
@@ -110,6 +98,7 @@ class JoinController extends Controller
 
     public function login(Request $request)
     {
+        
         $validatedData = $request->validate([
             'email' => 'email|exists:users',
             'password' => 'max:32',
@@ -179,9 +168,7 @@ class JoinController extends Controller
         //
         return [
             'isResultOk' => $isResultOk,
-            'validatedData' => $validatedData,
-            'possibleUser' => $possibleUser,
-            'overallProcessLogs' => $overallProcessLogs,
+            // 'overallProcessLogs' => $overallProcessLogs,
             'resultCode' => $resultCode,
             'objs' => [
                 'email' => $possibleUser->email,
