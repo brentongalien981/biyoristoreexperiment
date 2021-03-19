@@ -50,8 +50,8 @@ class JoinController extends Controller
                 'bmdRefreshToken' => $bmdAuth->refresh_token,
                 'expiresIn' => $bmdAuth->expires_in,
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
-                'kate' => Cache::store('redisreader')->get('kate'),
-                'bmdAuthCacheRecordVal' => $bmdAuthCacheRecordVal,
+                // 'kate' => Cache::store('redisreader')->get('kate'),
+                // 'bmdAuthCacheRecordVal' => $bmdAuthCacheRecordVal,
             ],
         ];
     }
@@ -330,7 +330,7 @@ class JoinController extends Controller
 
 
             $caughtCustomErrors[] = $e->getMessage();
-            $overallProcessLogs[] = 'caught custom-error';
+            $overallProcessLogs[] = 'caught exxception ==> ' . $e->getMessage();
 
             $deletionData = self::deleteStripeDotComCustomer($stripeInstance, $stripeCustomer);
             $overallProcessLogs[] = $deletionData['resultMsg'];

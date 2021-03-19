@@ -75,7 +75,7 @@ class BmdSocialiteController extends Controller
 
                 $bmdAuth = $data['bmdAuth'];
                 $socialiteUser = $data['socialiteUser'];
-                $stayLoggedIn = $data['stayLoggedIn'] ? 1 : 0;
+                $stayLoggedIn = (isset($data['stayLoggedIn']) && $data['stayLoggedIn'] == true) ? 1 : 0;
 
                 $urlParams .= '?bmdToken=' . $bmdAuth->token;
                 $urlParams .= '&bmdRefreshToken=' . $bmdAuth->refresh_token;
@@ -185,7 +185,7 @@ class BmdSocialiteController extends Controller
             ]);
         } catch (Exception $e) {
 
-            $overallProcessLogs[] = 'caught exxception';
+            $overallProcessLogs[] = 'caught exxception ==> ' . $e->getMessage();
 
             return $this->redirectForAuthResult([
                 'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN,
@@ -309,7 +309,7 @@ class BmdSocialiteController extends Controller
             ]);
         } catch (Exception $e) {
 
-            $overallProcessLogs[] = 'caught exxception';
+            $overallProcessLogs[] = 'caught exxception ==> ' . $e->getMessage();
             DB::rollBack();
             $overallProcessLogs[] = 'rolled-back db-transaction';
 
