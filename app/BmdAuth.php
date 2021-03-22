@@ -12,6 +12,13 @@ class BmdAuth extends Model
 
 
 
+    public function getCacheKey() {
+        $bmdAuthCacheRecordKey = 'bmdAuth?token=' . $this->token . '&authProviderId=' . $this->auth_provider_type_id;
+        return $bmdAuthCacheRecordKey;
+    }
+
+
+
     public function deleteOldCacheRecord() {
         $bmdAuthCacheRecordKey = 'bmdAuth?token=' . $this->token . '&authProviderId=' . $this->auth_provider_type_id;
         Cache::store('redisprimary')->forget($bmdAuthCacheRecordKey);
