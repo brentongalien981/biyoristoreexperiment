@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 
 
+/** bmd-auth */
+Route::post('/bmd-auth/checkBmdAuthValidity', 'BmdAuthController@checkBmdAuthValidity')->middleware('bmdauth');
+
+
+
 /* customized-easypost */
 Route::get('/customized-easypost/checkCartItems', 'CustomizedEasyPost@checkCartItems');
 Route::get('/customized-easypost/getRates', 'CustomizedEasyPost@getRates');
