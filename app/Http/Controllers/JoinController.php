@@ -11,7 +11,7 @@ use App\AuthProviderType;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\BmdHelpers\BmdAuthProvider;
+use App\Http\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -63,7 +63,7 @@ class JoinController extends Controller
     }
 
 
-
+    //ish
     private static function createPasswordAccessPassportToken($email, $password, $request)
     {
         // 3) Create Passport-Password-Access-Token.
@@ -239,7 +239,7 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created user';
 
 
-            //
+            //ish
             $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
             $overallProcessLogs[] = 'dispatched oauth-token request';
 

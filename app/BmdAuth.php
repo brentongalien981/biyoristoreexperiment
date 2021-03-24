@@ -9,6 +9,16 @@ class BmdAuth extends Model
 {
 
     public const NUM_OF_SECS_PER_MONTH = 60 * 60 * 24 * 30;
+    public const TOKEN_EXPIRY_GRACE_PERIOD_IN_SEC = 1 * 60; // TODO: Make this 3 minutes.
+
+    public const PSEUDO_SESSION_STATUS_IDLE = 9000;
+    public const PSEUDO_SESSION_STATUS_FLAGGED_EXPIRING = 9002;
+
+
+
+    public static function getGracePeriodExpiryInSec() {
+        return getdate()[0] + self::TOKEN_EXPIRY_GRACE_PERIOD_IN_SEC;
+    }
 
 
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\BmdHelpers;
+namespace App\Http\BmdHelpers;
 
 use App\BmdAuth;
 use App\Models\BmdAuthUser;

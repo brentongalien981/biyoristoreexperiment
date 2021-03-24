@@ -32,6 +32,12 @@ Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handle
 
 
 
+/** test-passport */
+// TODO:ON-DEPLOYMENT: Uncomment
+Route::get('/testpassport/create-token', 'TestPassportController@createPasswordAccessPassportToken');
+
+
+
 /** my-test-controller */
 // FOR-DEBUG
 // TODO:DEPLOYMENT: COMMENT-OUT

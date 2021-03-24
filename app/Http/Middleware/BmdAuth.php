@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use App\BmdHelpers\BmdAuthProvider;
+use App\Http\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Facades\Cache;
 
 class BmdAuth

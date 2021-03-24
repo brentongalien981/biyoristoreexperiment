@@ -16,7 +16,6 @@ class ExtraSeeder extends Seeder
             AddRandomItemTypeIdToProducts::class,
             AddTeamIdToProducts::class,
             SizeAvailabilitySeeder::class,
-            ReviewSeeder::class
         ]);
     }
 }

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 
 /** bmd-auth */
+Route::post('/bmd-auth/trySalvageToken', 'BmdAuthController@trySalvageToken')->middleware('bmdauth');
+Route::post('/bmd-auth/flagAsExpiring', 'BmdAuthController@flagAsExpiring')->middleware('bmdauth');
 Route::post('/bmd-auth/checkBmdAuthValidity', 'BmdAuthController@checkBmdAuthValidity')->middleware('bmdauth');
 
 
