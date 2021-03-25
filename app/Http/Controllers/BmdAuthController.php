@@ -10,13 +10,15 @@ use Illuminate\Support\Facades\Cache;
 
 class BmdAuthController extends Controller
 {
-    public function trySalvageToken(Request $r) {
-        // TODO:DELETE
-        sleep(20);
-
+    public function trySalvageToken(Request $r)
+    {
+        sleep(10);
         $bmdAuth = BmdAuthProvider::getInstance();
 
-        if (!$bmdAuth->stayLoggedIn) {
+        if (
+            !$bmdAuth->stayLoggedIn
+            && $bmdAuth->flag == BmdAuth::PSEUDO_SESSION_STATUS_FLAGGED_EXPIRING
+        ) {
             $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
             $bmdAuth->flag = BmdAuth::PSEUDO_SESSION_STATUS_IDLE;
             Cache::store('redisprimary')->put($bmdAuth->getCacheKey(), $bmdAuth, now()->addDays(30));
@@ -24,15 +26,20 @@ class BmdAuthController extends Controller
 
         return [
             'isResultOk' => true,
+            'bmdAuth' => $bmdAuth,
         ];
     }
 
 
-    
-    public function flagAsExpiring(Request $r) {
+
+    public function flagAsExpiring(Request $r)
+    {
         $bmdAuth = BmdAuthProvider::getInstance();
 
-        if (!$bmdAuth->stayLoggedIn) {
+        if (
+            !$bmdAuth->stayLoggedIn
+            && $bmdAuth->flag != BmdAuth::PSEUDO_SESSION_STATUS_FLAGGED_EXPIRING
+        ) {
             $bmdAuth->frontend_pseudo_expires_in = BmdAuth::getGracePeriodExpiryInSec();
             $bmdAuth->flag = BmdAuth::PSEUDO_SESSION_STATUS_FLAGGED_EXPIRING;
             Cache::store('redisprimary')->put($bmdAuth->getCacheKey(), $bmdAuth, now()->addDays(30));
@@ -61,7 +68,9 @@ class BmdAuthController extends Controller
             $isResultOk = true;
 
             $numOfOpenBrowserTabs = $bmdAuth->numOfOpenBrowserTabs;
-            if (!isset($numOfOpenBrowserTabs) || $numOfOpenBrowserTabs < 0) { $numOfOpenBrowserTabs = 0; }
+            if (!isset($numOfOpenBrowserTabs) || $numOfOpenBrowserTabs < 0) {
+                $numOfOpenBrowserTabs = 0;
+            }
             $updatedNumOfOpenBrowserTabs = $numOfOpenBrowserTabs + 1;
 
             $bmdAuth->numOfOpenBrowserTabs = $updatedNumOfOpenBrowserTabs;
