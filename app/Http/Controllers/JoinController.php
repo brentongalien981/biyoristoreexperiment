@@ -326,7 +326,7 @@ class JoinController extends Controller
             return [
                 'isResultOk' => false,
                 'caughtCustomErrors' => $caughtCustomErrors,
-                'overallProcessLogs' => $overallProcessLogs,
+                // 'overallProcessLogs' => $overallProcessLogs,
             ];
         }
     }
