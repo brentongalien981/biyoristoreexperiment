@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\PaymentInfoResource;
@@ -53,7 +54,7 @@ class ProfileController extends Controller
 
     public function show(Request $request)
     {
-        $user = Auth::user();
+        $user = BmdAuthProvider::user();
 
         //
         $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
@@ -71,7 +72,7 @@ class ProfileController extends Controller
         $userOrders = $user->orders()->orderBy('created_at', 'desc')->take($numOfItemsPerPage)->get();
 
         return [
-            'profile' => new ProfileResource(Auth::user()->profile),
+            'profile' => new ProfileResource($user->profile),
             'paymentInfos' => $paymentMethods['data'],
             'addresses' => AddressResource::collection($user->addresses),
             'orders' => OrderResource::collection($userOrders),
