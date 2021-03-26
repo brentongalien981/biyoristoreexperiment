@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,8 @@ class OrderController extends Controller
                 $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
                 $paymentInfo = $paymentMethod;
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+        }
 
 
 
@@ -46,11 +48,36 @@ class OrderController extends Controller
 
 
 
+
+    public function read(Request $r)
+    {
+        
+        $user = BmdAuthProvider::user();
+
+        // Get the user orders based on the request's order-page-number.
+        $allUserOrders = $user->orders;
+        $totalNumOfItems = count($allUserOrders);
+        $skipNumOfItems = Order::NUM_OF_ITEMS_PER_PAGE * ($r->pageNum - 1);
+        $chunkUserOrders = $user->orders()->orderBy('created_at', 'desc')->skip($skipNumOfItems)->take(Order::NUM_OF_ITEMS_PER_PAGE)->get();
+
+
+        return [
+            'isResultOk' => true,
+            'objs' => [
+                'orders' => OrderResource::collection($chunkUserOrders),
+                'ordersMetaData' => [
+                    'totalNumOfItems' => $totalNumOfItems,
+                    'numOfItemsPerPage' => Order::NUM_OF_ITEMS_PER_PAGE,
+                ]
+            ],
+        ];
+    }
+
+
+
     public function index(Request $request)
     {
-        $user = Auth::user();
-
-
+        $user = BmdAuthProvider::user();
 
         // TODO: Get the user orders based on the request's order-page-number.
         $skipNumOfItems = Order::NUM_OF_ITEMS_PER_PAGE * ($request->pageNum - 1);

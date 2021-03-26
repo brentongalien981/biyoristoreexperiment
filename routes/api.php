@@ -31,11 +31,12 @@ Route::get('/customized-easypost/test', 'CustomizedEasyPost@test');
 
 
 /* order */
+Route::post('/orders/read', 'OrderController@read')->middleware('bmdauth');
 Route::get('/orders/{id}', 'OrderController@show');
+Route::post('/orders', 'OrderController@index')->middleware('bmdauth');
 
 
 /* checkout */
-Route::middleware('auth:api')->get('/orders', 'OrderController@index');
 Route::middleware('auth:api')->post('/checkout/finalizeOrderWithPredefinedPayment', 'CheckoutController@finalizeOrderWithPredefinedPayment');
 Route::post('/checkout/finalizeOrder', 'CheckoutController@finalizeOrder');
 Route::middleware('auth:api')->post('/checkout/readCheckoutRequiredData', 'CheckoutController@readCheckoutRequiredData');

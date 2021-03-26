@@ -66,22 +66,13 @@ class ProfileController extends Controller
         ]);
 
 
-
-        // Get the user orders based on the request's order-page-number.
-        $totalNumOfItems = count($user->orders);
-        $numOfItemsPerPage = Order::NUM_OF_ITEMS_PER_PAGE;
-        $userOrders = $user->orders()->orderBy('created_at', 'desc')->take($numOfItemsPerPage)->get();
-
         
         return [
-            'profile' => new ProfileResource($user->profile),
-            'paymentInfos' => $paymentMethods['data'],
-            'addresses' => AddressResource::collection($user->addresses),
-            'orders' => OrderResource::collection($userOrders),
-            'ordersMetaData' => [
-                'totalNumOfItems' => $totalNumOfItems,
-                'numOfItemsPerPage' => $numOfItemsPerPage,
-            ]
+            'objs' => [
+                'profile' => new ProfileResource($user->profile),
+                'paymentInfos' => $paymentMethods['data'],
+                'addresses' => AddressResource::collection($user->addresses),
+            ],
         ];
     }
 }
