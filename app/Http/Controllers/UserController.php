@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\BmdHelpers\BmdAuthProvider;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Http\BmdHelpers\BmdAuthProvider;
 
 class UserController extends Controller
 {
     private const RESULT_CODE_OLD_PASSWORD_WRONG = ['code' => -1, 'msg' => 'old password is wrong'];
 
 
-
+    
     public function update(Request $r)
     {
         $v = $r->validate([
@@ -45,7 +46,7 @@ class UserController extends Controller
         return [
             'isResultOk' => $isResultOk,
             'resultCode' => $resultCode,
-            'overallProcessLogs' => $overallProcessLogs,            
+            // 'overallProcessLogs' => $overallProcessLogs,            
         ];
     }
 }

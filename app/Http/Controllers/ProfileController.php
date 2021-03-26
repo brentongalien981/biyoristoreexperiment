@@ -16,24 +16,25 @@ class ProfileController extends Controller
 {
     public function save(Request $request)
     {
-        //
+        
         $user = Auth::user();
-        $emailValidationCriteria = "email|min:8|max:64";
-        if ($user->email != $request->email) {
-            $emailValidationCriteria .= "|unique:users";
-        }
+
+        // TODO: On ITER-DEV-005: Delete.
+        // $emailValidationCriteria = "email|min:8|max:64";
+        // if ($user->email != $request->email) {
+        //     $emailValidationCriteria .= "|unique:users";
+        // }
 
         $validatedData = $request->validate([
-            'email' => $emailValidationCriteria,
+            // 'email' => $emailValidationCriteria,
             'firstName' => 'nullable|alpha|max:128',
             'lastName' => 'nullable|alpha|max:128',
             'phone' => 'nullable|string|max:16'
         ]);
 
-
-        //
-        $user->email = $validatedData['email'];
-        $user->save();
+        
+        // $user->email = $validatedData['email'];
+        // $user->save();
 
         $profile = $user->profile;
         $profile->first_name = isset($validatedData['firstName']) ? $validatedData['firstName'] : "";
@@ -71,6 +72,7 @@ class ProfileController extends Controller
         $numOfItemsPerPage = Order::NUM_OF_ITEMS_PER_PAGE;
         $userOrders = $user->orders()->orderBy('created_at', 'desc')->take($numOfItemsPerPage)->get();
 
+        
         return [
             'profile' => new ProfileResource($user->profile),
             'paymentInfos' => $paymentMethods['data'],
