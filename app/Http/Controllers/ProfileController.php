@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\BmdHelpers\BmdAuthProvider;
-use App\Http\Resources\AddressResource;
-use App\Http\Resources\OrderResource;
-use App\Http\Resources\PaymentInfoResource;
-use App\Http\Resources\ProfileResource;
 use App\Order;
 use Exception;
+use App\Address;
+use App\Profile;
+use App\StripeCustomer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\AddressResource;
+use App\Http\Resources\ProfileResource;
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\Http\Resources\PaymentInfoResource;
 
 class ProfileController extends Controller
 {
@@ -56,23 +59,35 @@ class ProfileController extends Controller
     public function show(Request $request)
     {
         $user = BmdAuthProvider::user();
+        $overallProcessLogs = [];
+        $resultCode = 0;
 
-        //
-        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
 
-        $paymentMethods = $stripe->paymentMethods->all([
-            'customer' => $user->stripeCustomer->stripe_customer_id,
-            'type' => 'card',
-        ]);
+        $readData = StripeCustomer::getPaymentMethodsFromCacheWithUser($user);
+        $paymentMethods = $readData['mainData'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $readData['processLogs']);
 
+
+        $readData = Profile::getProfileFromCacheWithUser($user);
+        $profile = $readData['mainData'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $readData['processLogs']);
+
+
+        $readData = Address::getAddressesFromCacheWithUser($user);
+        $addresses = $readData['mainData'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $readData['processLogs']);
+        
+        $resultCode = 1;
 
         
         return [
             'objs' => [
-                'profile' => new ProfileResource($user->profile),
-                'paymentInfos' => $paymentMethods['data'] ?? [],
-                'addresses' => AddressResource::collection($user->addresses) ?? [],
+                'profile' => $profile ?? [],
+                'paymentInfos' => $paymentMethods ?? [],
+                'addresses' => $addresses ?? [],
             ],
+            'overallProcessLogs' => $overallProcessLogs,
+            'resultCode' => $resultCode,
         ];
     }
 }
