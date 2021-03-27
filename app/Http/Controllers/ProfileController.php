@@ -20,7 +20,8 @@ class ProfileController extends Controller
     public function save(Request $request)
     {
         
-        $user = Auth::user();
+        $user = BmdAuthProvider::user();
+        $overallProcessLogs = 'In CLASS: ProfileController, METHOD: save()';
 
         // TODO: On ITER-DEV-005: Delete.
         // $emailValidationCriteria = "email|min:8|max:64";
@@ -35,22 +36,27 @@ class ProfileController extends Controller
             'phone' => 'nullable|string|max:16'
         ]);
 
-        
-        // $user->email = $validatedData['email'];
-        // $user->save();
 
         $profile = $user->profile;
         $profile->first_name = isset($validatedData['firstName']) ? $validatedData['firstName'] : "";
         $profile->last_name = isset($validatedData['lastName']) ? $validatedData['lastName'] : "";
         $profile->phone = isset($validatedData['phone']) ? $validatedData['phone'] : "";
         $profile->save();
+        $overallProcessLogs[] = 'updated profile saved';
+
+        $saveData = Profile::saveProfileToCache($profile);
+        $profile = $saveData['mainData'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $saveData['processLogs']);
 
 
-        //
         return [
             'validatedData' => $validatedData,
-            'profile' => new ProfileResource($profile),
-            'message' => "In CLASS: ProfileController, METHOD: save()"
+            'objs' => [
+                'profile' => $profile,
+                'overallProcessLogs' => $overallProcessLogs,
+            ],
+            // 'profile' => new ProfileResource($profile),
+            // 'message' => ""
         ];
     }
 
@@ -86,7 +92,7 @@ class ProfileController extends Controller
                 'paymentInfos' => $paymentMethods ?? [],
                 'addresses' => $addresses ?? [],
             ],
-            'overallProcessLogs' => $overallProcessLogs,
+            // 'overallProcessLogs' => $overallProcessLogs,
             'resultCode' => $resultCode,
         ];
     }

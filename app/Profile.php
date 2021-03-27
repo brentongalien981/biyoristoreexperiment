@@ -23,6 +23,23 @@ class Profile extends Model
 
 
     /** HELPER-FUNCS */
+    public static function saveProfileToCache($profile) {
+        $processLogs = ['In CLASS: Profile, METHOD: saveProfileToCache()'];
+
+        $cacheKey = 'profile?userId=' . $profile->user->id;
+        $mainData = new ProfileResource($profile);
+
+        Cache::store('redisprimary')->put($cacheKey, $mainData, now()->addDays(7));
+        $processLogs[] = 'has just saved mainData to cache';
+
+        return [
+            'mainData' => $mainData,
+            'processLogs' => $processLogs
+        ];
+    }
+
+
+
     public static function getProfileFromCacheWithUser($user) {
         $processLogs = ['In CLASS: Profile, METHOD: getProfileFromCacheWithUser()'];
 

@@ -112,7 +112,7 @@ Route::post('/join/login', 'JoinController@login');
 
 /* profile */
 Route::post('/profile/show', 'ProfileController@show')->middleware('bmdauth');
-Route::middleware('auth:api')->post('/profile/save', 'ProfileController@save');
+Route::post('/profile/save', 'ProfileController@save')->middleware('bmdauth');
 
 
 
