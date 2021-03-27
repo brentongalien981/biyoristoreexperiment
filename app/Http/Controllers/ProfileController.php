@@ -70,8 +70,8 @@ class ProfileController extends Controller
         return [
             'objs' => [
                 'profile' => new ProfileResource($user->profile),
-                'paymentInfos' => $paymentMethods['data'],
-                'addresses' => AddressResource::collection($user->addresses),
+                'paymentInfos' => $paymentMethods['data'] ?? [],
+                'addresses' => AddressResource::collection($user->addresses) ?? [],
             ],
         ];
     }
