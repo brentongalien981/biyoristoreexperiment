@@ -13,7 +13,7 @@ class StripePaymentMethodController extends Controller
 {
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = BmdAuthProvider::user();
 
         $validatedData = $request->validate([
             'id' => 'required',
@@ -22,6 +22,8 @@ class StripePaymentMethodController extends Controller
             'postalCode' => 'required'
         ]);
 
+
+        $overallProcessLogs = ['In CLASS: StripePaymentMethodController, METHOD: update()'];
 
 
         try {
@@ -42,20 +44,29 @@ class StripePaymentMethodController extends Controller
                     ]
                 ]
             );
+            $overallProcessLogs[] = 'updated stripePaymentMethod';
+
+
+            $resultData = StripeCustomer::clearCachePaymentMethodsWithUser($user);
+            $overallProcessLogs = array_merge($overallProcessLogs, $resultData['processLogs']);
 
 
 
             //
             return [
                 'isResultOk' => true,
-                'validatedData' => $validatedData,
-                'newPayment' => $stripePaymentMethod
+                // 'overallProcessLogs' => $overallProcessLogs,
+                'objs' => [
+                    'newPayment' => $stripePaymentMethod
+                ],
             ];
         } catch (Exception $e) {
+            $overallProcessLogs[] = 'caught-custom-error ==> ' . $e->getMessage();
+
             return [
                 'isResultOk' => false,
-                'validatedData' => $validatedData,
-                'customErrors' => ["Payment Error" => [$e->getMessage()]]
+                'caughtCustomError' => $e->getMessage(),
+                // 'overallProcessLogs' => $overallProcessLogs,
             ];
         }
     }
