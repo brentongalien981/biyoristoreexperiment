@@ -17,6 +17,7 @@ class AllowFrontendRefererOnly
     {
         $theHeaders = getallheaders();
         $refererUrl = $theHeaders['Referer'] ?? null;
+        $refererUrl = substr($refererUrl, 0, strlen(env('APP_FRONTEND_REFERER_URL')));
 
         if (
             isset($refererUrl)
@@ -25,6 +26,8 @@ class AllowFrontendRefererOnly
             return $next($request);
         }
 
-        return response("BmdException: Bad Frontend-Referer URL.", 401);
+        $responseMsg = 'BmdException: Bad Frontend-Referer';
+        // $responseMsg = 'BmdException: Bad Frontend-Referer URL ==> ' . $refererUrl . ' .';
+        return response($responseMsg, 501);
     }
 }

@@ -21,7 +21,8 @@ class ProfileController extends Controller
     {
         
         $user = BmdAuthProvider::user();
-        $overallProcessLogs = 'In CLASS: ProfileController, METHOD: save()';
+        $overallProcessLogs = ['In CLASS: ProfileController, METHOD: save()'];
+        $isResultOk = false;
 
         // TODO: On ITER-DEV-005: Delete.
         // $emailValidationCriteria = "email|min:8|max:64";
@@ -48,15 +49,16 @@ class ProfileController extends Controller
         $profile = $saveData['mainData'];
         $overallProcessLogs = array_merge($overallProcessLogs, $saveData['processLogs']);
 
+        $isResultOk = true;
+
 
         return [
+            'isResultOk' => $isResultOk,
             'validatedData' => $validatedData,
             'objs' => [
-                'profile' => $profile,
-                'overallProcessLogs' => $overallProcessLogs,
+                'profile' => $profile ?? [],
+                // 'overallProcessLogs' => $overallProcessLogs,
             ],
-            // 'profile' => new ProfileResource($profile),
-            // 'message' => ""
         ];
     }
 

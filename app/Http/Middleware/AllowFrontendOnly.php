@@ -17,6 +17,7 @@ class AllowFrontendOnly
     {
         $theHeaders = getallheaders();
         $frontendUrl = $theHeaders['Origin'] ?? null;
+        $frontendUrl = substr($frontendUrl, 0, strlen(env('APP_FRONTEND_URL')));
 
         if (
             isset($frontendUrl)
@@ -25,6 +26,6 @@ class AllowFrontendOnly
             return $next($request);
         }
 
-        return response("BmdException: Bad Frontend URL.", 401);
-    }
+        return response("BmdException: Bad Frontend URL.", 501);
+
 }

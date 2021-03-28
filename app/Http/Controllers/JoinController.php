@@ -63,7 +63,7 @@ class JoinController extends Controller
     }
 
 
-    //ish
+
     private static function createPasswordAccessPassportToken($email, $password, $request)
     {
         // 3) Create Passport-Password-Access-Token.
@@ -239,7 +239,6 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created user';
 
 
-            //ish
             $oauthProps = self::createPasswordAccessPassportToken($validatedData['email'], $validatedData['password'], $request);
             $overallProcessLogs[] = 'dispatched oauth-token request';
 
