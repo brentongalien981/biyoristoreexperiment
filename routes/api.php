@@ -44,8 +44,8 @@ Route::middleware('auth:api')->post('/checkout/readCheckoutRequiredData', 'Check
 
 
 /* payment */
-Route::middleware('auth:api')->post('/stripePaymentMethod/save', 'StripePaymentMethodController@save');
-Route::middleware('auth:api')->post('/stripePaymentMethod/update', 'StripePaymentMethodController@update');
+Route::post('/stripePaymentMethod/save', 'StripePaymentMethodController@save')->middleware('bmdauth');
+Route::post('/stripePaymentMethod/update', 'StripePaymentMethodController@update')->middleware('bmdauth');
 Route::post('/paymentIntent', 'PaymentIntentController@create');
 
 

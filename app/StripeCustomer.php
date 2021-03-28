@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class StripeCustomer extends Model
 {
+    public static function clearCachePaymentMethodsWithUser($user) {
+
+        $processLogs = ['In CLASS: StripeCustomer, METHOD: clearCachePaymentMethodsWithUser()'];
+        $cacheKey = 'stripePaymentMethods?userId=' . $user->id;
+
+        Cache::store('redisprimary')->forget($cacheKey);
+        $processLogs[] = 'cleared user-payment-methods in cache';
+
+
+        return [
+            'processLogs' => $processLogs
+        ];
+    }
+
+
+
     public static function getPaymentMethodsFromCacheWithUser($user)
     {
         $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));

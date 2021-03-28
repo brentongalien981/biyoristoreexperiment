@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\StripeCustomer;
 use Error;
 use Exception;
 use Illuminate\Http\Request;
@@ -62,7 +64,7 @@ class StripePaymentMethodController extends Controller
 
     public function save(Request $request)
     {
-        $user = Auth::user();
+        $user = BmdAuthProvider::user();
 
         $validatedData = $request->validate([
             'id' => 'nullable|numeric',
@@ -73,6 +75,7 @@ class StripePaymentMethodController extends Controller
             'postalCode' => 'required'
         ]);
 
+        $overallProcessLogs = ['In CLASS: StripePaymentMethodController, METHOD: save()'];
 
 
         try {
@@ -93,6 +96,7 @@ class StripePaymentMethodController extends Controller
                     ]
                 ]
             ]);
+            $overallProcessLogs[] = 'created stripePaymentMethod';
 
 
             $stripeCustomerId = $user->stripeCustomer->stripe_customer_id;
@@ -101,22 +105,30 @@ class StripePaymentMethodController extends Controller
                 $stripePaymentMethod->id,
                 ['customer' => $stripeCustomerId]
             );
+            $overallProcessLogs[] = 'attached stripePaymentMethod to stripe-customer';
+
+
+            $resultData = StripeCustomer::clearCachePaymentMethodsWithUser($user);
+            $overallProcessLogs = array_merge($overallProcessLogs, $resultData['processLogs']);
 
 
 
-            //
             return [
                 'isResultOk' => true,
-                'validatedData' => $validatedData,
-                'stripeCustomerId' => $stripeCustomerId,
-                'stripePaymentMethodId' => $stripePaymentMethod->id,
-                'newPayment' => $stripePaymentMethod
+                // 'overallProcessLogs' => $overallProcessLogs,
+                'objs' => [
+                    'stripeCustomerId' => $stripeCustomerId,
+                    'stripePaymentMethodId' => $stripePaymentMethod->id,
+                    'newPayment' => $stripePaymentMethod
+                ],
             ];
         } catch (Exception $e) {
+            $overallProcessLogs[] = 'caught-custom-error ==> ' . $e->getMessage();
+
             return [
                 'isResultOk' => false,
-                'validatedData' => $validatedData,
-                'customErrors' => ["Payment Error" => [$e->getMessage()]]
+                'caughtCustomError' => $e->getMessage(),
+                // 'overallProcessLogs' => $overallProcessLogs,
             ];
         }
     }
