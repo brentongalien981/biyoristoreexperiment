@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             TeamSeeder::class,
             ReviewSeeder::class,
             AuthProviderTypeSeeder::class,
+            BmdAuthSeeder::class
         ]);
     }
 }

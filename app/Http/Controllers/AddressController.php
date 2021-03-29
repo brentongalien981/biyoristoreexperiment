@@ -6,26 +6,44 @@ use Exception;
 use App\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
 use App\Http\BmdHelpers\BmdAuthProvider;
 
 class AddressController extends Controller
 {
     public function destroy(Request $request)
-    {
-        $isResultOk = false;
-        
+    {        
         $validatedData = $request->validate([
             'addressId' => 'required|numeric',
         ]);
 
-        Address::destroy($validatedData['addressId']);
 
-        $isResultOk = true;
+        $isResultOk = false;
+        $overallProcessLogs = ['In CLASS: AddressController, METHOD: save()'];
+        
+        $user = BmdAuthProvider::user();
+        $a = Address::find($validatedData['addressId']);
+
+
+        if (Gate::forUser($user)->authorize('delete', $a)) {
+
+            Address::destroy($validatedData['addressId']);
+            $overallProcessLogs[] = 'deleted address from db';
+
+            $resultData = Address::clearCacheAddressesWithUserId($user->id);
+            $overallProcessLogs = array_merge($overallProcessLogs, $resultData['processLogs']);
+
+            $isResultOk = true;
+        }
+
+
+
 
         return [
             'isResultOk' => $isResultOk,
-            'validatedData' => $validatedData
+            // 'validatedData' => $validatedData,
+            // 'overallProcessLogs' => $overallProcessLogs
         ];
     }
 
@@ -46,7 +64,11 @@ class AddressController extends Controller
         $overallProcessLogs = ['In CLASS: AddressController, METHOD: save()'];
 
         $address = null;
-        if (isset($validatedData['id'])) { $address = Address::find($validatedData['id']); }
+        if (isset($validatedData['id'])) { 
+            $address = Address::find($validatedData['id']); 
+
+            if (Gate::forUser($user)->authorize('update', $address)) {}
+        }
         else { $address = new Address(); }
         
         $address->user_id = $user->id;
