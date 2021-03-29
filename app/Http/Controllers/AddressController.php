@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Address;
-use App\Http\Resources\AddressResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\AddressResource;
+use App\Http\BmdHelpers\BmdAuthProvider;
 
 class AddressController extends Controller
 {
@@ -28,9 +30,7 @@ class AddressController extends Controller
     }
 
     public function save(Request $request)
-    {
-        $user = Auth::user();
-        $isResultOk = false;
+    {               
         
         $validatedData = $request->validate([
             'id' => 'nullable|numeric',
@@ -40,6 +40,10 @@ class AddressController extends Controller
             'country' => 'required|string|max:32',
             'postalCode' => 'required|string|max:16',
         ]);
+
+
+        $user = BmdAuthProvider::user();
+        $overallProcessLogs = ['In CLASS: AddressController, METHOD: save()'];
 
         $address = null;
         if (isset($validatedData['id'])) { $address = Address::find($validatedData['id']); }
@@ -52,15 +56,16 @@ class AddressController extends Controller
         $address->country = $validatedData['country'];
         $address->postal_code = $validatedData['postalCode'];
         $address->save();
+        $overallProcessLogs[] = 'saved mainData to db';
 
 
+        $resultData = Address::clearCacheAddressesWithUserId($address->user_id);
+        $overallProcessLogs = array_merge($overallProcessLogs, $resultData['processLogs']);
 
-        $isResultOk = true;
 
         return [
-            'isResultOk' => $isResultOk,
-            'validatedData' => $validatedData,
-            'address' => new AddressResource($address)
+            'isResultOk' => true,
+            // 'overallProcessLogs' => $overallProcessLogs
         ];
     }
 }

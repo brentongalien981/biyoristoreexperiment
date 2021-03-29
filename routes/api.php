@@ -68,8 +68,8 @@ Route::middleware('auth:api')->get('/cart/show', 'CartController@show');
 
 
 /* address */
-Route::middleware('auth:api')->post('/address/destroy', 'AddressController@destroy');
-Route::middleware('auth:api')->post('/address/save', 'AddressController@save');
+Route::post('/address/destroy', 'AddressController@destroy')->middleware('bmdauth');
+Route::post('/address/save', 'AddressController@save')->middleware('bmdauth');
 
 
 

@@ -8,6 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Address extends Model
 {
+    public static function clearCacheAddressesWithUserId($userId) {
+        $processLogs = ['In CLASS: Address, METHOD: clearCacheAddressesWithUserId()'];
+
+        $cacheKey = 'addresses?userId=' . $userId;
+
+        Cache::store('redisprimary')->forget($cacheKey);
+        $processLogs[] = 'cleared user-addresses in cache';
+
+
+        return [
+            'processLogs' => $processLogs
+        ];
+    }
+
+
+
     public static function getAddressesFromCacheWithUser($user)
     {
 
