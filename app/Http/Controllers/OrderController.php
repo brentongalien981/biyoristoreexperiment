@@ -50,16 +50,11 @@ class OrderController extends Controller
 
 
     public function read(Request $r)
-    {
-        //bmd-todo: delete
-        sleep(3);
-        throw new Exception('oh  no');
-        
+    {        
         $user = BmdAuthProvider::user();
         $overallProcessLogs = ['In CLASS: OrderController, METHOD: read()'];
 
 
-        // bmd-todo: Save the order objs to cache.
         $readData = Order::getUserOrdersDataFromCache($user, $r->pageNum);
         $orders = $readData['mainData'];
         $totalNumOfItems = $readData['totalNumOfItems'];
@@ -68,7 +63,7 @@ class OrderController extends Controller
 
         return [
             'isResultOk' => true,
-            'overallProcessLogs' => $overallProcessLogs,
+            // 'overallProcessLogs' => $overallProcessLogs,
             'objs' => [
                 'orders' => $orders,
                 'ordersMetaData' => [
