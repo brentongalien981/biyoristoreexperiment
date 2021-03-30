@@ -51,20 +51,26 @@ class OrderController extends Controller
 
     public function read(Request $r)
     {
+        //bmd-todo: delete
+        sleep(3);
+        throw new Exception('oh  no');
         
         $user = BmdAuthProvider::user();
+        $overallProcessLogs = ['In CLASS: OrderController, METHOD: read()'];
 
-        // Get the user orders based on the request's order-page-number.
-        $allUserOrders = $user->orders;
-        $totalNumOfItems = count($allUserOrders);
-        $skipNumOfItems = Order::NUM_OF_ITEMS_PER_PAGE * ($r->pageNum - 1);
-        $chunkUserOrders = $user->orders()->orderBy('created_at', 'desc')->skip($skipNumOfItems)->take(Order::NUM_OF_ITEMS_PER_PAGE)->get();
+
+        // bmd-todo: Save the order objs to cache.
+        $readData = Order::getUserOrdersDataFromCache($user, $r->pageNum);
+        $orders = $readData['mainData'];
+        $totalNumOfItems = $readData['totalNumOfItems'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $readData['processLogs']);
 
 
         return [
             'isResultOk' => true,
+            'overallProcessLogs' => $overallProcessLogs,
             'objs' => [
-                'orders' => OrderResource::collection($chunkUserOrders),
+                'orders' => $orders,
                 'ordersMetaData' => [
                     'totalNumOfItems' => $totalNumOfItems,
                     'numOfItemsPerPage' => Order::NUM_OF_ITEMS_PER_PAGE,

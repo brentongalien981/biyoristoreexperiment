@@ -2,16 +2,63 @@
 
 namespace App;
 
+use App\Http\Resources\OrderResource;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Order extends Model
 {
-    //
     const NUM_OF_ITEMS_PER_PAGE = 2;
 
 
 
-    //
+    public static function getUserOrdersDataFromCache($user, $pageNum)
+    {
+
+        $processLogs = ['In CLASS: Order, METHOD: getUserOrdersDataFromCache()'];
+        $cacheKey = 'orders?userId=' . $user->id;
+
+        $allUserOrders = Cache::store('redisreader')->get($cacheKey);
+
+        if ($allUserOrders) {
+            $processLogs[] = 'allUserOrders has been read from cache';
+        } else {
+            $processLogs[] = 'allUserOrders were not found from cache';
+
+            $allUserOrders = $user->orders()->orderBy('created_at', 'desc')->get();
+            $processLogs[] = 'allUserOrders has been read from db';
+
+            Cache::store('redisprimary')->put($cacheKey, $allUserOrders, now()->addDays(2));
+            
+            $processLogs[] = 'allUserOrders has been saved to cache';
+        }
+
+
+        $chunkOrders = [];
+        $skipNumOfItems = self::NUM_OF_ITEMS_PER_PAGE * ($pageNum - 1);
+        $startIndexOfPageOrders = $skipNumOfItems;
+        $endIndexOfPageOrders = $skipNumOfItems + self::NUM_OF_ITEMS_PER_PAGE - 1;
+
+        for ($i = $startIndexOfPageOrders; $i < $endIndexOfPageOrders; $i++) {
+            if (!isset($allUserOrders[$i])) {
+                break;
+            }
+            $chunkOrders[] = $allUserOrders[$i];
+        }
+
+
+        $totalNumOfItems = count($allUserOrders);
+        $chunkOrders = OrderResource::collection($chunkOrders);
+
+        return [
+            'mainData' => $chunkOrders,
+            'totalNumOfItems' => $totalNumOfItems,
+            'processLogs' => $processLogs
+        ];
+    }
+
+
+
     public static function getOrderAmountInCents($items)
     {
 
