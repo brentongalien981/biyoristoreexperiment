@@ -3,26 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Cart;
+use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\Resources\CartResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    public function show(Request $request)
+    public function read(Request $request)
     {
-        $isResultOk = false;
-        $user = Auth::user();
-        $cart = $user->carts()->where('is_active', 1)->take(1)->get();
-        $cart = count($cart) > 0 ? new CartResource($cart[0]) : null;
-        // $cart = Cart::find($cart[]);
+        $user = BmdAuthProvider::user();
+        $overallProcessLogs[] = 'In CLASS: CartController, METHOD: read().';
 
-        $isResultOk = true;
+        
+        // bmd-todo
+        $resultData = Cart::getUserCartFromCache($user);
+        $cart = $resultData['mainData'];
+        $overallProcessLogs = array_merge($overallProcessLogs, $resultData['processLogs']);
+
 
         return [
-            'isResultOk' => $isResultOk,
-            'message' => 'From CLASS: CartController, METHOD: show()',
-            'obj' => $cart,
+            'isResultOk' => true,
+            'overallProcessLogs' => $overallProcessLogs,
+            'retrievedDataFrom' => $resultData['retrievedDataFrom'],
+            'objs' => [
+                'cart' => $cart
+            ],
         ];
     }
 }

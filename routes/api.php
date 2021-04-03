@@ -63,7 +63,7 @@ Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save')
 
 
 /* cart */
-Route::middleware('auth:api')->get('/cart/show', 'CartController@show');
+Route::post('/cart/read', 'CartController@read')->middleware('bmdauth');
 
 
 
