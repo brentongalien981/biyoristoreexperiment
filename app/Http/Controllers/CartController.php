@@ -17,6 +17,25 @@ class CartController extends Controller
 
 
 
+    public function addItem(Request $r) {
+        $userId = $r->temporaryGuestUserId;
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+        }
+
+        $updatedCart = null;
+
+
+        return [
+            'isResultOk' => true,
+            'objs' => [
+                'cart' => $updatedCart
+            ],
+        ];
+    }
+
+
+
     public function read(Request $r)
     {
         $userId = null;
