@@ -10,35 +10,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
-    public static function getUserCartFromCache($user)
+    public static function getUserCartFromCache($userId)
     {
-        $cacheKey = 'cart?userId=' . $user->id;
+        $cacheKey = 'cart?userId=' . $userId;
         $cart = Cache::store('redisreader')->get($cacheKey);
-        $retrievedDataFrom = BmdGlobalConstants::RETRIEVED_DATA_FROM_CACHE;
         $shouldCreateNewCartObj = false;
 
         if ($cart) {
             if (CacheObjectsLifespanManager::shouldRefresh('cart', $cart)) {
                 $shouldCreateNewCartObj = true;
             }
-        } else {
-
-            $retrievedDataFrom = BmdGlobalConstants::RETRIEVED_DATA_FROM_DB;
-            $carts = $user->carts()->where('is_active', 1)->take(1)->get();
-
-            if (isset($carts) && count($carts) === 1) {
-                $cart = new CartResource($carts[0]);
-            } else {
-                $shouldCreateNewCartObj = true;
-            }
-        }
+        } else { $shouldCreateNewCartObj = true; }
 
 
         if ($shouldCreateNewCartObj) {
             // Create a new cart-obj, but don't save it to db cause cart-db-record needs Stripe-payment-intent-id.
             $cart = new Cart();
             $cart->id = 0;
-            $cart->user_id = $user->id;
             $cart->is_active = 1;
             $cart = new CartResource($cart);
         }
@@ -48,8 +36,7 @@ class Cart extends Model
 
 
         return [
-            'mainData' => $cart,
-            'retrievedDataFrom' => $retrievedDataFrom
+            'mainData' => $cart
         ];
     }
 

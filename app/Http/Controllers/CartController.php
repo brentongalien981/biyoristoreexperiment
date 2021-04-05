@@ -17,17 +17,22 @@ class CartController extends Controller
 
 
 
-    public function read(Request $request)
+    public function read(Request $r)
     {
-        $user = BmdAuthProvider::user();
+        $userId = null;
 
-        $resultData = Cart::getUserCartFromCache($user);
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+        } else {
+            $userId = $r->temporaryGuestUserId;
+        }
+
+        $resultData = Cart::getUserCartFromCache($userId);
         $cart = $resultData['mainData'];
 
 
         return [
             'isResultOk' => true,
-            'retrievedDataFrom' => $resultData['retrievedDataFrom'],
             'objs' => [
                 'cart' => $cart
             ],

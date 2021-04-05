@@ -56,6 +56,7 @@ Route::middleware('auth:api')->post('/paymentInfo/save', 'PaymentInfoController@
 
 
 /* cartItem */
+//bmd-todo: delete
 Route::middleware('auth:api')->post('/cartItem/update', 'CartItemController@update');
 Route::middleware('auth:api')->post('/cartItem/delete', 'CartItemController@destroy');
 Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save');
@@ -65,6 +66,7 @@ Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save')
 /* cart */
 Route::post('/cart/updateUserCartCache', 'CartController@updateUserCartCache')->middleware('bmdauth');
 Route::post('/cart/read', 'CartController@read')->middleware('bmdauth');
+Route::get('/cart/read', 'CartController@read');
 
 
 
