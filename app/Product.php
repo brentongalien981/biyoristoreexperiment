@@ -2,7 +2,10 @@
 
 namespace App;
 
+use App\Http\Resources\ProductResource;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use App\MyHelpers\Cache\CacheObjectsLifespanManager;
 
 /**
  * buy_price is display-price of product on seller's website (w/o shipping-fee, shipping-fee-tax, item-tax)
@@ -13,6 +16,38 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public static function getProductFromCache($productId, $retrieveJsonResource = false) {
+
+        $cacheKey = ($retrieveJsonResource ? 'productResource' : 'product') . '?id=' . $productId;
+
+        $p = Cache::store('redisreader')->get($cacheKey);
+        $shouldReferenceObjFromDb = false;
+
+        if ($p) {
+            if (CacheObjectsLifespanManager::shouldRefresh('product', $p)) {
+                $shouldReferenceObjFromDb = true;
+            }
+        } else { $shouldReferenceObjFromDb = true; }
+
+
+        if ($shouldReferenceObjFromDb) {
+            $p = self::find($productId);
+        }
+
+        if (isset($p)) {
+            $p = new ProductResource($p);
+            $p->lastRefreshedInSec = $p->lastRefreshedInSec ?? getdate()[0];
+            Cache::store('redisprimary')->put($cacheKey, $p, now()->addDays(1));
+        }
+
+
+        return [
+            'mainData' => $p
+        ];
+    }
+
+
+
     public function reviews()
     {
         return $this->hasMany('App\Review');
@@ -34,9 +69,9 @@ class Product extends Model
 
 
 
-    public function cartItem()
+    public function productItem()
     {
-        return $this->belongsTo('App\CartItem');
+        return $this->belongsTo('App\ProductItem');
     }
 
     public function productPhotoUrls()

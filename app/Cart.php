@@ -10,6 +10,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
+    public const RESULT_CODE_ADD_ITEM_ALREADY_EXISTS = -1;
+    public const RESULT_CODE_ADD_ITEM_DATA_MISMATCHES = -2;
+
+    public const RESULT_CODE_ADD_ITEM_OK_TO_ADD = 1;
+    
+
+
+
     public static function getUserCartFromCache($userId)
     {
         $cacheKey = 'cart?userId=' . $userId;
