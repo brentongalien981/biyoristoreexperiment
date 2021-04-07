@@ -44,6 +44,10 @@ class CartController extends Controller
         $resultCode = CartVerifier::verifyAddingItemToCartWithData($v);
 
         // bmd-todo: Add item to cart if ok to do so..
+        if ($resultCode == Cart::RESULT_CODE_ADD_ITEM_OK_TO_ADD) {
+            $updatedCart = Cart::addItemToCartCacheWithData($v);
+            $resultCode = Cart::RESULT_CODE_ADD_ITEM_SUCCESSFUL;
+        }
 
 
         return [

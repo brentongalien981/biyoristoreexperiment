@@ -35,7 +35,7 @@ class Product extends Model
         }
 
         if (isset($p)) {
-            $p = new ProductResource($p);
+            $p = ($retrieveJsonResource ? new ProductResource($p) : $p);
             $p->lastRefreshedInSec = $p->lastRefreshedInSec ?? getdate()[0];
             Cache::store('redisprimary')->put($cacheKey, $p, now()->addDays(1));
         }

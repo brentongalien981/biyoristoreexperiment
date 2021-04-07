@@ -10,11 +10,37 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cart extends Model
 {
+    /** CONSTS */
     public const RESULT_CODE_ADD_ITEM_ALREADY_EXISTS = -1;
     public const RESULT_CODE_ADD_ITEM_DATA_MISMATCHES = -2;
 
     public const RESULT_CODE_ADD_ITEM_OK_TO_ADD = 1;
+    public const RESULT_CODE_ADD_ITEM_SUCCESSFUL = 2;
     
+
+
+    /** HELPER-FUNCS */
+    public static function addItemToCartCacheWithData($data) {
+
+        $cacheKey = 'cart?userId=' . $data['userId'];
+        $cart = Cache::store('redisreader')->get($cacheKey);
+
+        $product = Product::getProductFromCache($data['productId'], true)['mainData'];
+        $newCartItem = new CartItem();
+        $newCartItem->product_id = $data['productId'];
+        $newCartItem->quantity = 1;
+        $newCartItem->product = $product;
+        $newCartItem->sellerProductId = $data['sellerProductId'];
+        $newCartItem->sizeAvailabilityId = $data['sizeAvailabilityId'];
+
+        $cartItems = $cart->cartItems ?? [];
+        $cartItems[] = $newCartItem;
+        $cart->cartItems = $cartItems;      
+        
+        Cache::store('redisprimary')->put($cacheKey, $cart);
+
+        return $cart;
+    }
 
 
 
@@ -36,7 +62,7 @@ class Cart extends Model
             $cart = new Cart();
             $cart->id = 0;
             $cart->is_active = 1;
-            $cart = new CartResource($cart);
+            // $cart = new CartResource($cart);
         }
 
         $cart->lastRefreshedInSec = $cart->lastRefreshedInSec ?? getdate()[0];
@@ -65,6 +91,9 @@ class Cart extends Model
         $cartItem->save();
     }
 
+
+
+    /** MAIN-FUNCS */
     public function cartItems()
     {
         return $this->hasMany('App\CartItem');

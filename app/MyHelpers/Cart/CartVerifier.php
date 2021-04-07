@@ -12,6 +12,8 @@ class CartVerifier
     public static function isItemWithSizeAlreadyInCart($data, $cart)
     {
 
+        if (!isset($cart->cartItems)) { return false; }
+
         foreach ($cart->cartItems as $ci) {
             if (
                 $ci->product->id == $data['productId']
@@ -46,11 +48,10 @@ class CartVerifier
 
                 if ($sellerProductPivot->id == $data['sellerProductId']) {
 
-                    //bmd-todo
                     $sellerProductSizeAvailabilities = SellerProduct::getSizeAvailabilitiesFromCache($sellerProductPivot->id)['mainData'];
 
                     // Verify that the size-availability is associated with the seller-product.
-                    foreach ($sellerProductSizeAvailabilities as $sizeAvailability) {
+                    foreach ($sellerProductSizeAvailabilities->objs as $sizeAvailability) {
                         if ($sizeAvailability->id == $data['sizeAvailabilityId']) {
                             return Cart::RESULT_CODE_ADD_ITEM_OK_TO_ADD;
                         }
