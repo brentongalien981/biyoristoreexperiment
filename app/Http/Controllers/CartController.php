@@ -3,20 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Cart;
-use App\Http\BmdHelpers\BmdAuthProvider;
-use App\Http\Resources\CartResource;
-use App\MyHelpers\Cart\CartVerifier;
 use App\Product;
 use App\SellerProduct;
 use Illuminate\Http\Request;
+use App\Http\Resources\CartResource;
+use App\MyHelpers\Cart\CartVerifier;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use App\Http\BmdHelpers\BmdAuthProvider;
 
 class CartController extends Controller
 {
-    public function updateUserCartCache(Request $r)
+
+    public function updateCartItemCount(Request $r)
     {
-        $u = BmdAuthProvider::user();
-        // bmd-todo
+        $v = $r->validate([
+            'sellerProductId' => 'required|numeric',
+            'sizeAvailabilityId' => 'required|numeric',
+            'quantity' => 'required|integer|min:1|max:' . Cart::MAX_CART_ITEM_QUANTITY
+        ]);
+
+        $userId = $r->temporaryGuestUserId;
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+        }
+
+
+        $updatedCart = Cart::getUserCartFromCache($userId)['mainData'];
+        $cartItems = $updatedCart->cartItems ?? [];
+
+        foreach ($cartItems as $ci) {
+            if ($ci->sellerProductId == $v['sellerProductId'] && $ci->sizeAvailabilityId == $v['sizeAvailabilityId']) {
+                $ci->quantity = $v['quantity'];
+                break;
+            }
+        }
+
+        $cacheKey = 'cart?userId=' . $userId;
+        Cache::store('redisprimary')->put($cacheKey, $updatedCart);
+
+
+        return [
+            'isResultOk' => true,
+            'objs' => [
+                'cart' => $updatedCart
+            ],
+        ];
     }
 
 

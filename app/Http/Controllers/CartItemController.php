@@ -13,37 +13,6 @@ use Illuminate\Support\Facades\Auth;
 
 class CartItemController extends Controller
 {
-    public function update(Request $request)
-    {
-        //
-        $isResultOk = false;
-
-        $validatedData = $request->validate([
-            'cartItemId' => 'required|integer',
-        ]);
-
- 
-        $cartItem = CartItem::find($validatedData['cartItemId']);
-
-        $validatedData = $request->validate([
-            'quantity' => ['required', 'integer', new WithinStockLimit($cartItem->product), new NonZeroCartItemQuantity()],
-        ]);
-
-
-        $cartItem->quantity = $validatedData['quantity'];
-        $cartItem->save();
-        $isResultOk = true;
-
-
-
-        return [
-            'isResultOk' => $isResultOk,
-            'message' => 'From CLASS: CartItemController, METHOD: update()',
-            'validatedData' => $validatedData
-        ];
-    }
-
-
 
     public function destroy(Request $request)
     {

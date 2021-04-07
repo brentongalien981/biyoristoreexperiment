@@ -17,7 +17,9 @@ class Cart extends Model
     public const RESULT_CODE_ADD_ITEM_OK_TO_ADD = 1;
     public const RESULT_CODE_ADD_ITEM_SUCCESSFUL = 2;
     
+    public const MAX_CART_ITEM_QUANTITY = 100;
 
+    
 
     /** HELPER-FUNCS */
     public static function addItemToCartCacheWithData($data) {
