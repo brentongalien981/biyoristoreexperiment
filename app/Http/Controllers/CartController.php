@@ -14,6 +14,17 @@ use App\Http\BmdHelpers\BmdAuthProvider;
 
 class CartController extends Controller
 {
+    
+    public function tryExtendingCartLifespan(Request $r) {
+        return [
+            'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
+            'oldTemporaryGuestUserId' => $r->oldTemporaryGuestUserId,
+            'newTemporaryGuestUserId' => $r->newTemporaryGuestUserId
+        ];
+    }
+
+
+
     public function deleteCartItem(Request $r)
     {
         $v = $r->validate([

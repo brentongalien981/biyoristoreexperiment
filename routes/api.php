@@ -62,6 +62,9 @@ Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save')
 
 
 /* cart */
+Route::post('/cart/tryExtendingCartLifespan', 'CartController@tryExtendingCartLifespan')->middleware('bmdauth');
+Route::get('/cart/tryExtendingCartLifespan', 'CartController@tryExtendingCartLifespan');
+
 Route::post('/cart/deleteCartItem', 'CartController@deleteCartItem')->middleware('bmdauth');
 Route::get('/cart/deleteCartItem', 'CartController@deleteCartItem');
 Route::post('/cart/updateCartItemCount', 'CartController@updateCartItemCount')->middleware('bmdauth');
