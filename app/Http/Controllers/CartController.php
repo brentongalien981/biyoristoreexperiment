@@ -16,6 +16,7 @@ class CartController extends Controller
 {
     
     public function tryExtendingCartLifespan(Request $r) {
+        sleep(5); //bmd-todo:delete
         return [
             'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
             'oldTemporaryGuestUserId' => $r->oldTemporaryGuestUserId,
