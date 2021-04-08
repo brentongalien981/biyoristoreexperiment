@@ -57,12 +57,13 @@ Route::middleware('auth:api')->post('/paymentInfo/save', 'PaymentInfoController@
 
 /* cartItem */
 //bmd-todo: delete
-Route::middleware('auth:api')->post('/cartItem/delete', 'CartItemController@destroy');
 Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save');
 
 
 
 /* cart */
+Route::post('/cart/deleteCartItem', 'CartController@deleteCartItem')->middleware('bmdauth');
+Route::get('/cart/deleteCartItem', 'CartController@deleteCartItem');
 Route::post('/cart/updateCartItemCount', 'CartController@updateCartItemCount')->middleware('bmdauth');
 Route::get('/cart/updateCartItemCount', 'CartController@updateCartItemCount');
 Route::post('/cart/updateUserCartCache', 'CartController@updateUserCartCache')->middleware('bmdauth');

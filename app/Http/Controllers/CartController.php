@@ -14,6 +14,45 @@ use App\Http\BmdHelpers\BmdAuthProvider;
 
 class CartController extends Controller
 {
+    public function deleteCartItem(Request $r)
+    {
+        $v = $r->validate([
+            'sellerProductId' => 'required|numeric',
+            'sizeAvailabilityId' => 'required|numeric'
+        ]);
+
+        $userId = $r->temporaryGuestUserId;
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+        }
+
+
+        $updatedCart = Cart::getUserCartFromCache($userId)['mainData'];
+        $cartItems = $updatedCart->cartItems ?? [];
+        $updatedCartItems = [];
+
+        foreach ($cartItems as $ci) {
+            if ($ci->sellerProductId == $v['sellerProductId'] && $ci->sizeAvailabilityId == $v['sizeAvailabilityId']) {
+                continue;
+            }
+
+            $updatedCartItems[] = $ci;
+        }
+
+        $updatedCart->cartItems = $updatedCartItems;
+        $cacheKey = 'cart?userId=' . $userId;
+        Cache::store('redisprimary')->put($cacheKey, $updatedCart);
+
+
+        return [
+            'isResultOk' => true,
+            'objs' => [
+                'cart' => $updatedCart
+            ],
+        ];
+    }
+
+
 
     public function updateCartItemCount(Request $r)
     {
