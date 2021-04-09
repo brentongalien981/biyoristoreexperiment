@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Cart;
+use App\Http\BmdCacheObjects\CartCacheObject;
 use App\Product;
 use App\SellerProduct;
 use Illuminate\Http\Request;
@@ -16,11 +17,30 @@ class CartController extends Controller
 {
     
     public function tryExtendingCartLifespan(Request $r) {
-        sleep(5); //bmd-todo:delete
+        sleep(3); //bmd-todo:delete
+
+        $v = $r->validate([
+            'oldTemporaryGuestUserId' => 'required|string|size:32',
+            'newTemporaryGuestUserId' => 'required|string|size:32'
+        ]);
+
+        $userId = $r->temporaryGuestUserId;
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+        }
+
+
+        $oldCacheKey = 'cart?userId=' . $v['oldTemporaryGuestUserId'];
+        $oldCartCacheO = new CartCacheObject($oldCacheKey);
+        $newCacheKey = 'cart?userId=' . $v['newTemporaryGuestUserId'];
+        $updatedCart = $oldCartCacheO->getRenewedObj($newCacheKey);
+
+
         return [
             'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
-            'oldTemporaryGuestUserId' => $r->oldTemporaryGuestUserId,
-            'newTemporaryGuestUserId' => $r->newTemporaryGuestUserId
+            'objs' => [
+                'cart' => $updatedCart
+            ]
         ];
     }
 
