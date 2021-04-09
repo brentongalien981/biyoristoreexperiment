@@ -22,30 +22,6 @@ class Cart extends Model
     
 
     /** HELPER-FUNCS */
-    public static function addItemToCartCacheWithData($data) {
-
-        $cacheKey = 'cart?userId=' . $data['userId'];
-        $cart = Cache::store('redisreader')->get($cacheKey);
-
-        $product = Product::getProductFromCache($data['productId'], true)['mainData'];
-        $newCartItem = new CartItem();
-        $newCartItem->product_id = $data['productId'];
-        $newCartItem->quantity = 1;
-        $newCartItem->product = $product;
-        $newCartItem->sellerProductId = $data['sellerProductId'];
-        $newCartItem->sizeAvailabilityId = $data['sizeAvailabilityId'];
-
-        $cartItems = $cart->cartItems ?? [];
-        $cartItems[] = $newCartItem;
-        $cart->cartItems = $cartItems;      
-        
-        Cache::store('redisprimary')->put($cacheKey, $cart);
-
-        return $cart;
-    }
-
-
-
     public static function getUserCartFromCache($userId)
     {
         $cacheKey = 'cart?userId=' . $userId;

@@ -3,6 +3,9 @@
 namespace App\MyHelpers\Cart;
 
 use App\Cart;
+use App\Http\BmdCacheObjects\CartCacheObject;
+use App\Http\BmdCacheObjects\ProductResourceCacheObject;
+use App\Http\BmdCacheObjects\SellerProductCacheObject;
 use App\Product;
 use App\SellerProduct;
 
@@ -30,7 +33,8 @@ class CartVerifier
 
     public static function verifyAddingItemToCartWithData($data)
     {
-        $cart = Cart::getUserCartFromCache($data['userId']);
+        // $cart = Cart::getUserCartFromCache($data['userId']);
+        $cart = new CartCacheObject('cart?userId=' . $data['userId']);
 
         // Check if product with same size is already in the cart.
         if (self::isItemWithSizeAlreadyInCart($data, $cart)) {
@@ -38,20 +42,22 @@ class CartVerifier
         }
 
 
-        $productToAdd = Product::getProductFromCache($data['productId'])['mainData'];
+        // $productToAdd = Product::getProductFromCache($data['productId'])['mainData'];
+        $productToAddCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($data['productId']);
 
         // Verify that the seller-product-id is associated with the product.
-        if (isset($productToAdd)) {
-            foreach ($productToAdd->sellers as $s) {
+        if (isset($productToAddCO)) {
+            foreach ($productToAddCO->data->sellers as $s) {
 
                 $sellerProductPivot = $s->pivot;
 
                 if ($sellerProductPivot->id == $data['sellerProductId']) {
 
-                    $sellerProductSizeAvailabilities = SellerProduct::getSizeAvailabilitiesFromCache($sellerProductPivot->id)['mainData'];
+                    $sellerProductCO = SellerProductCacheObject::getUpdatedModelCacheObjWithId($data['sellerProductId']);
+                    $sellerProductSizeAvailabilities = $sellerProductCO->data->sizeAvailabilities;
 
                     // Verify that the size-availability is associated with the seller-product.
-                    foreach ($sellerProductSizeAvailabilities->objs as $sizeAvailability) {
+                    foreach ($sellerProductSizeAvailabilities as $sizeAvailability) {
                         if ($sizeAvailability->id == $data['sizeAvailabilityId']) {
                             return Cart::RESULT_CODE_ADD_ITEM_OK_TO_ADD;
                         }

@@ -2,12 +2,15 @@
 
 namespace App\Http\BmdCacheObjects;
 
-use App\Http\Resources\ProductResource;
+use App\Cart;
 use App\Product;
+use App\CartItem;
+use App\Http\Resources\ProductResource;
 
-class CartCacheObject extends BmdCacheObject
+class CartCacheObject extends BmdModelCacheObject
 {
     protected $lifespanInMin = 1440;
+    protected static $modelPath = Cart::class;
 
 
 
@@ -25,27 +28,54 @@ class CartCacheObject extends BmdCacheObject
         foreach ($oldCartItems as $ci) {
             $updatedCartItem = $ci;
 
-            //bmd-todo: Make METHOD: ProductResourceCacheObj->getOrCreate().
-            // You can use the code: if (getdate(lastRefreshInSec)['hours] > CLOSING_SITE_HOUR)...
-            $updatedProduct= Product::find($ci->productId ?? $ci->product_id);
-            $updatedProductResource = new ProductResource($updatedProduct);
+            $updatedProductRCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($ci->productId ?? $ci->product_id);
 
-            $updatedCartItem->product = $updatedProductResource;
+            $updatedCartItem->product = $updatedProductRCO->data;
 
             $updatedCartItems[] = $updatedCartItem;
 
         }
 
 
-        $updatedCart = $this->data;
+        $updatedCart = $this->data ?? new Cart();
         $updatedCart->cartItems = $updatedCartItems;
 
         $updatedObj = new self($newCacheKey);
         $updatedObj->data = $updatedCart;
-        $updatedObj->lastRefreshedInSec = $this->lastRefreshedInSec + (24 * 60 * 60);
         $updatedObj->save();
         
 
         return $updatedObj;
+    }
+
+
+
+    public function addItemWithData($data) {
+
+        $productCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($data['productId']);
+        
+        $newCartItem = new CartItem();
+        $newCartItem->product_id = $productCO->data->id;
+        $newCartItem->productid = $productCO->data->id;
+        $newCartItem->quantity = 1;
+        $newCartItem->product = $productCO->data;
+
+        $newCartItem->sellerProductId = $data['sellerProductId'];
+        $newCartItem->sizeAvailabilityId = $data['sizeAvailabilityId'];
+
+        $cartItems = $this->data->cartItems ?? [];
+        $cartItems[] = $newCartItem;
+        $this->data->cartItems = $cartItems;      
+        
+        $this->save();
+    }
+
+
+
+    public function test_shit() {
+        $CCO = App\Http\BmdCacheObjects\CartCacheObject::class;
+        $k = 'cart?userId=1';
+        $oldCartCO = new $CCO($k);
+
     }
 }

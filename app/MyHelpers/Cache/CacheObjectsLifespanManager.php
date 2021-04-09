@@ -21,7 +21,8 @@ class CacheObjectsLifespanManager
 
     public static function shouldRefresh($objType, $cacheRecord)
     {
-        $lastRefreshDateObj = getdate($cacheRecord->lastRefreshedInSec);
+        $lastRefreshedInSec = $cacheRecord->lastRefreshedInSec ?? $cacheRecord['lastRefreshedInSec'];
+        $lastRefreshDateObj = getdate($lastRefreshedInSec);
         $nowInDateObj = getdate();
 
         if ($lastRefreshDateObj['year'] < $nowInDateObj['year']) {

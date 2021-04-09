@@ -12,34 +12,44 @@ use App\MyHelpers\Cart\CartVerifier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Http\BmdHelpers\BmdAuthProvider;
+use App\MyHelpers\General\GeneralHelper;
+use Exception;
 
 class CartController extends Controller
 {
-    
-    public function tryExtendingCartLifespan(Request $r) {
+
+    public function tryExtendingCartLifespan(Request $r)
+    {
         sleep(3); //bmd-todo:delete
+
+        if (!GeneralHelper::isWithinStoreSiteDataUpdateMaintenancePeriod()) {
+            throw new Exception('Invalid Time for Operation...');
+        }
 
         $v = $r->validate([
             'oldTemporaryGuestUserId' => 'required|string|size:32',
             'newTemporaryGuestUserId' => 'required|string|size:32'
         ]);
 
-        $userId = $r->temporaryGuestUserId;
-        if (BmdAuthProvider::check()) {
-            $userId = BmdAuthProvider::user()->id;
-        }
-
 
         $oldCacheKey = 'cart?userId=' . $v['oldTemporaryGuestUserId'];
-        $oldCartCacheO = new CartCacheObject($oldCacheKey);
         $newCacheKey = 'cart?userId=' . $v['newTemporaryGuestUserId'];
+
+        if (BmdAuthProvider::check()) {
+            $userId = BmdAuthProvider::user()->id;
+            $oldCacheKey = 'cart?userId=' . $userId;
+            $newCacheKey = 'cart?userId=' . $userId;
+        }
+
+        $oldCartCacheO = new CartCacheObject($oldCacheKey);
         $updatedCart = $oldCartCacheO->getRenewedObj($newCacheKey);
 
 
         return [
             'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
+            'isResultOk' => true,
             'objs' => [
-                'cart' => $updatedCart
+                'cart' => $updatedCart->data
             ]
         ];
     }
@@ -142,13 +152,14 @@ class CartController extends Controller
         }
 
         $v['userId'] = $userId;
-        $updatedCart = null;
+        $updatedCartCO = null;
 
         $resultCode = CartVerifier::verifyAddingItemToCartWithData($v);
 
         // bmd-todo: Add item to cart if ok to do so..
         if ($resultCode == Cart::RESULT_CODE_ADD_ITEM_OK_TO_ADD) {
-            $updatedCart = Cart::addItemToCartCacheWithData($v);
+            $updatedCartCO = new CartCacheObject('cart?userId=' . $v['userId']);
+            $updatedCartCO->addItemWithData($v);
             $resultCode = Cart::RESULT_CODE_ADD_ITEM_SUCCESSFUL;
         }
 
@@ -157,7 +168,7 @@ class CartController extends Controller
             'isResultOk' => true,
             'resultCode' => $resultCode,
             'objs' => [
-                'cart' => $updatedCart
+                'cart' => $updatedCartCO->data
             ],
         ];
     }
@@ -166,22 +177,20 @@ class CartController extends Controller
 
     public function read(Request $r)
     {
-        $userId = null;
+        $userId = $r->temporaryGuestUserId;
 
         if (BmdAuthProvider::check()) {
             $userId = BmdAuthProvider::user()->id;
-        } else {
-            $userId = $r->temporaryGuestUserId;
-        }
+        } 
 
-        $resultData = Cart::getUserCartFromCache($userId);
-        $cart = $resultData['mainData'];
+        $cacheKey = 'cart?userId=' . $userId;
+        $cart = new CartCacheObject($cacheKey);
 
 
         return [
             'isResultOk' => true,
             'objs' => [
-                'cart' => $cart
+                'cart' => $cart->data
             ],
         ];
     }
