@@ -11,6 +11,34 @@ class CartCacheObject extends BmdModelCacheObject
 {
     protected $lifespanInMin = 1440;
     protected static $modelPath = Cart::class;
+    public const DEFAUL_CART_CACHE_OBJECT_DATA = [
+        'id' => 0,
+        'isActive' => 1,
+        'cartItems' => []
+    ];
+
+
+
+    public function __construct($cacheKey, $readerConnection = null)
+    {
+        parent::__construct($cacheKey, $readerConnection);
+
+        if (!isset($this->entireData) || !isset($this->data)) {
+            $this->data = self::DEFAUL_CART_CACHE_OBJECT_DATA;
+            $this->save();
+        }
+    }
+
+
+
+    public static function mergeCarts($mainCartCO, $otherCartCO) {
+        //bmd-todo: Check for duplicate cart-items.
+        
+        $mergedCartItems = array_merge($mainCartCO->data->cartItems, $otherCartCO->data->cartItems);
+        $mainCartCO->data->cartItems = $mergedCartItems;
+        $mainCartCO->save();
+        return $mainCartCO;
+    }
 
 
 

@@ -17,6 +17,32 @@ use Exception;
 
 class CartController extends Controller
 {
+    public function mergeGuestAndActualUserCarts(Request $r)
+    {
+        $v = $r->validate([
+            'temporaryGuestUserId' => 'required|string|size:32'
+        ]);
+
+
+        $userId = BmdAuthProvider::user()->id;
+        $loggedInUserCartCacheKey = 'cart?userId=' . $userId;
+        $guestCartCacheKey = 'cart?userId=' . $v['temporaryGuestUserId'];
+
+        $loggedInUserCartCO = new CartCacheObject($loggedInUserCartCacheKey);
+        $guestCartCO = new CartCacheObject($guestCartCacheKey);
+
+        $mergedCartCO = CartCacheObject::mergeCarts($loggedInUserCartCO, $guestCartCO);
+
+        return [
+            'msg' => 'In CLASS: CartController, METHOD: mergeGuestAndActualUserCarts()...',
+            'isResultOk' => true,
+            'objs' => [
+                'cart' => $mergedCartCO->data
+            ]
+        ];
+    }
+
+
 
     public function tryExtendingCartLifespan(Request $r)
     {

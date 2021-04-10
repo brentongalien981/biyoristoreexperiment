@@ -62,6 +62,7 @@ Route::middleware('auth:api')->post('/cartItem/save', 'CartItemController@save')
 
 
 /* cart */
+Route::post('/cart/mergeGuestAndActualUserCarts', 'CartController@mergeGuestAndActualUserCarts')->middleware('bmdauth');
 Route::post('/cart/tryExtendingCartLifespan', 'CartController@tryExtendingCartLifespan')->middleware('bmdauth');
 Route::get('/cart/tryExtendingCartLifespan', 'CartController@tryExtendingCartLifespan');
 
