@@ -11,6 +11,24 @@ use App\SellerProduct;
 
 class CartVerifier
 {
+    public static function isItemAlreadyInCart($cartItem, $cart)
+    {
+
+        if (!isset($cart->cartItems)) { return false; }
+
+        foreach ($cart->cartItems as $ci) {
+            if (
+                $ci->product->id == $cartItem->productId
+                && $ci->sizeAvailabilityId == $cartItem->sizeAvailabilityId
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
 
     public static function isItemWithSizeAlreadyInCart($data, $cart)
     {
@@ -33,7 +51,6 @@ class CartVerifier
 
     public static function verifyAddingItemToCartWithData($data)
     {
-        // $cart = Cart::getUserCartFromCache($data['userId']);
         $cart = new CartCacheObject('cart?userId=' . $data['userId']);
 
         // Check if product with same size is already in the cart.
@@ -42,7 +59,6 @@ class CartVerifier
         }
 
 
-        // $productToAdd = Product::getProductFromCache($data['productId'])['mainData'];
         $productToAddCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($data['productId']);
 
         // Verify that the seller-product-id is associated with the product.

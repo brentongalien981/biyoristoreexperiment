@@ -6,16 +6,12 @@ use App\Cart;
 use App\Product;
 use App\CartItem;
 use App\Http\Resources\ProductResource;
+use App\MyHelpers\Cart\CartVerifier;
 
 class CartCacheObject extends BmdModelCacheObject
 {
     protected $lifespanInMin = 1440;
     protected static $modelPath = Cart::class;
-    public const DEFAUL_CART_CACHE_OBJECT_DATA = [
-        'id' => 0,
-        'isActive' => 1,
-        'cartItems' => []
-    ];
 
 
 
@@ -24,17 +20,35 @@ class CartCacheObject extends BmdModelCacheObject
         parent::__construct($cacheKey, $readerConnection);
 
         if (!isset($this->entireData) || !isset($this->data)) {
-            $this->data = self::DEFAUL_CART_CACHE_OBJECT_DATA;
-            $this->save();
+            $this->initData();
         }
     }
 
 
 
+    private function initData() {
+        $cart = new Cart();
+        $cart->id = 0;
+        $cart->isActive = 1;
+        $cart->cartItems = [];
+        $this->data = $cart;
+        $this->save();
+    }
+
+
+
     public static function mergeCarts($mainCartCO, $otherCartCO) {
-        //bmd-todo: Check for duplicate cart-items.
-        
-        $mergedCartItems = array_merge($mainCartCO->data->cartItems, $otherCartCO->data->cartItems);
+
+        $mainCart = $mainCartCO->data;
+        $mergedCartItems = $mainCartCO->data->cartItems;
+        $otherCartItems = $otherCartCO->data->cartItems;
+
+        foreach ($otherCartItems as $ci) {
+            if (!CartVerifier::isItemAlreadyInCart($ci, $mainCart)) {
+                $mergedCartItems[] = $ci;
+            }
+        }
+
         $mainCartCO->data->cartItems = $mergedCartItems;
         $mainCartCO->save();
         return $mainCartCO;
@@ -84,7 +98,7 @@ class CartCacheObject extends BmdModelCacheObject
         
         $newCartItem = new CartItem();
         $newCartItem->product_id = $productCO->data->id;
-        $newCartItem->productid = $productCO->data->id;
+        $newCartItem->productId = $productCO->data->id;
         $newCartItem->quantity = 1;
         $newCartItem->product = $productCO->data;
 

@@ -95,8 +95,10 @@ class CartController extends Controller
         }
 
 
-        $updatedCart = Cart::getUserCartFromCache($userId)['mainData'];
-        $cartItems = $updatedCart->cartItems ?? [];
+        // $updatedCart = Cart::getUserCartFromCache($userId)['mainData'];
+        $cacheKey = 'cart?userId=' . $userId;
+        $updatedCartCO = new CartCacheObject($cacheKey);
+        $cartItems = $updatedCartCO->data->cartItems;
         $updatedCartItems = [];
 
         foreach ($cartItems as $ci) {
@@ -107,15 +109,14 @@ class CartController extends Controller
             $updatedCartItems[] = $ci;
         }
 
-        $updatedCart->cartItems = $updatedCartItems;
-        $cacheKey = 'cart?userId=' . $userId;
-        Cache::store('redisprimary')->put($cacheKey, $updatedCart);
+        $updatedCartCO->data->cartItems = $updatedCartItems;
+        $updatedCartCO->save();
 
 
         return [
             'isResultOk' => true,
             'objs' => [
-                'cart' => $updatedCart
+                'cart' => $updatedCartCO->data
             ],
         ];
     }

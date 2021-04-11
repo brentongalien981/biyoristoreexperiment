@@ -51,6 +51,13 @@ class BmdCacheObject
 
 
 
+    public function deleteCacheRecord($connection = null) {
+        $connection = $connection ?? $this->writeConnection;
+        Cache::store($connection)->forget($this->cacheKey);
+    }
+
+
+
     public function shouldRefresh()
     {
         if (!isset($this->entireData) || !isset($this->lastRefreshedInSec)) { return true; }
