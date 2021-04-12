@@ -34,7 +34,7 @@ class CartController extends Controller
         $mergedCartCO = CartCacheObject::mergeCarts($loggedInUserCartCO, $guestCartCO);
 
         return [
-            'msg' => 'In CLASS: CartController, METHOD: mergeGuestAndActualUserCarts()...',
+            // 'msg' => 'In CLASS: CartController, METHOD: mergeGuestAndActualUserCarts()...',
             'isResultOk' => true,
             'objs' => [
                 'cart' => $mergedCartCO->data
@@ -46,7 +46,6 @@ class CartController extends Controller
 
     public function tryExtendingCartLifespan(Request $r)
     {
-        sleep(3); //bmd-todo:delete
 
         if (!GeneralHelper::isWithinStoreSiteDataUpdateMaintenancePeriod()) {
             throw new Exception('Invalid Time for Operation...');
@@ -72,7 +71,7 @@ class CartController extends Controller
 
 
         return [
-            'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
+            // 'msg' => 'In CLASS: CartController, METHOD: tryExtendingCartLifespan()...',
             'isResultOk' => true,
             'objs' => [
                 'cart' => $updatedCart->data
@@ -163,7 +162,6 @@ class CartController extends Controller
 
     public function addItem(Request $r)
     {
-
         // Validate the request-params.
         $v = $r->validate([
             'productId' => 'required|numeric',
@@ -183,7 +181,7 @@ class CartController extends Controller
 
         $resultCode = CartVerifier::verifyAddingItemToCartWithData($v);
 
-        // bmd-todo: Add item to cart if ok to do so..
+        // Add item to cart if ok to do so..
         if ($resultCode == Cart::RESULT_CODE_ADD_ITEM_OK_TO_ADD) {
             $updatedCartCO = new CartCacheObject('cart?userId=' . $v['userId']);
             $updatedCartCO->addItemWithData($v);
