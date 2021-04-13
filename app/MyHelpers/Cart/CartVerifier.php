@@ -51,10 +51,10 @@ class CartVerifier
 
     public static function verifyAddingItemToCartWithData($data)
     {
-        $cart = new CartCacheObject('cart?userId=' . $data['userId']);
+        $cartCO = new CartCacheObject('cart?userId=' . $data['userId']);
 
         // Check if product with same size is already in the cart.
-        if (self::isItemWithSizeAlreadyInCart($data, $cart)) {
+        if (self::isItemWithSizeAlreadyInCart($data, $cartCO->data)) {
             return Cart::RESULT_CODE_ADD_ITEM_ALREADY_EXISTS;
         }
 

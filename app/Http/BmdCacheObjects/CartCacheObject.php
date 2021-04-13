@@ -50,8 +50,10 @@ class CartCacheObject extends BmdModelCacheObject
         }
 
         $mainCartCO->data->cartItems = $mergedCartItems;
-        $mainCartCO->save();
-        return $mainCartCO;
+        
+        // Return cart with cart-items that have updated price, quantity, etc.
+        $updatedMergedCartCO = $mainCartCO->getRenewedObj($mainCartCO->cacheKey);
+        return $updatedMergedCartCO;
     }
 
 

@@ -136,8 +136,9 @@ class CartController extends Controller
         }
 
 
-        $updatedCart = Cart::getUserCartFromCache($userId)['mainData'];
-        $cartItems = $updatedCart->cartItems ?? [];
+        $cacheKey = 'cart?userId=' . $userId;
+        $updatedCartCO = new CartCacheObject($cacheKey);
+        $cartItems = $updatedCartCO->data->cartItems;
 
         foreach ($cartItems as $ci) {
             if ($ci->sellerProductId == $v['sellerProductId'] && $ci->sizeAvailabilityId == $v['sizeAvailabilityId']) {
@@ -146,14 +147,13 @@ class CartController extends Controller
             }
         }
 
-        $cacheKey = 'cart?userId=' . $userId;
-        Cache::store('redisprimary')->put($cacheKey, $updatedCart);
+        $updatedCartCO->save();
 
 
         return [
             'isResultOk' => true,
             'objs' => [
-                'cart' => $updatedCart
+                'cart' => $updatedCartCO->data
             ],
         ];
     }
@@ -193,7 +193,7 @@ class CartController extends Controller
             'isResultOk' => true,
             'resultCode' => $resultCode,
             'objs' => [
-                'cart' => $updatedCartCO->data
+                'cart' => isset($updatedCartCO) ? $updatedCartCO->data : null
             ],
         ];
     }
@@ -209,13 +209,18 @@ class CartController extends Controller
         } 
 
         $cacheKey = 'cart?userId=' . $userId;
-        $cart = new CartCacheObject($cacheKey);
+        $cartCO = new CartCacheObject($cacheKey);
+
+        $updatedCartCO = $cartCO;
+        if ($cartCO->shouldRefresh()) {
+            $updatedCartCO = $cartCO->getRenewedObj($cacheKey);
+        }
 
 
         return [
             'isResultOk' => true,
             'objs' => [
-                'cart' => $cart->data
+                'cart' => $updatedCartCO->data
             ],
         ];
     }
