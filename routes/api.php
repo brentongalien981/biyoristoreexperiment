@@ -39,7 +39,7 @@ Route::post('/orders', 'OrderController@index')->middleware('bmdauth');
 /* checkout */
 Route::middleware('auth:api')->post('/checkout/finalizeOrderWithPredefinedPayment', 'CheckoutController@finalizeOrderWithPredefinedPayment');
 Route::post('/checkout/finalizeOrder', 'CheckoutController@finalizeOrder');
-Route::middleware('auth:api')->post('/checkout/readCheckoutRequiredData', 'CheckoutController@readCheckoutRequiredData');
+Route::middleware('bmdauth')->post('/checkout/readCheckoutRequiredData', 'CheckoutController@readCheckoutRequiredData');
 
 
 

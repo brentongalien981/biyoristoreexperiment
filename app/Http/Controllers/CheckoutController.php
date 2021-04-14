@@ -7,6 +7,9 @@ use App\Order;
 use Exception;
 use App\Product;
 use App\CartItem;
+use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
+use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
+use App\Http\BmdHelpers\BmdAuthProvider;
 use App\OrderItem;
 use App\OrderStatus;
 use App\PaymentStatus;
@@ -309,23 +312,30 @@ class CheckoutController extends Controller
 
     public function readCheckoutRequiredData(Request $request)
     {
-        $user = Auth::user();
+        $user = BmdAuthProvider::user();
 
-        //
-        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+        //bmd-todo: Implement.
+        // //bmd-todo: ON-DEPLOYMENT: Change this to STRIPE_PK.
+        // $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
 
-        $paymentMethods = $stripe->paymentMethods->all([
-            'customer' => $user->stripeCustomer->stripe_customer_id,
-            'type' => 'card',
-        ]);
+        // $paymentMethods = $stripe->paymentMethods->all([
+        //     'customer' => $user->stripeCustomer->stripe_customer_id,
+        //     'type' => 'card',
+        // ]);
+        $userPaymentMethodsCO = new UserStripePaymentMethodsCacheObject('userPaymentMethods?userId=' . $user->id);
+        $profileResourceCO = ProfileResourceCacheObject::getUpdatedResourceCacheObjWithId($user->profile->id);
+
+        //bmd-todo: Create classes: BmdCollectionCacheObject, UserAddressCollectionCacheObject.
+        // $userAddressCollectionCO = ...
 
 
         return [
             'message' => 'From CLASS: CheckoutController, METHOD: readCheckoutRequiredData()',
             'objs' => [
-                'profile' => new ProfileResource($user->profile),
+                // 'profile' => new ProfileResource($user->profile),
+                'profile' => $profileResourceCO->data,
                 'addresses' => AddressResource::collection($user->addresses),
-                'paymentInfos' => $paymentMethods['data'],
+                'paymentInfos' => $userPaymentMethodsCO->data ?? [],
             ]
         ];
     }

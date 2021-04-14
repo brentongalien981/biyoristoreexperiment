@@ -21,11 +21,13 @@ class BmdResourceCacheObject extends BmdCacheObject
             if ($modelCacheObj->shouldRefresh()) {
                 $modelObj = static::$modelPath::find($modelId);
                 $modelCacheObj->data = $modelObj;
+                $modelCacheObj->shouldForceRefresh = false;
                 $modelCacheObj->save();
             }
 
             $resourceObj = new static::$jsonResourcePath($modelCacheObj->data);
             $resourceCacheObj->data = $resourceObj;
+            $resourceCacheObj->shouldForceRefresh = false;
             $resourceCacheObj->save();
         }
 

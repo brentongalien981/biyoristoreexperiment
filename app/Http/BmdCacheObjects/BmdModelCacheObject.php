@@ -12,6 +12,7 @@ class BmdModelCacheObject extends BmdCacheObject
         if ($modelCacheObj->shouldRefresh()) {
             $modelObj = static::$modelPath::find($modelId);
             $modelCacheObj->data = $modelObj;
+            $modelCacheObj->shouldForceRefresh = false;
             $modelCacheObj->save();
 
         }
