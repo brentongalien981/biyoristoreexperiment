@@ -7,6 +7,7 @@ use App\Order;
 use Exception;
 use App\Product;
 use App\CartItem;
+use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
 use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdHelpers\BmdAuthProvider;
@@ -314,27 +315,19 @@ class CheckoutController extends Controller
     {
         $user = BmdAuthProvider::user();
 
-        //bmd-todo: Implement.
-        // //bmd-todo: ON-DEPLOYMENT: Change this to STRIPE_PK.
-        // $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
-
-        // $paymentMethods = $stripe->paymentMethods->all([
-        //     'customer' => $user->stripeCustomer->stripe_customer_id,
-        //     'type' => 'card',
-        // ]);
         $userPaymentMethodsCO = new UserStripePaymentMethodsCacheObject('userPaymentMethods?userId=' . $user->id);
+        $userPaymentMethodsCO = $userPaymentMethodsCO->getMyRefreshedVersion();
         $profileResourceCO = ProfileResourceCacheObject::getUpdatedResourceCacheObjWithId($user->profile->id);
 
-        //bmd-todo: Create classes: BmdCollectionCacheObject, UserAddressCollectionCacheObject.
-        // $userAddressCollectionCO = ...
+        $foreignKeyId = $user->id;
+        $userAddressCollectionCO = AddressResourceCollectionCacheObject::getUpdatedCollection($foreignKeyId);
 
 
         return [
             'message' => 'From CLASS: CheckoutController, METHOD: readCheckoutRequiredData()',
             'objs' => [
-                // 'profile' => new ProfileResource($user->profile),
-                'profile' => $profileResourceCO->data,
-                'addresses' => AddressResource::collection($user->addresses),
+                'profile' => $profileResourceCO->data ?? [],
+                'addresses' => $userAddressCollectionCO->data ?? [],
                 'paymentInfos' => $userPaymentMethodsCO->data ?? [],
             ]
         ];

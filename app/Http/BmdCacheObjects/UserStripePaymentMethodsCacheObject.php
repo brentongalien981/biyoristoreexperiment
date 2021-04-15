@@ -2,6 +2,7 @@
 
 namespace App\Http\BmdCacheObjects;
 
+use App\Http\BmdHelpers\BmdAuthProvider;
 
 class UserStripePaymentMethodsCacheObject extends BmdModelCacheObject
 {
@@ -14,7 +15,20 @@ class UserStripePaymentMethodsCacheObject extends BmdModelCacheObject
      */
     public function getMyRefreshedVersion()
     {
+
+        if (!$this->shouldRefresh()) { return $this; }
+
+        //bmd-todo: ON-DEPLOYMENT: Change this to STRIPE_PK.
+        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+        $u = BmdAuthProvider::user();
+
+        $paymentMethods = $stripe->paymentMethods->all([
+            'customer' => $u->stripeCustomer->stripe_customer_id,
+            'type' => 'card',
+        ]);
+
+        $this->data = $paymentMethods['data'];
+        $this->save();
         return $this;
     }
-
 }
