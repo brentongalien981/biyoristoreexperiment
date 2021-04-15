@@ -9,7 +9,10 @@ use App\ShippingServiceLevel;
 
 class CustomizedEasyPost extends Controller
 {
+
+    private const CUSTOM_FORCED_INTERNAL_EXCEPTION = ['code' => -501, 'name' => 'CUSTOM_FORCED_INTERNAL_EXCEPTION'];
     private const CUSTOM_INTERNAL_EXCEPTION = ['code' => -500, 'name' => 'CUSTOM_INTERNAL_EXCEPTION'];
+
     private const ORIGIN_ADDRESS_EXCEPTION = ['code' => -1, 'name' => 'ORIGIN_ADDRESS_EXCEPTION'];
     private const DESTINATION_ADDRESS_EXCEPTION = ['code' => -2, 'name' => 'DESTINATION_ADDRESS_EXCEPTION'];
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
@@ -18,6 +21,9 @@ class CustomizedEasyPost extends Controller
 
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
 
+    /**
+     * bmd-todo: Update this everytime when it's needed.
+     */
     private const COMPANY_INFO = [
         'owner_name' => 'Bren Baga',
         'street1' => '50 Thorncliffe Park Drive',
@@ -63,7 +69,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-
+    
     public function setOriginAddress(&$params)
     {
         $originAddressParams = [
@@ -166,7 +172,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-
+    //bmd-ish
     public function setParcel(&$params)
     {
         $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
@@ -177,7 +183,7 @@ class CustomizedEasyPost extends Controller
         }
 
         $parcel = \EasyPost\Parcel::create([
-            "predefined_package" => $packageInfo,
+            "predefined_package" => $packageInfo['predefinedPackageName'],
             "weight" => $packageInfo['totalWeight']
         ]);
 
@@ -309,7 +315,9 @@ class CustomizedEasyPost extends Controller
 
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
             $entireProcessData['destinationAddress'] = $this->setDestinationAddress($entireProcessParams);
+            $packageInfo = MyShippingPackageManager::getPackageInfo($entireProcessParams['reducedCartItemsData']);
             $entireProcessData['parcel'] = $this->setParcel($entireProcessParams);
+
             $entireProcessData['shipment'] = $this->setShipment($entireProcessData);
             $entireProcessData['parsedRateObjs'] = $this->getParsedRateObjs($entireProcessData['shipment']->rates);
             $entireProcessData['modifiedRateObjs'] = $this->getModifiedRateObjs($entireProcessData['parsedRateObjs']);
@@ -319,17 +327,20 @@ class CustomizedEasyPost extends Controller
             $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
 
             $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
-            
+
 
             // TODO:DELETE-ON-PRODUCTION
             $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
             $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
+            $entireProcessData['packageInfo'] = $packageInfo;
             $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
         } catch (Exception $e) {
             if ($entireProcessParams['resultCode'] === 0) {
                 $entireProcessParams['resultCode'] = self::CUSTOM_INTERNAL_EXCEPTION['code'];
             }
             $entireProcessParams['entireProcessComments'][] = "caught exception ==> " . $e->getMessage();
+            // $entireProcessParams['entireProcessComments'][] = "caught exception trace ==> " . $e->getTrace();
+            $entireProcessParams['entireProcessComments'][] = "caught exception trace-string ==> " . $e->getTraceAsString();
         }
 
 
