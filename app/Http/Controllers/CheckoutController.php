@@ -219,7 +219,7 @@ class CheckoutController extends Controller
 
     public function finalizeOrder(Request $request)
     {
-        //
+        // bmd-todo: Refactor this. No need for cart-records.
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
         $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
@@ -255,7 +255,7 @@ class CheckoutController extends Controller
             $orderProcessStatusCode = OrderStatus::getIdByName('CART_CHECKEDOUT_OK');
 
 
-            //
+            // bmd-todo: Make the order id a UUID type.
             $order = new Order();
             $order->user_id = (isset($user) ? $user->id : null);
             $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;

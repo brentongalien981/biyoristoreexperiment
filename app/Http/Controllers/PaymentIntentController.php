@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Cart;
-use App\CartItem;
-use App\Http\Resources\CartResource;
 use Error;
+use App\Cart;
 use App\Order;
-use App\OrderStatus;
-use App\Product;
 use Exception;
+use App\Product;
+use App\CartItem;
+use App\Http\BmdCacheObjects\SellerProductCacheObject;
+use App\OrderStatus;
 use Illuminate\Http\Request;
+use App\Http\Resources\CartResource;
 use Illuminate\Support\Facades\Auth;
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\MyConstants\BmdGlobalConstants;
 
 class PaymentIntentController extends Controller
 {
@@ -19,18 +22,25 @@ class PaymentIntentController extends Controller
     {
 
         $orderTotalAmount = 0;
-        $tax = 0.13;
 
         foreach ($items as $i) {
             $i = json_decode($i);
-            $product = Product::find($i->productId);
-            $quantity = $i->quantity;
-            $itemTotalPrice = $product->price * $quantity;
+
+            $sellerProduct= SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId)->data;
+            $regularSellPrice = floatval($sellerProduct->sell_price);
+            $discountSellPrice = floatval($sellerProduct->discount_sell_price);
+
+            $purchasePrice = $regularSellPrice;
+            if ($discountSellPrice > 0 && $discountSellPrice < $regularSellPrice) {
+                $purchasePrice = $discountSellPrice;
+            }
+
+            $itemTotalPrice = $purchasePrice * $i->quantity;
 
             $orderTotalAmount += $itemTotalPrice;
         }
 
-        $orderTotalAmount = $orderTotalAmount * (1 + $tax);
+        $orderTotalAmount = $orderTotalAmount * (1 + BmdGlobalConstants::TAX_RATE);
 
         $orderTotalAmountInCents = round($orderTotalAmount, 2) * 100;
         return $orderTotalAmountInCents;
@@ -50,8 +60,12 @@ class PaymentIntentController extends Controller
 
         try {
 
-            //
-            $user = Auth::user();
+            BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
+
+            $user = null;
+            if (BmdAuthProvider::check()) {
+                $user = BmdAuthProvider::user();
+            }
 
             $paymentIntent = \Stripe\PaymentIntent::create([
                 'amount' => self::getOrderAmount($request->cartItemsData),
@@ -72,7 +86,8 @@ class PaymentIntentController extends Controller
             ]);
 
 
-
+            //bmd-ish: Maybe you don't have to do this?
+            //bmd-ish: Save the payment-intent-id to cart-cache. You'll need it for finalizing order.
             // Create / update cart record.
             $cart = null;
             if (isset($request->cartId) && $request->cartId != 0) {
