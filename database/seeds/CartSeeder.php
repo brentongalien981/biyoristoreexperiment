@@ -12,8 +12,8 @@ class CartSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('carts')->insert(['user_id' => 1, 'is_active' => false, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
-        DB::table('carts')->insert(['user_id' => 1, 'is_active' => true, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
-        DB::table('carts')->insert(['user_id' => 3, 'is_active' => true, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
+        // DB::table('carts')->insert(['user_id' => 1, 'is_active' => false, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
+        // DB::table('carts')->insert(['user_id' => 1, 'is_active' => true, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
+        // DB::table('carts')->insert(['user_id' => 3, 'is_active' => true, 'stripe_payment_intent_id' => 'zzzXXXzzz']);
     }
 }

@@ -8,6 +8,7 @@ use App\Order;
 use Exception;
 use App\Product;
 use App\CartItem;
+use App\Http\BmdCacheObjects\CartCacheObject;
 use App\Http\BmdCacheObjects\SellerProductCacheObject;
 use App\OrderStatus;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class PaymentIntentController extends Controller
         foreach ($items as $i) {
             $i = json_decode($i);
 
-            $sellerProduct= SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId)->data;
+            $sellerProduct = SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId)->data;
             $regularSellPrice = floatval($sellerProduct->sell_price);
             $discountSellPrice = floatval($sellerProduct->discount_sell_price);
 
@@ -62,6 +63,7 @@ class PaymentIntentController extends Controller
 
             BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
 
+            $tempGuestUserId = $request->temporaryGuestUserId;
             $user = null;
             if (BmdAuthProvider::check()) {
                 $user = BmdAuthProvider::user();
@@ -72,7 +74,7 @@ class PaymentIntentController extends Controller
                 'currency' => 'usd',
                 'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
                 'metadata' => [
-                    'storeUserId' => (isset($user) ? $user->id : null),
+                    'storeUserId' => (isset($user) ? $user->id : $tempGuestUserId),
                     'firstName' => $request->firstName,
                     'lastName' => $request->lastName,
                     'phoneNumber' => $request->phone,
@@ -86,47 +88,70 @@ class PaymentIntentController extends Controller
             ]);
 
 
-            //bmd-ish: Maybe you don't have to do this?
-            //bmd-ish: Save the payment-intent-id to cart-cache. You'll need it for finalizing order.
+
             // Create / update cart record.
+            // Do this so that when for some reason the customer gets charged for payment and the 
+            // app gives an error finalizing the order, you'll be able to track which order items
+            // he made through the cart-items and Stripe backend.
+            $cacheKey = 'cart?userId=' . (isset($user) ? $user->id : $tempGuestUserId);
+            $cartCO = new CartCacheObject($cacheKey);
+            $cacheCart = $cartCO->data;
             $cart = null;
-            if (isset($request->cartId) && $request->cartId != 0) {
-                $cart = Cart::find($request->cartId);
-            } else {
-                $cart = new Cart();
+            $shouldCreateNewCart = true;
+
+            if (isset($cacheCart->id) && $cacheCart->id != 0) {
+                $cart = Cart::find($cacheCart->id);
+                if ($cart->is_active) {
+                    $shouldCreateNewCart = false;
+                }
             }
-            $cart->stripe_payment_intent_id = $paymentIntent->id;
-            $cart->save();
+            if ($shouldCreateNewCart) {
+                $cart = new Cart();
+                $cart->user_id = (isset($user) ? $user->id : null);
+                $cart->stripe_payment_intent_id = $paymentIntent->id;
+                $cart->save();
+
+                $cacheCart->id = $cart->id;
+            }
 
 
             // Create / update cart-items
-            foreach ($request->cartItemsData as $i) {
-                $i = json_decode($i);
+            $updatedCacheCartItems = [];
+            foreach ($cacheCart->cartItems as $cci) {
 
                 $updatedCartItem = null;
-                if (isset($i->id)) {
-                    $updatedCartItem = CartItem::find($i->id);
+
+                if (isset($cci->id)) {
+                    $updatedCartItem = CartItem::find($cci->id);
                 } else {
                     $updatedCartItem = new CartItem();
                 }
-                $updatedCartItem->cart_id = $cart->id;
-                $updatedCartItem->product_id = $i->productId;
-                $updatedCartItem->quantity = $i->quantity;
+
+                $updatedCartItem->cart_id = $cacheCart->id;
+                $updatedCartItem->product_id = $cci->productId;
+                $updatedCartItem->product_seller_id = $cci->sellerProductId;
+                $updatedCartItem->size_availability_id = $cci->sizeAvailabilityId;
+                $updatedCartItem->quantity = $cci->quantity;
                 $updatedCartItem->save();
+
+                $cci->id = $updatedCartItem->id;
+                $cci->cart_id = $cacheCart->id;
+
+                $updatedCacheCartItems[] = $cci;
             }
 
+            // Update cache-cart.
+            $cacheCart->cartItems = $updatedCacheCartItems;
+            $cartCO->data = $cacheCart;
+            $cartCO->save();
 
 
-            //
+
             return [
-                'clientSecret' => $paymentIntent->client_secret,
-                'cart' => new CartResource($cart),
-                'street' => $request->street,
-                'cartItemsData' => $request->cartItemsData,
+                'clientSecret' => $paymentIntent->client_secret
             ];
         } catch (Exception $e) {
             throw $e;
-            // return ['customError' => $e->getMessage()];
         }
     }
 }
