@@ -44,6 +44,7 @@ Route::middleware('bmdauth')->post('/checkout/readCheckoutRequiredData', 'Checko
 
 
 /* payment */
+Route::post('/stripePaymentMethod/delete', 'StripePaymentMethodController@delete')->middleware('bmdauth');
 Route::post('/stripePaymentMethod/save', 'StripePaymentMethodController@save')->middleware('bmdauth');
 Route::post('/stripePaymentMethod/update', 'StripePaymentMethodController@update')->middleware('bmdauth');
 Route::post('/paymentIntent', 'PaymentIntentController@create');

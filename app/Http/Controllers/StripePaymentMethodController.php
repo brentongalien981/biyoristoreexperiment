@@ -11,6 +11,32 @@ use Illuminate\Support\Facades\Auth;
 
 class StripePaymentMethodController extends Controller
 {
+    public function delete(Request $r)
+    {
+        $u = BmdAuthProvider::user();
+
+        $v = $r->validate([
+            'paymentMethodId' => 'required'
+        ]);
+
+
+        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+        $stripe->paymentMethods->detach(
+            $v['paymentMethodId'],
+            []
+        );
+
+
+        $resultData = StripeCustomer::clearCachePaymentMethodsWithUser($u);
+
+        return [
+            'isResultOk' => true
+        ];
+    }
+
+
+
     public function update(Request $request)
     {
         $user = BmdAuthProvider::user();
