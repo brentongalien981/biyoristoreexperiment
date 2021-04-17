@@ -307,7 +307,7 @@ class CustomizedEasyPost extends Controller
 
         try {
 
-            // TODO:LATER-ON-PRODUCTION Finish all validation of request-params.
+            // BMD-TODO:LATER-ON-PRODUCTION Finish all validation of request-params.
             if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
                 $entireProcessParams['resultCode'] = self::EMPTY_CART_EXCEPTION['code'];
                 throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
@@ -329,7 +329,7 @@ class CustomizedEasyPost extends Controller
             $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
 
 
-            // TODO:DELETE-ON-PRODUCTION
+            // BMD-TODO:DELETE-ON-PRODUCTION
             $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
             $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
             $entireProcessData['packageInfo'] = $packageInfo;
