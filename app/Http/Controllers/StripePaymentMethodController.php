@@ -28,7 +28,7 @@ class StripePaymentMethodController extends Controller
         );
 
 
-        $resultData = StripeCustomer::clearCachePaymentMethodsWithUser($u);
+        StripeCustomer::clearCachePaymentMethodsWithUser($u);
 
         return [
             'isResultOk' => true

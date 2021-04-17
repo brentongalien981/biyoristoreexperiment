@@ -219,7 +219,7 @@ class CheckoutController extends Controller
 
     public function finalizeOrder(Request $request)
     {
-        // bmd-todo: Refactor this. No need for cart-records.
+        // bmd-todo: Refactor this.
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
         $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');

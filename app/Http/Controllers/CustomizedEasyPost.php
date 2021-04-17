@@ -22,7 +22,7 @@ class CustomizedEasyPost extends Controller
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
 
     /**
-     * bmd-todo: Update this everytime when it's needed.
+     * BMD-SENSITIVE-INFO: Update this everytime when it's needed.
      */
     private const COMPANY_INFO = [
         'owner_name' => 'Bren Baga',
@@ -172,7 +172,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-    //bmd-ish
+    
     public function setParcel(&$params)
     {
         $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
