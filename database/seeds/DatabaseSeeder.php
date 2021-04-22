@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ProductSellerSeeder::class,
             SellerAddressSeeder::class,
             PackageItemTypeSeeder::class,
+            ShippingServiceLevelSeeder::class,
             TeamSeeder::class,
             ReviewSeeder::class,
             AuthProviderTypeSeeder::class,

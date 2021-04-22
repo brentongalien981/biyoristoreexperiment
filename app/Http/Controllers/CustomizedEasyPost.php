@@ -227,6 +227,7 @@ class CustomizedEasyPost extends Controller
     {
         // For each rate, add value to field "delivery_days" if the retrieved rate has null.
         $modifiedRateObjs = [];
+        // BMD-ISH: Use cache here.
         $shippingServiceLevels = ShippingServiceLevel::all();
 
         foreach ($parsedRateObjs as $r) {
