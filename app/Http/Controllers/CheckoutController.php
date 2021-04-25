@@ -219,12 +219,19 @@ class CheckoutController extends Controller
 
     public function finalizeOrder(Request $request)
     {
-        // bmd-todo: Refactor this.
-        $user = Auth::user();
+        BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
+
+        $userId = $request->temporaryGuestUserId;
+        $user = null;
+        if (BmdAuthProvider::check()) {
+            $user = BmdAuthProvider::user();
+            $userId = $user->id;
+        }
+
         $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
         $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
 
-
+        // BMD-ISH
         // Create order record with status "PAID".
         $cart = Cart::find($request->cartId);
 

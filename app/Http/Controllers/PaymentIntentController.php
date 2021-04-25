@@ -51,10 +51,6 @@ class PaymentIntentController extends Controller
 
     public function create(Request $request)
     {
-
-        // TODO:LATER: Validate shipping info when you implement the shipping feature.
-
-
         // This is your real test secret API key.
         \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
 
@@ -148,6 +144,7 @@ class PaymentIntentController extends Controller
 
 
             return [
+                'isResultOk' => true,
                 'clientSecret' => $paymentIntent->client_secret
             ];
         } catch (Exception $e) {
