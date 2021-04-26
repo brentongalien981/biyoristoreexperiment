@@ -13,6 +13,7 @@ class CustomizedEasyPost extends Controller
     private const CUSTOM_FORCED_INTERNAL_EXCEPTION = ['code' => -501, 'name' => 'CUSTOM_FORCED_INTERNAL_EXCEPTION'];
     private const CUSTOM_INTERNAL_EXCEPTION = ['code' => -500, 'name' => 'CUSTOM_INTERNAL_EXCEPTION'];
 
+    private const DEFAULT_INITIAL_RESULT = ['code' => 0, 'name' => 'DEFAULT_INITIAL_RESULT'];
     private const ORIGIN_ADDRESS_EXCEPTION = ['code' => -1, 'name' => 'ORIGIN_ADDRESS_EXCEPTION'];
     private const DESTINATION_ADDRESS_EXCEPTION = ['code' => -2, 'name' => 'DESTINATION_ADDRESS_EXCEPTION'];
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
@@ -114,7 +115,7 @@ class CustomizedEasyPost extends Controller
 
             $params['customErrors']['originAddressErrors'] = $originAddressErrors;
             $params['entireProcessComments'][] = self::ORIGIN_ADDRESS_EXCEPTION['name'];
-            // $params['resultCode'] = self::ORIGIN_ADDRESS_EXCEPTION['code'];
+            $params['resultCode'] = self::ORIGIN_ADDRESS_EXCEPTION['code'];
 
 
             throw new Exception(self::ORIGIN_ADDRESS_EXCEPTION['name']);
@@ -177,7 +178,12 @@ class CustomizedEasyPost extends Controller
 
     public function setParcel(&$params, $usePredefinedPackageProp = true)
     {
-        $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
+        if (isset($params['packageInfo'])) {
+            $packageInfo = $params['packageInfo'];
+        } else {
+            $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
+        }
+
 
         if (!isset($packageInfo)) {
             $params['resultCode'] = self::NULL_PREDEFINED_PACKAGE_EXCEPTION['code'];
@@ -190,16 +196,23 @@ class CustomizedEasyPost extends Controller
                 "predefined_package" => $packageInfo['predefinedPackageName'],
                 "weight" => $packageInfo['totalWeight']
             ]);
+
+            $params['entireProcessComments'][] = 'Parcel-obj created using prop: predefined_package.';
         } else {
+            // I'm doing this because EasyPost doesn't seem to return a shipment-obj with rates
+            // sometimes if the parcel-obj has the property "predefined_package" when created.
             $parcel = \EasyPost\Parcel::create([
                 "length" => $packageInfo['dimensions']['length'],
                 "width" => $packageInfo['dimensions']['width'],
                 "height" => $packageInfo['dimensions']['height'],
                 "weight" => $packageInfo['totalWeight']
             ]);
+
+            $params['entireProcessComments'][] = 'Parcel-obj created using package-info-dimensions.';
         }
 
 
+        $params['packageInfo'] = $packageInfo;
         return $parcel;
     }
 
@@ -240,7 +253,7 @@ class CustomizedEasyPost extends Controller
     {
         // For each rate, add value to field "delivery_days" if the retrieved rate has null.
         $modifiedRateObjs = [];
-        // BMD-ISH: Use cache here.
+        // BMD-TODO: Use cache here.
         $shippingServiceLevels = ShippingServiceLevel::all();
 
         foreach ($parsedRateObjs as $r) {
@@ -325,9 +338,14 @@ class CustomizedEasyPost extends Controller
     public function getRates(Request $request)
     {
         $entireProcessData = [];
-        $entireProcessParams = ['entireProcessComments' => [], 'customErrors' => [], 'resultCode' => 0, 'reducedCartItemsData' => $request->reducedCartItemsData, 'shippingInfo' => $request->shippingInfo];
+        $entireProcessParams = [
+            'entireProcessComments' => [], 
+            'customErrors' => [], 
+            'resultCode' => self::DEFAULT_INITIAL_RESULT['code'], 
+            'reducedCartItemsData' => $request->reducedCartItemsData, 
+            'shippingInfo' => $request->shippingInfo
+        ];
 
-        \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
 
         try {
 
@@ -337,46 +355,24 @@ class CustomizedEasyPost extends Controller
                 throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
             }
 
+            \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
+
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
             $entireProcessData['destinationAddress'] = $this->setDestinationAddress($entireProcessParams);
-            $packageInfo = MyShippingPackageManager::getPackageInfo($entireProcessParams['reducedCartItemsData']); // BMD-FOR-DEBUG: Comment-out on deployment.
             $entireProcessData['parcel'] = $this->setParcel($entireProcessParams);
+            $entireProcessData['packageInfo'] = $entireProcessParams['packageInfo'];
+
             $shipmentObj = $this->setShipment($entireProcessData);
 
-
-            // BMD-FOR-DEBUG
-            $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
-            $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
-            $entireProcessData['packageInfo'] = $packageInfo;
-            $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
-            $entireProcessData['jsonShipment'] = $this->jsonifyObj($shipmentObj);
-
-
+            // Check.
             if (!$this->doesShipmentHaveRates($shipmentObj)) {
-                // Re-create the parcel without the property "predefined_package". 
-                // I'm doing this because EasyPost doesn't seem to return a shipment-obj with rates
-                // sometimes if the parcel-obj has the property "predefined_package" when created.
-                $entireProcessParams['entireProcessComments'][] = 'The first parcel-obj created using predefined_package prop led to a shipment-obj without rates property.';
-                $entireProcessParams['entireProcessComments'][] = 'Therefore, creating a new parcel-obj without using the predefined_package prop...';
-
-
                 $usePredefinedPackageProp = false;
                 $entireProcessData['parcel'] = $this->setParcel($entireProcessParams, $usePredefinedPackageProp);
 
-
-                $entireProcessParams['entireProcessComments'][] = '2nd parcel-obj created...';
-                $entireProcessParams['entireProcessComments'][] = 'Creating new shipment-obj...';
-
                 $shipmentObj = $this->setShipment($entireProcessData);
-
-
-                // BMD-FOR-DEBUG
-                $entireProcessData['jsonParcel2'] = $this->jsonifyObj($entireProcessData['parcel']);
-                $entireProcessData['jsonShipment2'] = $this->jsonifyObj($shipmentObj);
             }
 
-
-            // Check the 2nd-time around.
+            // 2nd check.
             if (!$this->doesShipmentHaveRates($shipmentObj)) {
                 $params['resultCode'] = self::COULD_NOT_FIND_SHIPMENT_RATES['code'];
                 throw new Exception(self::COULD_NOT_FIND_SHIPMENT_RATES['name']);
@@ -384,26 +380,18 @@ class CustomizedEasyPost extends Controller
 
             $entireProcessData['shipment'] = $shipmentObj;
             $entireProcessData['parsedRateObjs'] = $this->getParsedRateObjs($entireProcessData['shipment']->rates);
-
-
-            // BMD-FOR-DEBUG
-            $entireProcessData['jsonParsedRateObjs'] = $this->jsonifyObj($entireProcessData['parsedRateObjs']);
-
-
             $entireProcessData['modifiedRateObjs'] = $this->getModifiedRateObjs($entireProcessData['parsedRateObjs']);
             $entireProcessData['efficientShipmentRates'] = $this->getEfficientShipmentRates($entireProcessData['modifiedRateObjs']);
-            $entireProcessData['isResultOk'] = true;
+            $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
+
             $entireProcessParams['resultCode'] = self::ENTIRE_PROCESS_OK['code'];
             $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
-
-            $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
         } catch (Exception $e) {
-            if ($entireProcessParams['resultCode'] === 0) {
+            if ($entireProcessParams['resultCode'] === self::DEFAULT_INITIAL_RESULT['code']) {
                 $entireProcessParams['resultCode'] = self::CUSTOM_INTERNAL_EXCEPTION['code'];
             }
             $entireProcessParams['entireProcessComments'][] = "caught exception ==> " . $e->getMessage();
-            // $entireProcessParams['entireProcessComments'][] = "caught exception trace ==> " . $e->getTrace();
-            $entireProcessParams['entireProcessComments'][] = "caught exception trace-string ==> " . $e->getTraceAsString();
+            $entireProcessParams['entireProcessComments'][] = "caught exception trace ==> " . $e->getTraceAsString();
         }
 
 
@@ -412,8 +400,23 @@ class CustomizedEasyPost extends Controller
         $entireProcessData['resultCode'] = $entireProcessParams['resultCode'];
 
         return [
-            'msg' => 'In CLASS: CustomizedEasyPost, METHOD: getRates()',
-            'objs' => $entireProcessData
+            'objs' => $entireProcessData,
+            'jsonifiedProcessData' => $this->extractToJsonifiedData($entireProcessData) // BMD-FOR-DEBUG
+        ];
+    }
+
+
+    
+    private function extractToJsonifiedData(&$entireProcessData)
+    {
+        return [
+            'jsonOriginAddress' => isset($entireProcessData['originAddress']) ? $this->jsonifyObj($entireProcessData['originAddress']) : 'NOT SET',
+            'jsonDestinationAddress' => isset($entireProcessData['destinationAddress']) ? $this->jsonifyObj($entireProcessData['destinationAddress']) : 'NOT SET',
+            'packageInfo' => isset($entireProcessData['packageInfo']) ? $entireProcessData['packageInfo'] : 'NOT SET',
+            'jsonParcel' => isset($entireProcessData['parcel']) ? $this->jsonifyObj($entireProcessData['parcel']) : 'NOT SET',
+            'jsonShipment' => isset($entireProcessData['shipment']) ? $this->jsonifyObj($entireProcessData['shipment']) : 'NOT SET',
+            'jsonParsedRateObjs' => isset($entireProcessData['parsedRateObjs']) ? $this->jsonifyObj($entireProcessData['parsedRateObjs']) : 'NOT SET'
+
         ];
     }
 }
