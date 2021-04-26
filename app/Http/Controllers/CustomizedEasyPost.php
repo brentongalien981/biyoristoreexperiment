@@ -69,7 +69,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-    
+
     public function setOriginAddress(&$params)
     {
         $originAddressParams = [
@@ -172,13 +172,13 @@ class CustomizedEasyPost extends Controller
     }
 
 
-    
+
     public function setParcel(&$params)
     {
         $packageInfo = MyShippingPackageManager::getPackageInfo($params['reducedCartItemsData']);
 
         if (!isset($packageInfo)) {
-            // $params['resultCode'] = self::NULL_PREDEFINED_PACKAGE_EXCEPTION['code'];
+            $params['resultCode'] = self::NULL_PREDEFINED_PACKAGE_EXCEPTION['code'];
             throw new Exception(self::NULL_PREDEFINED_PACKAGE_EXCEPTION['name']);
         }
 
@@ -320,6 +320,14 @@ class CustomizedEasyPost extends Controller
             $entireProcessData['parcel'] = $this->setParcel($entireProcessParams);
 
             $entireProcessData['shipment'] = $this->setShipment($entireProcessData);
+
+            // BMD-TODO:DELETE-ON-PRODUCTION
+            $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
+            $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
+            $entireProcessData['packageInfo'] = $packageInfo;
+            $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
+            $entireProcessData['jsonShipment'] = $this->jsonifyObj($entireProcessData['shipment']);
+
             $entireProcessData['parsedRateObjs'] = $this->getParsedRateObjs($entireProcessData['shipment']->rates);
             $entireProcessData['modifiedRateObjs'] = $this->getModifiedRateObjs($entireProcessData['parsedRateObjs']);
             $entireProcessData['efficientShipmentRates'] = $this->getEfficientShipmentRates($entireProcessData['modifiedRateObjs']);
@@ -328,13 +336,6 @@ class CustomizedEasyPost extends Controller
             $entireProcessParams['entireProcessComments'][] = self::ENTIRE_PROCESS_OK['name'];
 
             $entireProcessData['shipmentId'] = $entireProcessData['shipment']->id;
-
-
-            // BMD-TODO:DELETE-ON-PRODUCTION
-            $entireProcessData['jsonOriginAddress'] = $this->jsonifyObj($entireProcessData['originAddress']);
-            $entireProcessData['jsonDestinationAddress'] = $this->jsonifyObj($entireProcessData['destinationAddress']);
-            $entireProcessData['packageInfo'] = $packageInfo;
-            $entireProcessData['jsonParcel'] = $this->jsonifyObj($entireProcessData['parcel']);
         } catch (Exception $e) {
             if ($entireProcessParams['resultCode'] === 0) {
                 $entireProcessParams['resultCode'] = self::CUSTOM_INTERNAL_EXCEPTION['code'];

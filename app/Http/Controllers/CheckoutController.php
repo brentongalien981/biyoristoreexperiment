@@ -7,21 +7,67 @@ use App\Order;
 use Exception;
 use App\Product;
 use App\CartItem;
-use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
-use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
-use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
-use App\Http\BmdHelpers\BmdAuthProvider;
 use App\OrderItem;
 use App\OrderStatus;
 use App\PaymentStatus;
+use App\SizeAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\Http\BmdCacheObjects\CartCacheObject;
+use App\Http\BmdCacheObjects\ProductResourceCacheObject;
+use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
+use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
+use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
 
 class CheckoutController extends Controller
 {
+    public function doOrderInventoryChecks(Request $r)
+    {
+
+        BmdAuthProvider::setInstance($r->bmdToken, $r->authProviderId);
+
+        $userId = $r->temporaryGuestUserId;
+        if (BmdAuthProvider::check()) {
+            $user = BmdAuthProvider::user();
+            $userId = $user->id;
+        }
+
+        $entireProcessFailedCheckObjs = [
+            'orderItemExceedInventoryQuantity' => [],
+            'orderItemsWontFitInBiggestPackageBox' => null,
+        ];
+
+
+        /** Check if the inventory quantities can supply the order-items quantities. */
+        $cacheCO = new CartCacheObject('cart?userId=' . $userId);
+        $cartItems = $cacheCO->data->cartItems;
+
+        foreach ($cartItems as $ci) {
+
+            $sizeAvailabilityObj = SizeAvailability::find($ci->sizeAvailabilityId);
+
+            if ($ci->quantity > $sizeAvailabilityObj->quantity) {
+                // Append a failed-check-msg.
+                $productResourceCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($ci->productId);
+                $failedCheckObj = [
+                    'productName' => $productResourceCO->data->name,
+                    'productInventoryQuantity' => $sizeAvailabilityObj->quantity,
+                    'orderItemQuantity' => $ci->quantity
+                ];
+                $entireProcessFailedCheckObjs['orderItemExceedInventoryQuantity'][] = $failedCheckObj;
+            }
+        }
+
+        
+        /** Based on the maximum package-box we can ship, check if that can fit all the order-items. */
+    }
+
+
+
     private static function checkCartItemExistence($items)
     {
         foreach ($items as $i) {
@@ -41,7 +87,7 @@ class CheckoutController extends Controller
 
 
     public function finalizeOrderWithPredefinedPayment(Request $request)
-    { 
+    {
 
         $user = Auth::user();
         $paymentProcessStatusCode = PaymentStatus::WAITING_FOR_PAYMENT;

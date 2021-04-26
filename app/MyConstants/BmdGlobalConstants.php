@@ -13,4 +13,6 @@ class BmdGlobalConstants
 
 
     public const TAX_RATE = 0.13;
+
+    
 }
