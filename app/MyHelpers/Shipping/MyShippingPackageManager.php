@@ -14,19 +14,23 @@ class MyShippingPackageManager
         'UPS' => [
             'UPSLetter' => [
                 'weightLimit' => 16.00,
-                'itemTypeLimits' => ['shirt' => 3.0, 'jersey' => 2.0, 'shorts' => 2.0]
+                'itemTypeLimits' => ['shirt' => 3.0, 'jersey' => 2.0, 'shorts' => 2.0],
+                'dimensions' => ['length' => 15, 'width' => 9.5, 'height' => 1]
             ],
             'SmallExpressBox' => [
                 'weightLimit' => 480.00,
-                'itemTypeLimits' => ['shirt' => 10.0, 'jersey' => 10.0, 'shorts' => 6.0, 'hoodie' => 2.0]
+                'itemTypeLimits' => ['shirt' => 10.0, 'jersey' => 10.0, 'shorts' => 6.0, 'hoodie' => 2.0],
+                'dimensions' => ['length' => 13, 'width' => 11, 'height' => 2]
             ],
             'UPS10kgBox' => [
                 'weightLimit' => 352.00,
-                'itemTypeLimits' => ['shirt' => 35.0, 'jersey' => 30.0, 'shorts' => 20.0, 'hoodie' => 8.0, 'shoes' => 4.0]
+                'itemTypeLimits' => ['shirt' => 35.0, 'jersey' => 30.0, 'shorts' => 20.0, 'hoodie' => 8.0, 'shoes' => 4.0],
+                'dimensions' => ['length' => 16.5, 'width' => 13.25, 'height' => 10.75]
             ],
             'UPS25kgBox' => [
                 'weightLimit' => 880.00,
-                'itemTypeLimits' => ['shirt' => 50.0, 'jersey' => 42.0, 'shorts' => 30.0, 'hoodie' => 12.0, 'shoes' => 6.0, 'pctowercase' => 1.0]
+                'itemTypeLimits' => ['shirt' => 50.0, 'jersey' => 42.0, 'shorts' => 30.0, 'hoodie' => 12.0, 'shoes' => 6.0, 'pctowercase' => 1.0],
+                'dimensions' => ['length' => 19.75, 'width' => 17.75, 'height' => 13.25]
             ]
         ],
         'FedEx' => [],
@@ -150,7 +154,8 @@ class MyShippingPackageManager
         return [
             'convertedQty' => $allItemsTotalConvertedQty,
             'totalWeight' => $orderTotalWeight,
-            'predefinedPackageName' => $selectedPredefinedPackageName
+            'predefinedPackageName' => $selectedPredefinedPackageName,
+            'dimensions' => self::$predefinePackagesByCarrier['UPS'][$selectedPredefinedPackageName]['dimensions']
         ];
     }
 }
