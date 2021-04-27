@@ -9,6 +9,8 @@ class MyShippingPackageManager
 {
     /**
      * weightLimit is in oz
+     * dimensions are in inches
+     * itemTypeLimits are in number of pieces
      */
     public static $predefinePackagesByCarrier = [
         'UPS' => [

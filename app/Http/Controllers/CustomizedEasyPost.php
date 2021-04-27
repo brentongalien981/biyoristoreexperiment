@@ -366,6 +366,7 @@ class CustomizedEasyPost extends Controller
 
             // Check.
             if (!$this->doesShipmentHaveRates($shipmentObj)) {
+                // Re-create the parcel & shipment.
                 $usePredefinedPackageProp = false;
                 $entireProcessData['parcel'] = $this->setParcel($entireProcessParams, $usePredefinedPackageProp);
 
