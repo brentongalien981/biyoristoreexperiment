@@ -36,16 +36,12 @@ class CheckoutController extends Controller
             $userId = $user->id;
         }
 
-        $entireProcessFailedCheckObjs = [
-            'orderItemExceedInventoryQuantity' => [],
-            'orderItemsWontFitInBiggestPackageBox' => null,
-        ];
-
 
         /** Check if the inventory quantities can supply the order-items quantities. */
         $cacheCO = new CartCacheObject('cart?userId=' . $userId);
         $cartItems = $cacheCO->data->cartItems;
 
+        $failedCheckObjs = [];
         foreach ($cartItems as $ci) {
 
             $sizeAvailabilityObj = SizeAvailability::find($ci->sizeAvailabilityId);
@@ -53,17 +49,24 @@ class CheckoutController extends Controller
             if ($ci->quantity > $sizeAvailabilityObj->quantity) {
                 // Append a failed-check-msg.
                 $productResourceCO = ProductResourceCacheObject::getUpdatedResourceCacheObjWithId($ci->productId);
-                $failedCheckObj = [
+                $failedCheckObjs[] = [
                     'productName' => $productResourceCO->data->name,
                     'productInventoryQuantity' => $sizeAvailabilityObj->quantity,
+                    'size' => $sizeAvailabilityObj->size,
                     'orderItemQuantity' => $ci->quantity
                 ];
-                $entireProcessFailedCheckObjs['orderItemExceedInventoryQuantity'][] = $failedCheckObj;
+                
             }
         }
 
-        
-        /** Based on the maximum package-box we can ship, check if that can fit all the order-items. */
+
+        return [
+            'isResultOk' => count($failedCheckObjs) > 0 ? false : true,
+            'objs' => [
+                'orderItemExceedInventoryQuantityFailedCheckObjs' => $failedCheckObjs
+            ]
+        ];
+
     }
 
 
