@@ -336,7 +336,7 @@ class CheckoutController extends Controller
                 $orderItem = new OrderItem();
                 $orderItem->order_id = $order->id;
                 $orderItem->product_id = $i->product_id;
-                $orderItem->price = $i->product->price;
+                $orderItem->price = $i->product->price; // BMD-TODO: Edit this using seller-product data.
                 $orderItem->quantity = $i->quantity;
                 $orderItem->save();
             }
@@ -348,7 +348,6 @@ class CheckoutController extends Controller
             //
             return [
                 'isResultOk' => true,
-                'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'order' => $order
@@ -356,7 +355,6 @@ class CheckoutController extends Controller
         } catch (Exception $e) {
             return [
                 'isResultOk' => false,
-                'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrder()',
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'customError' => $e->getMessage(),

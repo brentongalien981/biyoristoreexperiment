@@ -51,7 +51,7 @@ class PaymentIntentController extends Controller
 
     public function create(Request $request)
     {
-        // This is your real test secret API key.
+        // BMD-ON-STAGING
         \Stripe\Stripe::setApiKey(env('STRIPE_SK'));
 
 
@@ -65,6 +65,12 @@ class PaymentIntentController extends Controller
                 $user = BmdAuthProvider::user();
             }
 
+
+            // BMD-TODO: Add these as meta-data
+            // - charged_subtotal
+            // - charged_shipping_fee
+            // - charged_tax
+            // - estimated-total-delivery-days
             $paymentIntent = \Stripe\PaymentIntent::create([
                 'amount' => self::getOrderAmount($request->cartItemsData),
                 'currency' => 'usd',
@@ -140,6 +146,9 @@ class PaymentIntentController extends Controller
             $cacheCart->cartItems = $updatedCacheCartItems;
             $cartCO->data = $cacheCart;
             $cartCO->save();
+
+
+            // BMD-TODO: Edit the Stripe-Payment-Intent-obj. Add the cart and cart-items details as backup record.
 
 
 

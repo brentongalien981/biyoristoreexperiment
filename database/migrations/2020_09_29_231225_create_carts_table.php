@@ -22,10 +22,6 @@ class CreateCartsTable extends Migration
             $table->timestamps();
         });
 
-        // Schema::table('carts', function (Blueprint $table) {
-
-        //     $table->foreign('user_id')->references('id')->on('users');
-        // });
     }
 
     /**

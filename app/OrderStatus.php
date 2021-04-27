@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+// BMD-TODO: Maybe move this to global constants?
 class OrderStatus extends Model
 {
     // const INVALID_CART = self::getIdByName('INVALID_CART');
