@@ -22,6 +22,8 @@ use App\Http\BmdCacheObjects\ProductResourceCacheObject;
 use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
+use App\Http\BmdCacheObjects\OrderStatusCacheObject;
+use App\MyConstants\BmdExceptions;
 
 class CheckoutController extends Controller
 {
@@ -55,7 +57,6 @@ class CheckoutController extends Controller
                     'size' => $sizeAvailabilityObj->size,
                     'orderItemQuantity' => $ci->quantity
                 ];
-                
             }
         }
 
@@ -66,7 +67,6 @@ class CheckoutController extends Controller
                 'orderItemExceedInventoryQuantityFailedCheckObjs' => $failedCheckObjs
             ]
         ];
-
     }
 
 
@@ -266,6 +266,33 @@ class CheckoutController extends Controller
 
 
 
+    private function checkCartCache(&$params)
+    {
+        $cartCO = new CartCacheObject('cart?userId=' . $params['userId']);
+
+        if (!isset($cartCO->data->id) || !isset($cartCO->data->cartItems)) {
+            $e = BmdExceptions::INVALID_CART_EXCEPTION;
+            $params['resultCode'] = $e['id'];
+            $params['entireProcessLogs'][] = $e['name'];
+            throw new Exception($e['name']);
+        } else {
+            $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('VALID_CART');
+        }
+
+        
+        if (count($cartCO->data->cartItems) == 0) {
+
+            $e = BmdExceptions::CART_HAS_NO_ITEM_EXCEPTION;
+            $params['resultCode'] = $e['id'];
+            $params['entireProcessLogs'][] = $e['name'];
+            throw new Exception($e['name']);
+        } else {
+            $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('CART_HAS_ITEM');
+        }
+    }
+
+
+
     public function finalizeOrder(Request $request)
     {
         BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
@@ -277,45 +304,42 @@ class CheckoutController extends Controller
             $userId = $user->id;
         }
 
-        $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
-        $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
 
-        // BMD-ISH
-        // Create order record with status "PAID".
-        $cart = Cart::find($request->cartId);
+        $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
+        $resultCode = BmdExceptions::DEFAULT_INITIAL_FINALIZING_ORDER_EXCEPTION['id'];
+        $entireProcessLogs = [];
+
+        $entireProcessParams = [
+            'userId' => $userId,
+            'entireProcessLogs' => $entireProcessLogs,
+            'resultCode' => $resultCode
+        ];
 
 
         try {
 
-            //
-            if (!isset($cart)) {
-                throw new Exception("Invalid cart.");
-            } else {
-                $orderProcessStatusCode = OrderStatus::getIdByName('VALID_CART');
-            }
+            $this->checkCartCache($entireProcessParams);
 
-
-            //
-            if (count($cart->cartItems) == 0) {
-                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_NO_ITEM');
-                throw new Exception("Cart has no item.");
-            } else {
-                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_ITEM');
-            }
-
-
-            // Update cart record as not-active.
+            // BMD-ISH: Update cart record as not-active.
             $cart->is_active = 0;
             $cart->save();
 
+            // BMD-TODO: Use cache here.
             $orderProcessStatusCode = OrderStatus::getIdByName('CART_CHECKEDOUT_OK');
 
 
-            // bmd-todo: Make the order id a UUID type.
+
+            // BMD-TODO: Update cart-cache.
+
+
+
+            // Create order record with status "PAID".
+            // BMD-TODO: Make the order id a UUID type.
             $order = new Order();
             $order->user_id = (isset($user) ? $user->id : null);
             $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
             $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
+            // BMD-TODO: Use cache here.
             $order->status_id = OrderStatus::getIdByName('PAYMENT_METHOD_CHARGED');
 
             $order->street = $request->street;
@@ -327,6 +351,8 @@ class CheckoutController extends Controller
             $order->email = $request->email;
             $order->save();
 
+
+            // BMD-TODO: Use cache here.
             $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_CREATED');
 
 
@@ -341,11 +367,23 @@ class CheckoutController extends Controller
                 $orderItem->save();
             }
 
+
+            // BMD-TODO: Use cache here.
             $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_ITEMS_CREATED');
 
 
 
-            //
+            // BMD-TODO: Update inventory.
+
+
+            // BMD-TODO: Update inventory-order-limits
+
+
+            // BMD-TODO: EVENT: Email user of the order details.
+
+
+
+            // BMD-TODO: Refactor.
             return [
                 'isResultOk' => true,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
@@ -353,6 +391,7 @@ class CheckoutController extends Controller
                 'order' => $order
             ];
         } catch (Exception $e) {
+            // BMD-TODO: Refactor.
             return [
                 'isResultOk' => false,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,

@@ -4,21 +4,27 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-// BMD-TODO: Maybe move this to global constants?
+
 class OrderStatus extends Model
 {
-    // const INVALID_CART = self::getIdByName('INVALID_CART');
-    // const VALID_CART = self::where('name', 'VALID_CART')->id;
-    // const CART_HAS_ITEM = self::where('name', 'CART_HAS_ITEM')->id;
-    // const CART_HAS_NO_ITEM = self::where('name', 'CART_HAS_NO_ITEM')->id;
-    // const INVALID_PAYMENT_METHOD = self::where('name', 'INVALID_PAYMENT_METHOD')->id;
-    // const WAITING_FOR_PAYMENT = self::where('name', 'WAITING_FOR_PAYMENT')->id;
-    // const PAYMENT_METHOD_CHARGED = self::where('name', 'PAYMENT_METHOD_CHARGED')->id;
-    // const CART_CHECKEDOUT_OK = self::where('name', 'CART_CHECKEDOUT_OK')->id;
-    // const CANCELLED = self::where('name', 'CANCELLED')->id;
-    // const ORDER_CREATED = self::where('name', 'ORDER_CREATED')->id;
-    // const ORDER_ITEMS_CREATED = self::where('name', 'ORDER_ITEMS_CREATED')->id;
-
+    // DB::table('order_statuses')->insert(['name' => 'INVALID_CART', 'readable_name' => 'Invalid Cart']);
+    // DB::table('order_statuses')->insert(['name' => 'VALID_CART', 'readable_name' => 'Valid Cart']);
+    // DB::table('order_statuses')->insert(['name' => 'CART_HAS_ITEM', 'readable_name' => 'Cart Has item']);
+    // DB::table('order_statuses')->insert(['name' => 'CART_HAS_NO_ITEM', 'readable_name' => 'Cart Has No Item']);
+    // DB::table('order_statuses')->insert(['name' => 'INVALID_PAYMENT_METHOD', 'readable_name' => 'Invalid Payment Method']);
+    // DB::table('order_statuses')->insert(['name' => 'WAITING_FOR_PAYMENT', 'readable_name' => 'Waiting for Payment']);
+    // DB::table('order_statuses')->insert(['name' => 'PAYMENT_METHOD_CHARGED', 'readable_name' => 'Payment Method Charged']);
+    // DB::table('order_statuses')->insert(['name' => 'CART_CHECKEDOUT_OK', 'readable_name' => 'Cart Checked-out OK']);
+    // DB::table('order_statuses')->insert(['name' => 'CANCELLED', 'readable_name' => 'Order Cancelled']);
+    // DB::table('order_statuses')->insert(['name' => 'ORDER_CREATED', 'readable_name' => 'Order Created']);
+    // DB::table('order_statuses')->insert(['name' => 'ORDER_ITEMS_CREATED', 'readable_name' => 'Order Items Created']);
+    // DB::table('order_statuses')->insert(['name' => 'PROCESSING_FOR_SHIPMENT', 'readable_name' => 'Processing for Shipment']);
+    // DB::table('order_statuses')->insert(['name' => 'BEING_SHIPPED', 'readable_name' => 'Order Being Shipped']);
+    // DB::table('order_statuses')->insert(['name' => 'DELIVERED', 'readable_name' => 'Order Delivered']);
+    // DB::table('order_statuses')->insert(['name' => 'SHIPPED_FOR_REFUND', 'readable_name' => 'Shipped for Refund']);
+    // DB::table('order_statuses')->insert(['name' => 'RETURNED', 'readable_name' => 'Order Returned']);
+    // DB::table('order_statuses')->insert(['name' => 'PROCESSING_FOR_REFUND', 'readable_name' => 'Processing for Refund']);
+    // DB::table('order_statuses')->insert(['name' => 'REFUNDED', 'readable_name' => 'Refunded']);
 
 
     public static function getIdByName($name) {
