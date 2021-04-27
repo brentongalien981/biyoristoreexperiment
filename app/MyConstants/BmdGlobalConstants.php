@@ -15,4 +15,8 @@ class BmdGlobalConstants
     public const TAX_RATE = 0.13;
 
     
+    /** TAGS: inventory, orders, cart */
+    public const NUM_OF_DAILY_ORDER_ITEMS_LIMIT = 300;
+    public const NUM_OF_DAILY_ORDERS_LIMIT = 100;
+
 }

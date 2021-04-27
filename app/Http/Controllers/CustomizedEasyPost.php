@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
+use App\MyConstants\BmdGlobalConstants;
 use App\MyHelpers\Shipping\MyShippingPackageManager;
 use Exception;
 use Illuminate\Http\Request;
@@ -19,6 +21,9 @@ class CustomizedEasyPost extends Controller
     private const NULL_PREDEFINED_PACKAGE_EXCEPTION = ['code' => -3, 'name' => 'NULL_PREDEFINED_PACKAGE_EXCEPTION'];
     private const EMPTY_CART_EXCEPTION = ['code' => -4, 'name' => 'EMPTY_CART_EXCEPTION'];
     private const COULD_NOT_FIND_SHIPMENT_RATES = ['code' => -5, 'name' => 'COULD_NOT_FIND_SHIPMENT_RATES'];
+
+    private const NUM_OF_DAILY_ORDERS_LIMIT_REACHED = ['code' => -6, 'name' => 'NUM_OF_DAILY_ORDERS_LIMIT_REACHED'];
+    private const NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED = ['code' => -7, 'name' => 'NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED'];
 
     private const EMPTY_REQUEST_PARAMS = ['code' => -400, 'name' => 'EMPTY_REQUEST_PARAMS'];
 
@@ -335,6 +340,23 @@ class CustomizedEasyPost extends Controller
 
 
 
+    private function checkInventoryOrderLimits(&$entireProcessParams) {
+        $cacheKey = 'inventoryOrderLimits';
+        $inventoryOrderLimitsCO = new InventoryOrderLimitsCacheObject($cacheKey);
+
+        if ($inventoryOrderLimitsCO->data['numOfDailyOrders'] >= BmdGlobalConstants::NUM_OF_DAILY_ORDERS_LIMIT) {
+            $entireProcessParams['resultCode'] = self::NUM_OF_DAILY_ORDERS_LIMIT_REACHED['code'];
+            throw new Exception(self::NUM_OF_DAILY_ORDERS_LIMIT_REACHED['name']);
+        }
+
+        if ($inventoryOrderLimitsCO->data['numOfDailyOrderItems'] >= BmdGlobalConstants::NUM_OF_DAILY_ORDER_ITEMS_LIMIT) {
+            $entireProcessParams['resultCode'] = self::NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED['code'];
+            throw new Exception(self::NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED['name']);
+        }
+    }
+
+
+
     public function getRates(Request $request)
     {
         $entireProcessData = [];
@@ -348,6 +370,9 @@ class CustomizedEasyPost extends Controller
 
 
         try {
+
+            // BMD-ISH: Do Inventory-Order-Limits checks.
+            $this->checkInventoryOrderLimits($entireProcessParams);
 
             // BMD-TODO:LATER-ON-PRODUCTION Finish all validation of request-params.
             if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
