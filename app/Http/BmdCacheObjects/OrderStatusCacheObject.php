@@ -10,7 +10,7 @@ class OrderStatusCacheObject extends BmdCacheObject
 
 
 
-    public static function getIdByName($name) {
+    public static function getDataByName($name) {
 
         $cacheKey = 'orderStatus?name=' . $name;
         $orderStatusCO = new self($cacheKey);
@@ -20,7 +20,19 @@ class OrderStatusCacheObject extends BmdCacheObject
             $orderStatusCO->save();
         }
 
-        return $orderStatusCO->data->id;
+        return $orderStatusCO->data;
+    }
+
+
+
+    public static function getCodeByName($name) {
+        return self::getDataByName($name)->code;
+    }
+
+
+
+    public static function getReadableNameByName($name) {
+        return self::getDataByName($name)->readable_name;
     }
 
 }

@@ -26,6 +26,12 @@ class CartCacheObject extends BmdModelCacheObject
 
 
 
+    public function resetData() {
+        $this->initData();
+    }
+
+
+
     private function initData() {
         $cart = new Cart();
         $cart->id = 0;
