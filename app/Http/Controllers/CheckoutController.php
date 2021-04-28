@@ -12,18 +12,19 @@ use App\OrderStatus;
 use App\PaymentStatus;
 use App\SizeAvailability;
 use Illuminate\Http\Request;
+use App\MyConstants\BmdExceptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdCacheObjects\CartCacheObject;
+use App\Http\BmdCacheObjects\OrderStatusCacheObject;
+use App\Http\BmdCacheObjects\SellerProductCacheObject;
 use App\Http\BmdCacheObjects\ProductResourceCacheObject;
 use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
-use App\Http\BmdCacheObjects\OrderStatusCacheObject;
-use App\MyConstants\BmdExceptions;
 
 class CheckoutController extends Controller
 {
@@ -265,10 +266,19 @@ class CheckoutController extends Controller
     }
 
 
-
+    
+    /**
+     * Check cart validity.
+     * Check if cart has items.
+     *
+     * @param [type] $params
+     * @return void
+     */
     private function checkCartCache(&$params)
     {
         $cartCO = new CartCacheObject('cart?userId=' . $params['userId']);
+        $params['cartCO'] = $cartCO;
+        $params['cartId'] = $cartCO->data->id;
 
         if (!isset($cartCO->data->id) || !isset($cartCO->data->cartItems)) {
             $e = BmdExceptions::INVALID_CART_EXCEPTION;
@@ -279,7 +289,7 @@ class CheckoutController extends Controller
             $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('VALID_CART');
         }
 
-        
+
         if (count($cartCO->data->cartItems) == 0) {
 
             $e = BmdExceptions::CART_HAS_NO_ITEM_EXCEPTION;
@@ -289,6 +299,86 @@ class CheckoutController extends Controller
         } else {
             $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('CART_HAS_ITEM');
         }
+    }
+
+
+
+    private function deactivateDbCart(&$params)
+    {
+        $cart = Cart::find($params['cartId']);
+        $cart->is_active = 0;
+        $cart->save();
+
+        $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('CART_CHECKEDOUT_OK');
+    }
+
+
+
+    private function retrieveStripePaymentIntent($paymentIntentId)
+    {
+        // BMD-ON-STAGING
+        $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+        return $stripe->paymentIntents->retrieve(
+            $paymentIntentId,
+            []
+        );
+    }
+
+
+
+    private function createOrder(&$params)
+    {
+        $r = $params['request'];
+        $spi = $this->retrieveStripePaymentIntent($params['cartCO']->data->paymentIntentId);
+
+        $order = new Order();
+        $order->user_id = $params['userId'];
+        $order->cart_id = $params['cartId'];
+        $order->stripe_payment_intent_id = $params['cartCO']->data->paymentIntentId;
+
+        $order->street = $r->street;
+        $order->city = $r->city;
+        $order->province = $r->province;
+        $order->country = $r->country;
+        $order->postal_code = $r->postalCode;
+        $order->phone = $r->phone;
+        $order->email = $r->email;       
+
+        $order->charged_subtotal = $spi->metadata->chargedSubtotal;
+        $order->charged_shipping_fee = $spi->metadata->chargedShippingFee;
+        $order->charged_tax = $spi->metadata->chargedTax;
+        $order->projected_total_delivery_days = $spi->metadata->projectedTotalDeliveryDays;
+        $order->status_id = OrderStatusCacheObject::getIdByName('PAYMENT_METHOD_CHARGED');
+        $order->save();
+
+        $params['orderId'] = $order->id;
+        $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('ORDER_CREATED');
+
+
+        $this->createOrderItems($params);
+    }
+
+
+    
+    private function createOrderItems(&$params) {
+
+        $cartItems = $params['cartCO']->data->cartItems;
+
+        foreach ($cartItems as $i) {
+
+            $sellerProductCO = SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId);
+
+            $orderItem = new OrderItem();
+            $orderItem->order_id = $params['orderId'];
+            $orderItem->product_id = $i->productId;
+            $orderItem->price = $sellerProductCO->getSellerProductPurchasePrice();
+            $orderItem->quantity = $i->quantity;
+            $orderItem->product_seller_id = $i->sellerProductId;
+            $orderItem->size_availability_id = $i->sizeAvailabilityId;
+            $orderItem->save();
+        }
+
+        $params['entireProcessLogs'][] = OrderStatusCacheObject::getIdByName('ORDER_CREATED');
     }
 
 
@@ -308,75 +398,33 @@ class CheckoutController extends Controller
         $paymentProcessStatusCode = PaymentStatus::PAYMENT_METHOD_CHARGED;
         $resultCode = BmdExceptions::DEFAULT_INITIAL_FINALIZING_ORDER_EXCEPTION['id'];
         $entireProcessLogs = [];
+        $isResultOk = false;
 
         $entireProcessParams = [
             'userId' => $userId,
             'entireProcessLogs' => $entireProcessLogs,
-            'resultCode' => $resultCode
+            'resultCode' => $resultCode,
+            'request' => $request
         ];
 
 
         try {
 
             $this->checkCartCache($entireProcessParams);
+            $this->createOrder($entireProcessParams);
 
-            // BMD-ISH: Update cart record as not-active.
-            $cart->is_active = 0;
-            $cart->save();
+            // BMD-ISH
+            // BMD-TODO: Update inventory.
 
-            // BMD-TODO: Use cache here.
-            $orderProcessStatusCode = OrderStatus::getIdByName('CART_CHECKEDOUT_OK');
+            // BMD-TODO: Update inventory-order-limits
+
+
+
+            $this->deactivateDbCart($entireProcessParams);
 
 
 
             // BMD-TODO: Update cart-cache.
-
-
-
-            // Create order record with status "PAID".
-            // BMD-TODO: Make the order id a UUID type.
-            $order = new Order();
-            $order->user_id = (isset($user) ? $user->id : null);
-            $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
-            $order->payment_info_id = (isset($request->paymentInfoId) ? $request->paymentInfoId : null);
-            // BMD-TODO: Use cache here.
-            $order->status_id = OrderStatus::getIdByName('PAYMENT_METHOD_CHARGED');
-
-            $order->street = $request->street;
-            $order->city = $request->city;
-            $order->province = $request->province;
-            $order->country = $request->country;
-            $order->postal_code = $request->postalCode;
-            $order->phone = $request->phone;
-            $order->email = $request->email;
-            $order->save();
-
-
-            // BMD-TODO: Use cache here.
-            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_CREATED');
-
-
-
-            // Create order-items.
-            foreach ($cart->cartItems as $i) {
-                $orderItem = new OrderItem();
-                $orderItem->order_id = $order->id;
-                $orderItem->product_id = $i->product_id;
-                $orderItem->price = $i->product->price; // BMD-TODO: Edit this using seller-product data.
-                $orderItem->quantity = $i->quantity;
-                $orderItem->save();
-            }
-
-
-            // BMD-TODO: Use cache here.
-            $orderProcessStatusCode = OrderStatus::getIdByName('ORDER_ITEMS_CREATED');
-
-
-
-            // BMD-TODO: Update inventory.
-
-
-            // BMD-TODO: Update inventory-order-limits
 
 
             // BMD-TODO: EVENT: Email user of the order details.
@@ -384,22 +432,28 @@ class CheckoutController extends Controller
 
 
             // BMD-TODO: Refactor.
+            $isResultOk = true;
+
             return [
-                'isResultOk' => true,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
-                'orderProcessStatusCode' => $orderProcessStatusCode,
-                'order' => $order
+                // 'orderProcessStatusCode' => $orderProcessStatusCode,
+                // 'order' => $order
             ];
         } catch (Exception $e) {
             // BMD-TODO: Refactor.
             return [
-                'isResultOk' => false,
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
-                'orderProcessStatusCode' => $orderProcessStatusCode,
+                // 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'customError' => $e->getMessage(),
                 // 'order' => $order // TODO:LATER: Depending on the orderProcessStatusCode, decide whether or not to include this.
             ];
         }
+
+
+        // BMD-TODO:
+        return [
+            'isResultOk' => $isResultOk
+        ];
     }
 
 

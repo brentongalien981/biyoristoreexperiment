@@ -19,32 +19,23 @@ use App\MyConstants\BmdGlobalConstants;
 
 class PaymentIntentController extends Controller
 {
-    private static function getOrderAmount($items)
+    private static function getOrderSubtotal($items)
     {
 
-        $orderTotalAmount = 0;
+        $orderSubtotal = 0;
 
         foreach ($items as $i) {
             $i = json_decode($i);
 
-            $sellerProduct = SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId)->data;
-            $regularSellPrice = floatval($sellerProduct->sell_price);
-            $discountSellPrice = floatval($sellerProduct->discount_sell_price);
-
-            $purchasePrice = $regularSellPrice;
-            if ($discountSellPrice > 0 && $discountSellPrice < $regularSellPrice) {
-                $purchasePrice = $discountSellPrice;
-            }
+            $sellerProductCO = SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId);
+            $purchasePrice = $sellerProductCO->getSellerProductPurchasePrice();
 
             $itemTotalPrice = $purchasePrice * $i->quantity;
 
-            $orderTotalAmount += $itemTotalPrice;
+            $orderSubtotal += $itemTotalPrice;
         }
 
-        $orderTotalAmount = $orderTotalAmount * (1 + BmdGlobalConstants::TAX_RATE);
-
-        $orderTotalAmountInCents = round($orderTotalAmount, 2) * 100;
-        return $orderTotalAmountInCents;
+        return $orderSubtotal;
     }
 
 
@@ -59,24 +50,29 @@ class PaymentIntentController extends Controller
 
             BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
 
-            $tempGuestUserId = $request->temporaryGuestUserId;
+            $userId = $request->temporaryGuestUserId;
             $user = null;
             if (BmdAuthProvider::check()) {
                 $user = BmdAuthProvider::user();
+                $userId = $user->id;
             }
 
 
-            // BMD-TODO: Add these as meta-data
-            // - charged_subtotal
-            // - charged_shipping_fee
-            // - charged_tax
-            // - estimated-total-delivery-days
+            // order-meta-data
+            $chargedSubtotal = self::getOrderSubtotal($request->cartItemsData);
+            $chargedShippingFee = $request->shipmentRateAmount;
+            $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
+            $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
+            $chargedTotalInCents = round($chargedTotal, 2) * 100;
+            $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
+
+
             $paymentIntent = \Stripe\PaymentIntent::create([
-                'amount' => self::getOrderAmount($request->cartItemsData),
+                'amount' => $chargedTotalInCents,
                 'currency' => 'usd',
                 'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
                 'metadata' => [
-                    'storeUserId' => (isset($user) ? $user->id : $tempGuestUserId),
+                    'storeUserId' => $userId,
                     'firstName' => $request->firstName,
                     'lastName' => $request->lastName,
                     'phoneNumber' => $request->phone,
@@ -86,6 +82,12 @@ class PaymentIntentController extends Controller
                     'province' => $request->province,
                     'country' => $request->country,
                     'postalCode' => $request->postalCode,
+
+                    'chargedSubtotal' => $chargedSubtotal,
+                    'chargedShippingFee' => $chargedShippingFee,
+                    'chargedTax' => $chargedTax,
+                    'chargedTotal' => $chargedTotal,
+                    'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
                 ]
             ]);
 
@@ -95,7 +97,7 @@ class PaymentIntentController extends Controller
             // Do this so that when for some reason the customer gets charged for payment and the 
             // app gives an error finalizing the order, you'll be able to track which order items
             // he made through the cart-items and Stripe backend.
-            $cacheKey = 'cart?userId=' . (isset($user) ? $user->id : $tempGuestUserId);
+            $cacheKey = 'cart?userId=' . (isset($user) ? $user->id : $userId);
             $cartCO = new CartCacheObject($cacheKey);
             $cacheCart = $cartCO->data;
             $cart = null;
@@ -143,6 +145,7 @@ class PaymentIntentController extends Controller
             }
 
             // Update cache-cart.
+            $cacheCart->paymentIntentId = $paymentIntent->id;
             $cacheCart->cartItems = $updatedCacheCartItems;
             $cartCO->data = $cacheCart;
             $cartCO->save();

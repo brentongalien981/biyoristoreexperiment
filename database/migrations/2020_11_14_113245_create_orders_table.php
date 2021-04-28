@@ -14,8 +14,9 @@ class CreateOrdersTable extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->bigInteger('user_id')->unsigned()->nullable();
+            $table->unsignedBigInteger('cart_id');
             $table->string('stripe_payment_intent_id', 128);
             $table->bigInteger('payment_info_id')->unsigned()->nullable();
             $table->tinyInteger('status_id')->unsigned();
@@ -32,6 +33,7 @@ class CreateOrdersTable extends Migration
 
         Schema::table('orders', function (Blueprint $table) {
             $table->foreign('status_id')->references('id')->on('order_statuses');
+            $table->foreign('cart_id')->references('id')->on('carts');
         });
     }
 
