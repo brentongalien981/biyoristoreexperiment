@@ -15,6 +15,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => -8001, 'name' => 'INVALID_CART', 'readable_name' => 'Invalid Cart']);
         DB::table('order_statuses')->insert(['code' => -8002, 'name' => 'CART_HAS_NO_ITEM', 'readable_name' => 'Cart Has No Item']);
         DB::table('order_statuses')->insert(['code' => -8003, 'name' => 'INVALID_PAYMENT_METHOD', 'readable_name' => 'Invalid Payment Method']);
+        DB::table('order_statuses')->insert(['code' => -8004, 'name' => 'ORDER_FINALIZATION_FAILED', 'readable_name' => 'Order Finalization Failed']);
 
         DB::table('order_statuses')->insert(['code' => 7000, 'name' => 'WAITING_FOR_PAYMENT', 'readable_name' => 'Waiting for Payment']);
         DB::table('order_statuses')->insert(['code' => 7001, 'name' => 'PAYMENT_METHOD_CHARGED', 'readable_name' => 'Payment Method Charged']);

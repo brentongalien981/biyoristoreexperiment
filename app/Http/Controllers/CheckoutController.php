@@ -490,12 +490,18 @@ class CheckoutController extends Controller
 
 
             $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
-            $params['resultCode'] = $status->code;
-            $params['entireProcessLogs'][] = $status->readable_name;
+            $entireProcessParams['resultCode'] = $status->code;
+            $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
 
             $isResultOk = true;
         } catch (Exception $e) {
-            $entireProcessParams['entireProcessLogs'][] = 'caught bmd-exception ==> ' . $e->getMessage();
+
+            $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
+            $entireProcessParams['resultCode'] = $status->code;
+            $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
+
+            $entireProcessParams['entireProcessLogs'][] = 'caught bmd-exception ==> ...';
+            $entireProcessParams['entireProcessLogs'][] = $e->getMessage();
 
             // BMD-TODO: 
             // - Create EVENT: OrderFinalizationFailed
