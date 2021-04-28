@@ -445,6 +445,7 @@ class CheckoutController extends Controller
     {
         $cartCO = $params['cartCO'];
         $cartCO->resetData();
+        $params['cartCO'] = $cartCO;
 
         $status = OrderStatusCacheObject::getDataByName('CACHE_CART_RESET_OK');
         $params['resultCode'] = $status->code;
@@ -513,9 +514,9 @@ class CheckoutController extends Controller
         return [
             'isResultOk' => $isResultOk,
             'orderProcessStatusCode' => $entireProcessParams['resultCode'],
-            'paymentProcessStatusCode' => PaymentStatus::PAYMENT_METHOD_CHARGED,
             'orderId' => $entireProcessParams['orderId'],
-            'entireProcessLogs' => $entireProcessParams['entireProcessLogs']
+            'entireProcessLogs' => $entireProcessParams['entireProcessLogs'],
+            'newCart' => $entireProcessParams['cartCO']->data
         ];
         // BMD-ISH
     }

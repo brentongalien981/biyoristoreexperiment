@@ -39,6 +39,7 @@ Route::get('/testpassport/create-token', 'TestPassportController@createPasswordA
 
 
 /** my-test-controller */
+// TAGS: cache, redis,
 // FOR-DEBUG
 // TODO:DEPLOYMENT: COMMENT-OUT
 Route::get('/reviews/test2', 'ReviewController@test2');
