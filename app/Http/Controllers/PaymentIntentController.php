@@ -112,11 +112,16 @@ class PaymentIntentController extends Controller
             if ($shouldCreateNewCart) {
                 $cart = new Cart();
                 $cart->user_id = (isset($user) ? $user->id : null);
-                $cart->stripe_payment_intent_id = $paymentIntent->id;
-                $cart->save();
-
-                $cacheCart->id = $cart->id;
             }
+
+            // Update the db-cart.
+            $cart->stripe_payment_intent_id = $paymentIntent->id;
+            $cart->save();
+            // BMD-TODO: However, on above, you should re-user the Stripe-Payment-Intent-obj.
+            // Work on this on UC: User edits order-details.
+
+
+            $cacheCart->id = $cart->id;
 
 
             // Create / update cart-items

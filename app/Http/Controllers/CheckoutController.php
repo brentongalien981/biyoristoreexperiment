@@ -10,6 +10,7 @@ use App\CartItem;
 use App\OrderItem;
 use App\OrderStatus;
 use App\PaymentStatus;
+use App\IncompleteOrder;
 use App\SizeAvailability;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -281,6 +282,7 @@ class CheckoutController extends Controller
         $cartCO = new CartCacheObject('cart?userId=' . $params['userId']);
         $params['cartCO'] = $cartCO;
         $params['cartId'] = $cartCO->data->id;
+        $params['stripePaymentIntentId'] = $cartCO->data->paymentIntentId;
 
         if (!isset($cartCO->data->id) || !isset($cartCO->data->cartItems)) {
             $status = OrderStatusCacheObject::getDataByName('INVALID_CART');
@@ -464,10 +466,25 @@ class CheckoutController extends Controller
         if (isset($order)) {
             $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
             $order->status_code = $status->code;
+            $order->save();
+
             $params['resultCode'] = $status->code;
             $params['entireProcessLogs'][] = $status->readable_name;
         }
+    }
 
+
+
+    private function createIncompleteOrderRecord(&$params)
+    {
+        $io = new IncompleteOrder();
+        $io->cart_id = $params['cartId'];
+        $io->user_id = $params['userId'];
+        $io->order_id = $params['orderId'];
+        $io->stripe_payment_intent_id = $params['stripePaymentIntentId'];
+        $io->result_code = $params['resultCode'];
+        $io->entire_process_logs = implode(',', $params['entireProcessLogs']);
+        $io->save();
     }
 
 
@@ -486,11 +503,13 @@ class CheckoutController extends Controller
         $entireProcessParams = [
             'userId' => $userId,
             'user' => $user,
+            'cartId' => 0,
             'entireProcessLogs' => [
                 OrderStatusCacheObject::getReadableNameByName('PAYMENT_METHOD_CHARGED'),
                 OrderStatusCacheObject::getReadableNameByName('START_OF_FINALIZING_ORDER')
             ],
             'resultCode' => OrderStatusCacheObject::getCodeByName('START_OF_FINALIZING_ORDER'),
+            'stripePaymentIntentId' => null,
             'orderId' => 0,
             'order' => null,
             'request' => $request
@@ -501,9 +520,9 @@ class CheckoutController extends Controller
             $this->checkCartCache($entireProcessParams);
             $this->updateInventoryQuantities($entireProcessParams);
             $this->updateInventoryOrderLimits($entireProcessParams);
-            $this->createOrder($entireProcessParams);    
+            $this->createOrder($entireProcessParams);
             $this->deactivateDbCart($entireProcessParams);
-            $this->resetCacheCart($entireProcessParams);        
+            $this->resetCacheCart($entireProcessParams);
             $this->updateOrder($entireProcessParams);
 
 
@@ -512,19 +531,8 @@ class CheckoutController extends Controller
             // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
 
         } catch (Exception $e) {
-
-            $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
-            $entireProcessParams['resultCode'] = $status->code;
-            $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
-
-            $entireProcessParams['entireProcessLogs'][] = 'caught bmd-exception ==> ...';
-            $entireProcessParams['entireProcessLogs'][] = $e->getMessage();
-            $entireProcessParams['entireProcessLogs'][] = $e->getTraceAsString();
-
-            // BMD-TODO: 
-            // - Create EVENT: OrderFinalizationFailed
-            // - Create Queueable-Event-Handler: HandleOrderFinalizationFailed
-            //    - create db-record for TABLE: incomplete-orders
+            $entireProcessParams['exception'] = $e;
+            $this->handleEntireProcessException($entireProcessParams);
         }
 
 
@@ -536,7 +544,43 @@ class CheckoutController extends Controller
                 'newCart' => isset($entireProcessParams['newCartCO']) ? $entireProcessParams['newCartCO']->data : null
             ]
         ];
-        // BMD-ISH
+    }
+
+
+
+    private function handleEntireProcessException(&$entireProcessParams)
+    {
+
+        $e = $entireProcessParams['exception'];
+
+        $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
+        // $entireProcessParams['resultCode'] = $status->code;
+        $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
+
+        $entireProcessParams['entireProcessLogs'][] = 'caught BMD-EXCEPTION ==> ...';
+        $entireProcessParams['entireProcessLogs'][] = $e->getMessage();
+
+        $eTrace = $e->getTrace();
+        $entireProcessParams['entireProcessLogs'][] = 'caught BMD-EXCEPTION-TRACE ==> ...';
+
+        // Log the first 3 errors.
+        for ($i = 0; $i < 3; $i++) {
+            if (!isset($eTrace[$i])) {
+                break;
+            }
+            $eTraceMsg = 'CLASS ==> ' . $eTrace[$i]['class'] . ' | ';
+            $eTraceMsg .= 'FILE ==> ' . $eTrace[$i]['file'] . ' | ';
+            $eTraceMsg .= 'FUNC ==> ' . $eTrace[$i]['function'] . ' | ';
+            $eTraceMsg .= 'LINE ==> ' . $eTrace[$i]['line'];
+            $entireProcessParams['entireProcessLogs'][] = $eTraceMsg;
+        }
+
+
+        $this->createIncompleteOrderRecord($entireProcessParams);
+
+
+        $entireProcessParams['entireProcessLogs'][] = 'caught BMD-EXCEPTION-TRACE-AS-STRING ==> ...';
+        $entireProcessParams['entireProcessLogs'][] = $e->getTraceAsString();
     }
 
 

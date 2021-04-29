@@ -12,6 +12,15 @@ class Order extends Model
 
 
 
+    /**
+     * Indicates if the model's ID is auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+
+
     public static function getUserOrdersDataFromCache($user, $pageNum)
     {
 
@@ -29,7 +38,7 @@ class Order extends Model
             $processLogs[] = 'allUserOrders has been read from db';
 
             Cache::store('redisprimary')->put($cacheKey, $allUserOrders, now()->addDays(2));
-            
+
             $processLogs[] = 'allUserOrders has been saved to cache';
         }
 
