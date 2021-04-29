@@ -11,6 +11,7 @@ use App\OrderItem;
 use App\OrderStatus;
 use App\PaymentStatus;
 use App\SizeAvailability;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\MyConstants\BmdExceptions;
 use Illuminate\Support\Facades\Auth;
@@ -337,9 +338,12 @@ class CheckoutController extends Controller
     {
         $r = $params['request'];
         $spi = $this->retrieveStripePaymentIntent($params['cartCO']->data->paymentIntentId);
+        $u = $params['user'];
+        $manuallyGeneratedOrderId = Str::uuid()->toString();
 
         $order = new Order();
-        $order->user_id = $params['userId'];
+        $order->id = $manuallyGeneratedOrderId;
+        $order->user_id = (isset($u) ? $u->id : null);
         $order->cart_id = $params['cartId'];
         $order->stripe_payment_intent_id = $params['cartCO']->data->paymentIntentId;
 
@@ -357,15 +361,19 @@ class CheckoutController extends Controller
         $order->projected_total_delivery_days = $spi->metadata->projectedTotalDeliveryDays;
 
         $status = OrderStatusCacheObject::getDataByName('ORDER_CREATED');
-        $order->status_id = $status->code;
+        $order->status_code = $status->code;
         $order->save();
 
 
-        $params['orderId'] = $order->id;
+        $params['orderId'] = $manuallyGeneratedOrderId;
 
 
         $params['resultCode'] = $status->code;
         $params['entireProcessLogs'][] = $status->readable_name;
+
+
+        // BMD-DELETE
+        $params['entireProcessLogs'][] = 'orderId BEFORE ==> ' . $params['orderId'];
 
 
         $this->createOrderItems($params);
@@ -375,6 +383,9 @@ class CheckoutController extends Controller
 
     private function createOrderItems(&$params)
     {
+
+        // BMD-DELETE
+        $params['entireProcessLogs'][] = 'orderId AFTER ==> ' . $params['orderId'];
 
         $cartItems = $params['cartCO']->data->cartItems;
 
@@ -430,8 +441,8 @@ class CheckoutController extends Controller
         $cacheKey = 'inventoryOrderLimits';
         $inventoryOrderLimitsCO = new InventoryOrderLimitsCacheObject($cacheKey);
 
-        $inventoryOrderLimitsCO->data->numOfDailyOrders += 1;
-        $inventoryOrderLimitsCO->data->numOfDailyOrderItems += count($cartItems);
+        $inventoryOrderLimitsCO->data['numOfDailyOrders'] += 1;
+        $inventoryOrderLimitsCO->data['numOfDailyOrderItems'] += count($cartItems);
         $inventoryOrderLimitsCO->save();
 
         $status = OrderStatusCacheObject::getDataByName('INVENTORY_ORDER_LIMITS_UPDATED');
@@ -445,7 +456,7 @@ class CheckoutController extends Controller
     {
         $cartCO = $params['cartCO'];
         $cartCO->resetData();
-        $params['cartCO'] = $cartCO;
+        $params['newCartCO'] = $cartCO;
 
         $status = OrderStatusCacheObject::getDataByName('CACHE_CART_RESET_OK');
         $params['resultCode'] = $status->code;
@@ -468,11 +479,13 @@ class CheckoutController extends Controller
         $isResultOk = false;
         $entireProcessParams = [
             'userId' => $userId,
+            'user' => $user,
             'entireProcessLogs' => [
                 OrderStatusCacheObject::getReadableNameByName('PAYMENT_METHOD_CHARGED'),
                 OrderStatusCacheObject::getReadableNameByName('START_OF_FINALIZING_ORDER')
             ],
             'resultCode' => OrderStatusCacheObject::getCodeByName('START_OF_FINALIZING_ORDER'),
+            'orderId' => 0,
             'request' => $request
         ];
 
@@ -488,6 +501,10 @@ class CheckoutController extends Controller
             // BMD-TODO: Email user of the order details.
             // - EVENT: OrderFinalized
             // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
+
+
+            // BMD-TODO
+            // Update the status of order to ORDER_BEING_PROCESSED.
 
 
             $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
@@ -513,10 +530,12 @@ class CheckoutController extends Controller
 
         return [
             'isResultOk' => $isResultOk,
-            'orderProcessStatusCode' => $entireProcessParams['resultCode'],
-            'orderId' => $entireProcessParams['orderId'],
-            'entireProcessLogs' => $entireProcessParams['entireProcessLogs'],
-            'newCart' => $entireProcessParams['cartCO']->data
+            'objs' => [
+                'orderProcessStatusCode' => $entireProcessParams['resultCode'],
+                'orderId' => $entireProcessParams['orderId'],
+                'entireProcessLogs' => $entireProcessParams['entireProcessLogs'],
+                'newCart' => isset($entireProcessParams['newCartCO']) ? $entireProcessParams['newCartCO']->data : null
+            ]
         ];
         // BMD-ISH
     }

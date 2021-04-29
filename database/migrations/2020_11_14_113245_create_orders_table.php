@@ -19,7 +19,7 @@ class CreateOrdersTable extends Migration
             $table->unsignedBigInteger('cart_id');
             $table->string('stripe_payment_intent_id', 128);
             $table->bigInteger('payment_info_id')->unsigned()->nullable();
-            $table->tinyInteger('status_id')->unsigned();
+            $table->bigInteger('status_code');
 
             $table->string('street', 128);
             $table->string('city', 64);
@@ -32,7 +32,6 @@ class CreateOrdersTable extends Migration
         });
 
         Schema::table('orders', function (Blueprint $table) {
-            $table->foreign('status_id')->references('id')->on('order_statuses');
             $table->foreign('cart_id')->references('id')->on('carts');
         });
     }
