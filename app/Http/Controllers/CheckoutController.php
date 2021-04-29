@@ -526,7 +526,7 @@ class CheckoutController extends Controller
             $this->updateOrder($entireProcessParams);
 
 
-            // BMD-TODO: Email user of the order details.
+            // BMD-TODO: For UC: app emails user of order-details...
             // - EVENT: OrderFinalized
             // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
 

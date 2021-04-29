@@ -18,7 +18,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class BmdSocialiteController extends Controller
 {
-    // TODO:ON-DEPLOYMENT: Edit this..
+    // BMD-ON-DEPLOYMENT: Edit this..
     // NOTE: The Laravel env() function doesn't work outside a function.
     // private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
     private const APP_FRONTEND_URL = 'http://localhost:3000';
@@ -134,10 +134,10 @@ class BmdSocialiteController extends Controller
             // Reference a random existing user with appropriate email for google or facebook.
             $possibleUsers = User::where('email', 'like', '%' . $providerType['name'] . '%')->get();
 
-            // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
+            // BMD-ON-STAGING: Test and make sure that this workflow happens.
             // If the user has no existing record, redirect him to a sign-up workflow.
             if (!isset($possibleUsers) 
-                || count($possibleUsers) === 0 // TODO:ON-DEPLOYMENT: This should be just ==> count() !== 1
+                || count($possibleUsers) === 0 // BMD-ON-STAGING: This should be just ==> count() !== 1
                 || !isset($possibleUsers[0])) {
                     $isComingFromLoginWorkflow = true;
                     return $this->testhandleProviderCallback($r, $isComingFromLoginWorkflow);
@@ -227,7 +227,7 @@ class BmdSocialiteController extends Controller
 
 
             // If the user already exists, redirect him to a log-in workflow.
-            // TODO:ON-DEPLOYMENT: Test and make sure that this workflow happens.
+            // BMD-ON-STAGING: Test and make sure that this workflow happens.
             if (User::doesExistWithEmail($email)) {
                 return $this->testhandleSocialiteLoginCallback($r, true);
             }
@@ -273,7 +273,7 @@ class BmdSocialiteController extends Controller
 
 
             // Create stripe-objs.
-            // TODO:ON-DEPLOYMENT: Use the production-key here.
+            // BMD-ON-STAGING: Use the production-key here.
             $stripeInstance = new \Stripe\StripeClient(env('STRIPE_SK'));
 
             $stripeCustomer = $stripeInstance->customers->create([
@@ -332,9 +332,9 @@ class BmdSocialiteController extends Controller
     {
         try {
 
-            // TODO:ON-DEPLOYMENT: Make sure the dynamodb session/cache driver is configured.
-            // TODO:ON-DEPLOYMENT: Add the missing steps from the METHOD: testhandleProviderCallback().
-            // TODO:ON-DEPLOYMENT: Modify this method to resemble the method above "testhandleProviderCallback()".
+            // BMD-ON-STAGING: Make sure the dynamodb session/cache driver is configured.
+            // BMD-ON-STAGING: Add the missing steps from the METHOD: testhandleProviderCallback().
+            // BMD-ON-STAGING: Modify this method to resemble the method above "testhandleProviderCallback()".
 
             /** 1) */
             $socialiteUser = Socialite::driver('google')->user();

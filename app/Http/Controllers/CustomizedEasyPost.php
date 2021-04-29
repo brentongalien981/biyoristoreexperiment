@@ -45,7 +45,7 @@ class CustomizedEasyPost extends Controller
 
 
 
-    // TODO:DELETE-ON-PRODUCTION
+    // BMD-ON-DEPLOYMENT
     public function test(Request $request)
     {
         //
@@ -83,8 +83,8 @@ class CustomizedEasyPost extends Controller
         $originAddressParams = [
             'verify' => [true],
             'name' => self::COMPANY_INFO['owner_name'],
-            // 'company' => self::COMPANY_INFO['company'], // TODO:LATER-ON-PRODUCTION
-            // 'email' => self::COMPANY_INFO['email'], // TODO:LATER-ON-PRODUCTION
+            // 'company' => self::COMPANY_INFO['company'], // BMD-ON-STAGING
+            // 'email' => self::COMPANY_INFO['email'], // BMD-ON-STAGING
             'street1' => self::COMPANY_INFO['street1'],
             'street2' => self::COMPANY_INFO['street2'],
             'city' => self::COMPANY_INFO['city'],
