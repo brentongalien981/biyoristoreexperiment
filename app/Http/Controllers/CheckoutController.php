@@ -366,14 +366,11 @@ class CheckoutController extends Controller
 
 
         $params['orderId'] = $manuallyGeneratedOrderId;
+        $params['order'] = $order;
 
 
         $params['resultCode'] = $status->code;
         $params['entireProcessLogs'][] = $status->readable_name;
-
-
-        // BMD-DELETE
-        $params['entireProcessLogs'][] = 'orderId BEFORE ==> ' . $params['orderId'];
 
 
         $this->createOrderItems($params);
@@ -383,10 +380,6 @@ class CheckoutController extends Controller
 
     private function createOrderItems(&$params)
     {
-
-        // BMD-DELETE
-        $params['entireProcessLogs'][] = 'orderId AFTER ==> ' . $params['orderId'];
-
         $cartItems = $params['cartCO']->data->cartItems;
 
         foreach ($cartItems as $i) {
@@ -465,6 +458,20 @@ class CheckoutController extends Controller
 
 
 
+    private function updateOrder(&$params)
+    {
+        $order = $params['order'];
+        if (isset($order)) {
+            $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
+            $order->status_code = $status->code;
+            $params['resultCode'] = $status->code;
+            $params['entireProcessLogs'][] = $status->readable_name;
+        }
+
+    }
+
+
+
     public function finalizeOrder(Request $request)
     {
         BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
@@ -476,7 +483,6 @@ class CheckoutController extends Controller
             $userId = $user->id;
         }
 
-        $isResultOk = false;
         $entireProcessParams = [
             'userId' => $userId,
             'user' => $user,
@@ -486,32 +492,25 @@ class CheckoutController extends Controller
             ],
             'resultCode' => OrderStatusCacheObject::getCodeByName('START_OF_FINALIZING_ORDER'),
             'orderId' => 0,
+            'order' => null,
             'request' => $request
         ];
 
 
         try {
             $this->checkCartCache($entireProcessParams);
-            $this->createOrder($entireProcessParams);
             $this->updateInventoryQuantities($entireProcessParams);
             $this->updateInventoryOrderLimits($entireProcessParams);
+            $this->createOrder($entireProcessParams);    
             $this->deactivateDbCart($entireProcessParams);
-            $this->resetCacheCart($entireProcessParams);
+            $this->resetCacheCart($entireProcessParams);        
+            $this->updateOrder($entireProcessParams);
+
 
             // BMD-TODO: Email user of the order details.
             // - EVENT: OrderFinalized
             // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
 
-
-            // BMD-TODO
-            // Update the status of order to ORDER_BEING_PROCESSED.
-
-
-            $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
-            $entireProcessParams['resultCode'] = $status->code;
-            $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
-
-            $isResultOk = true;
         } catch (Exception $e) {
 
             $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
@@ -520,6 +519,7 @@ class CheckoutController extends Controller
 
             $entireProcessParams['entireProcessLogs'][] = 'caught bmd-exception ==> ...';
             $entireProcessParams['entireProcessLogs'][] = $e->getMessage();
+            $entireProcessParams['entireProcessLogs'][] = $e->getTraceAsString();
 
             // BMD-TODO: 
             // - Create EVENT: OrderFinalizationFailed
@@ -529,7 +529,6 @@ class CheckoutController extends Controller
 
 
         return [
-            'isResultOk' => $isResultOk,
             'objs' => [
                 'orderProcessStatusCode' => $entireProcessParams['resultCode'],
                 'orderId' => $entireProcessParams['orderId'],
