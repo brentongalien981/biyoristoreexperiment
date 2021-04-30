@@ -266,7 +266,7 @@ class CustomizedEasyPost extends Controller
     public function getModifiedRateObjs($parsedRateObjs)
     {
         $modifiedRateObjs = [];
-        $shippingServiceLevels = ShippingServiceLevelModelCollectionCacheObject::getUpdatedModelCollection();
+        $shippingServiceLevels = ShippingServiceLevelModelCollectionCacheObject::getUpdatedModelCollection()->data;
 
         foreach ($parsedRateObjs as $r) {
 
