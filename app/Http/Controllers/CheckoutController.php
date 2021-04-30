@@ -257,7 +257,6 @@ class CheckoutController extends Controller
 
             return [
                 'isResultOk' => $isResultOk,
-                'message' => 'From CLASS: CheckoutController, METHOD: finalizeOrderWithPredefinedPayment()',
                 'paymentProcessStatusCode' => $paymentProcessStatusCode,
                 'orderProcessStatusCode' => $orderProcessStatusCode,
                 'customeMsgs' => $customeMsgs,
