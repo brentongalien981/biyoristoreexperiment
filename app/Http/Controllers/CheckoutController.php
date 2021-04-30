@@ -526,7 +526,7 @@ class CheckoutController extends Controller
             $this->updateOrder($entireProcessParams);
 
 
-            // BMD-TODO: For UC: app emails user of order-details...
+            // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
             // - EVENT: OrderFinalized
             // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
 
@@ -540,8 +540,12 @@ class CheckoutController extends Controller
             'objs' => [
                 'orderProcessStatusCode' => $entireProcessParams['resultCode'],
                 'orderId' => $entireProcessParams['orderId'],
-                'entireProcessLogs' => $entireProcessParams['entireProcessLogs'],
-                'newCart' => isset($entireProcessParams['newCartCO']) ? $entireProcessParams['newCartCO']->data : null
+
+                // BMD-FOR-DEBUG
+                // BMD-ON-STAGING: Comment-out
+                'entireProcessLogs' => $entireProcessParams['entireProcessLogs'], 
+
+                'newCart' => $entireProcessParams['newCartCO']->data ?? null
             ]
         ];
     }
@@ -554,7 +558,6 @@ class CheckoutController extends Controller
         $e = $entireProcessParams['exception'];
 
         $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
-        // $entireProcessParams['resultCode'] = $status->code;
         $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
 
         $entireProcessParams['entireProcessLogs'][] = 'caught BMD-EXCEPTION ==> ...';

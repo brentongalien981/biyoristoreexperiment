@@ -17,15 +17,15 @@ use Illuminate\Support\Facades\Route;
 
 /** socialite */
 Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
-    // TODO:DEPLOYMENT: UNCOMMENT
+    // BMD-ON-STAGING: UNCOMMENT
     // Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
     // Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
 
-    // TODO:DEPLOYMENT: COMMENT-OUT
+    // BMD-ON-STAGING: COMMENT-OUT
     Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
     Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@testloginWithAuthProvider');
 });
-// TODO:ON-DEPLOYMENT: Tinker if you can add middleware on these to only allow callbacks from referer-urls facebook.com or google.com.
+// BMD-ON-STAGING: Tinker if you can add middleware on these to only allow callbacks from referer-urls facebook.com or google.com.
 Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
 Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromGoogle');
 
@@ -33,15 +33,15 @@ Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handle
 
 
 /** test-passport */
-// TODO:ON-DEPLOYMENT: Uncomment
+// BMD-ON-STAGING: COMMENT-OUT
 Route::get('/testpassport/create-token', 'TestPassportController@createPasswordAccessPassportToken');
 
 
 
 /** my-test-controller */
-// TAGS: cache, redis,
-// FOR-DEBUG
-// TODO:DEPLOYMENT: COMMENT-OUT
+// BMD-TAGS: cache, redis, test, testing, debug
+// BMD-FOR-DEBUG
+// BMD-ON-STAGING: COMMENT-OUT
 Route::get('/reviews/test2', 'ReviewController@test2');
 Route::get('/reviews/test', 'ReviewController@test');
 Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo');
@@ -60,16 +60,12 @@ Route::get('/test-redis/get-connection', 'TestRedisController@getConnection');
 
 
 
-// TODO:ON-DEPLOYMENT: COMMENT-OUT
+// BMD-ON-STAGING: COMMENT-OUT
+// BMD-FOR-DEBUG
+// BMD-TAGS: cache, redis, test, testing, debug
 Route::get('/mycache/has', 'MyCacheController@has');
 Route::get('/mycache/test-get', 'MyCacheController@testGet');
 Route::get('/mycache/test-put', 'MyCacheController@testPut');
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/hello', function () {
-    return "hello";
-});
-Route::get('/yo', 'MyTestController@yo');
-
-// Route::post('/payment-intent', 'PaymentIntentController@create');

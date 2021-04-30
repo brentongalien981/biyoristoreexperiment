@@ -117,8 +117,8 @@ class PaymentIntentController extends Controller
             // Update the db-cart.
             $cart->stripe_payment_intent_id = $paymentIntent->id;
             $cart->save();
-            // BMD-TODO: However, on above, you should re-user the Stripe-Payment-Intent-obj.
-            // Work on this on UC: User edits order-details.
+            // However, on above, you should re-use the Stripe-Payment-Intent-obj.
+            // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: user updates order
 
 
             $cacheCart->id = $cart->id;
@@ -156,7 +156,8 @@ class PaymentIntentController extends Controller
             $cartCO->save();
 
 
-            // BMD-TODO: Edit the Stripe-Payment-Intent-obj. Add the cart and cart-items details as backup record.
+            // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: user updates order
+            // Edit the Stripe-Payment-Intent-obj. Add the cart and cart-items details as backup record.
 
 
 

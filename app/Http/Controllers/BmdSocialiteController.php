@@ -18,7 +18,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class BmdSocialiteController extends Controller
 {
-    // BMD-ON-DEPLOYMENT: Edit this..
+    // BMD-ON-STAGING: Edit this..
     // NOTE: The Laravel env() function doesn't work outside a function.
     // private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
     private const APP_FRONTEND_URL = 'http://localhost:3000';

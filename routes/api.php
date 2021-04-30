@@ -128,7 +128,9 @@ Route::post('/users/update', 'UserController@update')->middleware('bmdauth');
 
 
 /* test */
-// TODO:ON-DEPLOYMENT COMMENT-OUT
+// BMD-FOR-DEBUG
+// BMD-ON-STAGING: Comment-out.
+// BMD-TAGS: test, testing, debug, tinker, cors, http, https, auth
 // fruitcake/laravel-cors middleware setup.
 Route::get('/test', function (Request $request) {
     return [

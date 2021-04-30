@@ -80,7 +80,8 @@ class OrderController extends Controller
     {
         $user = BmdAuthProvider::user();
 
-        // TODO: Get the user orders based on the request's order-page-number.
+        // BMD-TODO: On DEV-ITER-002 / FEAT: Orders
+        // Get the user orders based on the request's order-page-number.
         $skipNumOfItems = Order::NUM_OF_ITEMS_PER_PAGE * ($request->pageNum - 1);
         $userOrders = $user->orders()->orderBy('created_at', 'desc')->skip($skipNumOfItems)->take(Order::NUM_OF_ITEMS_PER_PAGE)->get();
 

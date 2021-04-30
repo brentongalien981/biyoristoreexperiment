@@ -265,8 +265,8 @@ class JoinController extends Controller
             $overallProcessLogs[] = 'created profile obj';
 
 
+            // BMD-ON-STAGING: Use the production-key here.
             // 7) Create stripe objs.
-            // TODO:ON-DEPLOYMENT: Use the production-key here.
             $stripeInstance = new \Stripe\StripeClient(env('STRIPE_SK'));
 
             $stripeCustomer = $stripeInstance->customers->create([

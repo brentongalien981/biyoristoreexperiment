@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
+use App\Http\BmdCacheObjects\ShippingServiceLevelModelCollectionCacheObject;
 use App\MyConstants\BmdGlobalConstants;
 use App\MyHelpers\Shipping\MyShippingPackageManager;
 use Exception;
@@ -30,7 +31,8 @@ class CustomizedEasyPost extends Controller
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
 
     /**
-     * BMD-SENSITIVE-INFO: Update this everytime when it's needed.
+     * BMD-SENSITIVE-INFO
+     * BMD-ON-STAGING: Update this everytime when it's needed.
      */
     private const COMPANY_INFO = [
         'owner_name' => 'Bren Baga',
@@ -45,7 +47,8 @@ class CustomizedEasyPost extends Controller
 
 
 
-    // BMD-ON-DEPLOYMENT
+    // BMD-FOR-DEBUG
+    // BMD-ON-STAGING: Comment-out.
     public function test(Request $request)
     {
         //
@@ -254,12 +257,16 @@ class CustomizedEasyPost extends Controller
 
 
 
+    /**
+     * For each rate, add value to field "delivery_days" if the retrieved rate has null.
+     *
+     * @param [] $parsedRateObjs
+     * @return []
+     */
     public function getModifiedRateObjs($parsedRateObjs)
     {
-        // For each rate, add value to field "delivery_days" if the retrieved rate has null.
         $modifiedRateObjs = [];
-        // BMD-TODO: Use cache here.
-        $shippingServiceLevels = ShippingServiceLevel::all();
+        $shippingServiceLevels = ShippingServiceLevelModelCollectionCacheObject::getUpdatedModelCollection();
 
         foreach ($parsedRateObjs as $r) {
 
@@ -371,10 +378,9 @@ class CustomizedEasyPost extends Controller
 
         try {
 
-            // BMD-ISH: Do Inventory-Order-Limits checks.
             $this->checkInventoryOrderLimits($entireProcessParams);
 
-            // BMD-TODO:LATER-ON-PRODUCTION Finish all validation of request-params.
+            // BMD-ON-STAGING: Finish all validation of request-params.
             if (!isset($request->reducedCartItemsData) || count($request->reducedCartItemsData) === 0) {
                 $entireProcessParams['resultCode'] = self::EMPTY_CART_EXCEPTION['code'];
                 throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
@@ -425,6 +431,8 @@ class CustomizedEasyPost extends Controller
         $entireProcessData['customErrors'] = $entireProcessParams['customErrors'];
         $entireProcessData['resultCode'] = $entireProcessParams['resultCode'];
 
+
+        // BMD-ON-STAGING: Don't include info that are unnecessary or sensitive.
         return [
             'objs' => $entireProcessData,
             'jsonifiedProcessData' => $this->extractToJsonifiedData($entireProcessData) // BMD-FOR-DEBUG

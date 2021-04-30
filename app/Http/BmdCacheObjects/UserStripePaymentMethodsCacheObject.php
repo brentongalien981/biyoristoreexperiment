@@ -18,7 +18,7 @@ class UserStripePaymentMethodsCacheObject extends BmdModelCacheObject
 
         if (!$this->shouldRefresh()) { return $this; }
 
-        // BMD-ON-DEPLOYMENT: Change this to STRIPE_PK.
+        // BMD-ON-STAGING: Change this to STRIPE_PK.
         $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
         $u = BmdAuthProvider::user();
 
