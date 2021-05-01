@@ -27,6 +27,7 @@ use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
+use App\StripeCustomer;
 
 class CheckoutController extends Controller
 {
@@ -92,68 +93,133 @@ class CheckoutController extends Controller
 
 
 
-    public function finalizeOrderWithPredefinedPayment(Request $request)
+    private function validateStripePaymentMethod(&$entireProcessData)
     {
 
-        $user = Auth::user();
-        $paymentProcessStatusCode = PaymentStatus::WAITING_FOR_PAYMENT;
-        $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_CART');
-        $order = null;
-        $cart = null;
-        $isResultOk = false;
-        $customError = null;
-        $customeMsgs = ['invalid cart'];
+        $paymentMethod = $entireProcessData['stripeObj']->paymentMethods->retrieve(
+            $entireProcessData['request']->paymentMethodId,
+            []
+        );
+
+        $entireProcessData['stripePaymentMethod'] = $paymentMethod;
+
+
+        if ($paymentMethod->customer === $entireProcessData['user']->stripeCustomer->stripe_customer_id) {
+            $status = OrderStatusCacheObject::getDataByName('PAYMENT_METHOD_VALIDATED');
+            $entireProcessData['resultCode'] = $status->code;
+            $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+        } else {
+            $status = OrderStatusCacheObject::getDataByName('INVALID_PAYMENT_METHOD');
+            $entireProcessData['resultCode'] = $status->code;
+            $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+            throw new Exception($status->readable_name);
+        }
+    }
+
+
+
+    private function createStripePaymentIntent(&$entireProcessData)
+    {
+
+        $r = $entireProcessData['request'];
+
+        $paymentIntent = $entireProcessData['stripeObj']->paymentIntents->create([
+            'amount' => Order::getOrderAmountInCents($r->cartItemsInfo),
+            'currency' => 'usd',
+            'payment_method_types' => ['card'],
+            'customer' => $entireProcessData['user']->stripeCustomer->stripe_customer_id,
+            'payment_method' => $entireProcessData['stripePaymentMethod']->id,
+            'metadata' => [
+                'storeUserId' => $entireProcessData['user']->id,
+                'firstName' => $r->firstName,
+                'lastName' => $r->lastName,
+                'phoneNumber' => $r->phone,
+                'email' => $r->email,
+                'street' => $r->street,
+                'city' => $r->city,
+                'province' => $r->province,
+                'country' => $r->country,
+                'postalCode' => $r->postalCode,
+            ]
+        ]);
+
+
+
+        // BMD-ISH
+        // order-meta-data
+        $chargedSubtotal = self::getOrderSubtotal($request->cartItemsData);
+        $chargedShippingFee = $request->shipmentRateAmount;
+        $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
+        $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
+        $chargedTotalInCents = round($chargedTotal, 2) * 100;
+        $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
+
+
+        $paymentIntent = \Stripe\PaymentIntent::create([
+            'amount' => $chargedTotalInCents,
+            'currency' => 'usd',
+            'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
+            'metadata' => [
+                'storeUserId' => $userId,
+                'firstName' => $request->firstName,
+                'lastName' => $request->lastName,
+                'phoneNumber' => $request->phone,
+                'email' => $request->email,
+                'street' => $request->street,
+                'city' => $request->city,
+                'province' => $request->province,
+                'country' => $request->country,
+                'postalCode' => $request->postalCode,
+
+                'chargedSubtotal' => $chargedSubtotal,
+                'chargedShippingFee' => $chargedShippingFee,
+                'chargedTax' => $chargedTax,
+                'chargedTotal' => $chargedTotal,
+                'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
+            ]
+        ]);
+    }
+
+
+
+    public function finalizeOrderWithPredefinedPayment(Request $request)
+    {
+        // Set user.
+        $user = BmdAuthProvider::user();
+        $userId = $user->id;
+
+
+        // Initialize entire-process-data (params and data).
+        $entireProcessData = [
+            'userId' => $userId,
+            'user' => $user,
+            'stripeObj' => new \Stripe\StripeClient(env('STRIPE_SK')), // BMD-ON-STAGING
+            'stripePaymentMethod' => null,
+            'cartId' => 0,
+            'entireProcessLogs' => [
+                OrderStatusCacheObject::getReadableNameByName('START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT')
+            ],
+            'resultCode' => OrderStatusCacheObject::getCodeByName('START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT'),
+            'stripePaymentIntentId' => null,
+            'orderId' => 0,
+            'order' => null,
+            'request' => $request
+        ];
 
 
         try {
 
-            // validate payment-method
-            $orderProcessStatusCode = OrderStatus::getIdByName('INVALID_PAYMENT_METHOD');
-            $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
-
-            $paymentMethod = $stripe->paymentMethods->retrieve(
-                $request->paymentMethodId,
-                []
-            );
-
-            $customeMsgs[] = 'paymentMethod->customer ==> ' . $paymentMethod->customer;
-            $customeMsgs[] = 'user->customerId ==> ' . $user->stripeCustomer->stripe_customer_id;
-            if ($paymentMethod->customer === $user->stripeCustomer->stripe_customer_id) {
-                $customeMsgs[] = 'payment method is valid';
-                $orderProcessStatusCode = OrderStatus::getIdByName('WAITING_FOR_PAYMENT');
-            } else {
-                $customeMsgs[] = 'invalid payment method';
-                throw new Exception("INVALID_PAYMENT_METHOD");
-            }
+            // BMD-TODO: On DEV-ITER-003: FEAT: Checkout
+            // Validate the request-params.
 
 
-
-            // create payment-intent
-            $paymentIntent = $stripe->paymentIntents->create([
-                'amount' => Order::getOrderAmountInCents($request->cartItemsInfo),
-                'currency' => 'usd',
-                'payment_method_types' => ['card'],
-                'customer' => $user->stripeCustomer->stripe_customer_id,
-                'payment_method' => $paymentMethod->id,
-                'metadata' => [
-                    'storeUserId' => $user->id,
-                    'firstName' => $request->firstName,
-                    'lastName' => $request->lastName,
-                    'phoneNumber' => $request->phone,
-                    'email' => $request->email,
-                    'street' => $request->street,
-                    'city' => $request->city,
-                    'province' => $request->province,
-                    'country' => $request->country,
-                    'postalCode' => $request->postalCode,
-                ]
-            ]);
-
-            $customeMsgs[] = 'payment-intent created';
+            $this->validateStripePaymentMethod($entireProcessData);
+            // BMD-ISH
+            // Create Stripe-payment-intent.
+            $this->createStripePaymentIntent($entireProcessData);
 
 
-
-            // create cart
+            // Create db-cart.
             $cart = new Cart();
             $cart->user_id = $user->id;
             $cart->stripe_payment_intent_id = $paymentIntent->id;
@@ -165,7 +231,7 @@ class CheckoutController extends Controller
 
 
 
-            // check pseudo-cart-items existence
+            // Check pseudo-cart-items existence.
             if (!self::checkCartItemExistence($request->cartItemsInfo)) {
                 $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_NO_ITEM');
                 throw new Exception("CART_HAS_NO_ITEM");
@@ -175,7 +241,7 @@ class CheckoutController extends Controller
 
 
 
-            // create and associate cart-items
+            // Create and associate cart-items to db-cart.
             foreach ($request->cartItemsInfo as $i) {
                 $i = json_decode($i);
                 $cartItem = new CartItem();
@@ -189,7 +255,7 @@ class CheckoutController extends Controller
 
 
 
-            // charge customer
+            // Charge customer.
             $stripe->paymentIntents->confirm(
                 $paymentIntent->id
             );
@@ -200,7 +266,7 @@ class CheckoutController extends Controller
 
 
 
-            // set cart to not active
+            // Set cart to not active.
             $cart->is_active = 0;
             $cart->save();
 
@@ -209,7 +275,7 @@ class CheckoutController extends Controller
 
 
 
-            // create order-record with status "order-created"
+            // Create order-record.
             $order = new Order();
             $order->user_id = $user->id;
             $order->stripe_payment_intent_id = $cart->stripe_payment_intent_id;
@@ -230,7 +296,7 @@ class CheckoutController extends Controller
 
 
 
-            // create order-items
+            // Create and associate order-items to order.
             foreach ($cart->cartItems as $i) {
                 $orderItem = new OrderItem();
                 $orderItem->order_id = $order->id;
@@ -264,6 +330,9 @@ class CheckoutController extends Controller
                 'cart' => $cart,
             ];
         }
+
+
+        // Return.
     }
 
 
@@ -517,6 +586,7 @@ class CheckoutController extends Controller
 
 
         try {
+            // BMD-ISH
             $this->checkCartCache($entireProcessParams);
             $this->updateInventoryQuantities($entireProcessParams);
             $this->updateInventoryOrderLimits($entireProcessParams);
@@ -543,7 +613,7 @@ class CheckoutController extends Controller
 
                 // BMD-FOR-DEBUG
                 // BMD-ON-STAGING: Comment-out
-                'entireProcessLogs' => $entireProcessParams['entireProcessLogs'], 
+                'entireProcessLogs' => $entireProcessParams['entireProcessLogs'],
 
                 'newCart' => $entireProcessParams['newCartCO']->data ?? null
             ]

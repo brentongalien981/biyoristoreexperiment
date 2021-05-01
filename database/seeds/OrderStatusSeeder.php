@@ -18,12 +18,19 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => -8004, 'name' => 'ORDER_FINALIZATION_FAILED', 'readable_name' => 'Order Finalization Failed']);
 
         DB::table('order_statuses')->insert(['code' => 7000, 'name' => 'WAITING_FOR_PAYMENT', 'readable_name' => 'Waiting for Payment']);
-        DB::table('order_statuses')->insert(['code' => 7001, 'name' => 'PAYMENT_METHOD_CHARGED', 'readable_name' => 'Payment Method Charged']);
+        DB::table('order_statuses')->insert(['code' => 7001, 'name' => 'PAYMENT_METHOD_VALIDATED', 'readable_name' => 'Payment Method Validated']);
+        DB::table('order_statuses')->insert(['code' => 7002, 'name' => 'PAYMENT_METHOD_CHARGED', 'readable_name' => 'Payment Method Charged']);
 
         DB::table('order_statuses')->insert(['code' => 8000, 'name' => 'START_OF_FINALIZING_ORDER', 'readable_name' => 'Start of Finalizing Order']);
         DB::table('order_statuses')->insert(['code' => 8001, 'name' => 'VALID_CART', 'readable_name' => 'Valid Cart']);
         DB::table('order_statuses')->insert(['code' => 8002, 'name' => 'CART_HAS_ITEM', 'readable_name' => 'Cart Has item']);
         DB::table('order_statuses')->insert(['code' => 8003, 'name' => 'CART_CHECKEDOUT_OK', 'readable_name' => 'Cart Checked-out OK']);
+
+
+
+        DB::table('order_statuses')->insert(['code' => 8100, 'name' => 'START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT', 'readable_name' => 'Start of Finalizing Order With Predefined Payment']);
+
+
 
         DB::table('order_statuses')->insert(['code' => 8006, 'name' => 'ORDER_CREATED', 'readable_name' => 'Order Created']);
         DB::table('order_statuses')->insert(['code' => 8007, 'name' => 'ORDER_ITEMS_CREATED', 'readable_name' => 'Order Items Created']);
@@ -36,6 +43,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8013, 'name' => 'BEING_SHIPPED', 'readable_name' => 'Order Being Shipped']);
         DB::table('order_statuses')->insert(['code' => 8014, 'name' => 'DELIVERED', 'readable_name' => 'Order Delivered']);
         DB::table('order_statuses')->insert(['code' => 8015, 'name' => 'FINALIZED', 'readable_name' => 'Finalized']);
+
 
 
         DB::table('order_statuses')->insert(['code' => 666001, 'name' => 'CANCELLED', 'readable_name' => 'Order Cancelled']);
