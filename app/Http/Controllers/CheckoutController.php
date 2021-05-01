@@ -14,7 +14,6 @@ use App\IncompleteOrder;
 use App\SizeAvailability;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\MyConstants\BmdExceptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
