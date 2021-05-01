@@ -5,8 +5,9 @@ namespace App\Http\BmdCacheObjects;
 use App\Cart;
 use App\Product;
 use App\CartItem;
-use App\Http\Resources\ProductResource;
 use App\MyHelpers\Cart\CartVerifier;
+use App\Http\Resources\ProductResource;
+use App\Http\BmdCacheObjects\SellerProductCacheObject;
 
 class CartCacheObject extends BmdModelCacheObject
 {
@@ -122,6 +123,28 @@ class CartCacheObject extends BmdModelCacheObject
 
 
 
+    public function getOrderSubtotal()
+    {
+        $cartItems = $this->data->cartItems ?? [];
+
+        $orderSubtotal = 0;
+
+        foreach ($cartItems as $i) {
+            $i = json_decode($i);
+
+            $sellerProductCO = SellerProductCacheObject::getUpdatedModelCacheObjWithId($i->sellerProductId);
+            $purchasePrice = $sellerProductCO->getSellerProductPurchasePrice();
+
+            $itemTotalPrice = $purchasePrice * $i->quantity;
+
+            $orderSubtotal += $itemTotalPrice;
+        }
+
+        return $orderSubtotal;
+    }
+
+
+    // BMD-FOR-DEBUG
     public function test_shit() {
         $CCO = App\Http\BmdCacheObjects\CartCacheObject::class;
         $k = 'cart?userId=1';

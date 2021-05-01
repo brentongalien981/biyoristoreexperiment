@@ -57,9 +57,14 @@ class PaymentIntentController extends Controller
                 $userId = $user->id;
             }
 
+            $cacheKey = 'cart?userId=' . (isset($user) ? $user->id : $userId);
+            $cartCO = new CartCacheObject($cacheKey);
 
+
+            // BMD-TODO: Edit this.
+            // Extract to function: updateOrCreateStripePaymentIntent().
             // order-meta-data
-            $chargedSubtotal = self::getOrderSubtotal($request->cartItemsData);
+            $chargedSubtotal = $cartCO->getOrderSubtotal();
             $chargedShippingFee = $request->shipmentRateAmount;
             $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
             $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
@@ -97,8 +102,6 @@ class PaymentIntentController extends Controller
             // Do this so that when for some reason the customer gets charged for payment and the 
             // app gives an error finalizing the order, you'll be able to track which order items
             // he made through the cart-items and Stripe backend.
-            $cacheKey = 'cart?userId=' . (isset($user) ? $user->id : $userId);
-            $cartCO = new CartCacheObject($cacheKey);
             $cacheCart = $cartCO->data;
             $cart = null;
             $shouldCreateNewCart = true;

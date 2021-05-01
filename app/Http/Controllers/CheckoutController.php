@@ -10,14 +10,17 @@ use App\CartItem;
 use App\OrderItem;
 use App\OrderStatus;
 use App\PaymentStatus;
+use App\StripeCustomer;
 use App\IncompleteOrder;
 use App\SizeAvailability;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
 use App\Http\Resources\ProfileResource;
+use App\MyConstants\BmdGlobalConstants;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdCacheObjects\CartCacheObject;
 use App\Http\BmdCacheObjects\OrderStatusCacheObject;
@@ -27,7 +30,6 @@ use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
-use App\StripeCustomer;
 
 class CheckoutController extends Controller
 {
@@ -75,24 +77,6 @@ class CheckoutController extends Controller
 
 
 
-    private static function checkCartItemExistence($items)
-    {
-        foreach ($items as $i) {
-            $i = json_decode($i);
-
-            $product = Product::find($i->productId);
-            if (isset($product)) {
-                return true;
-            }
-
-            return false;
-        }
-
-        return false;
-    }
-
-
-
     private function validateStripePaymentMethod(&$entireProcessData)
     {
 
@@ -120,11 +104,17 @@ class CheckoutController extends Controller
 
     private function createStripePaymentIntent(&$entireProcessData)
     {
-
         $r = $entireProcessData['request'];
 
+        $chargedSubtotal = $entireProcessData['cartCO']->getOrderSubtotal();
+        $chargedShippingFee = $r->shipmentRateAmount;
+        $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
+        $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
+        $chargedTotalInCents = round($chargedTotal, 2) * 100;
+        $projectedTotalDeliveryDays = $r->projectedTotalDeliveryDays;
+
         $paymentIntent = $entireProcessData['stripeObj']->paymentIntents->create([
-            'amount' => Order::getOrderAmountInCents($r->cartItemsInfo),
+            'amount' => $chargedTotalInCents,
             'currency' => 'usd',
             'payment_method_types' => ['card'],
             'customer' => $entireProcessData['user']->stripeCustomer->stripe_customer_id,
@@ -140,36 +130,6 @@ class CheckoutController extends Controller
                 'province' => $r->province,
                 'country' => $r->country,
                 'postalCode' => $r->postalCode,
-            ]
-        ]);
-
-
-
-        // BMD-ISH
-        // order-meta-data
-        $chargedSubtotal = self::getOrderSubtotal($request->cartItemsData);
-        $chargedShippingFee = $request->shipmentRateAmount;
-        $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
-        $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
-        $chargedTotalInCents = round($chargedTotal, 2) * 100;
-        $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
-
-
-        $paymentIntent = \Stripe\PaymentIntent::create([
-            'amount' => $chargedTotalInCents,
-            'currency' => 'usd',
-            'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
-            'metadata' => [
-                'storeUserId' => $userId,
-                'firstName' => $request->firstName,
-                'lastName' => $request->lastName,
-                'phoneNumber' => $request->phone,
-                'email' => $request->email,
-                'street' => $request->street,
-                'city' => $request->city,
-                'province' => $request->province,
-                'country' => $request->country,
-                'postalCode' => $request->postalCode,
 
                 'chargedSubtotal' => $chargedSubtotal,
                 'chargedShippingFee' => $chargedShippingFee,
@@ -178,6 +138,94 @@ class CheckoutController extends Controller
                 'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
             ]
         ]);
+
+        $entireProcessData['stripePaymentIntent'] = $paymentIntent;
+
+
+        $status = OrderStatusCacheObject::getDataByName('STRIPE_PAYMENT_INTENT_CREATED');
+        $entireProcessData['resultCode'] = $status->code;
+        $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+    }
+
+
+
+    private function updateOrCreateCart(&$entireProcessData)
+    {
+        // Db-cart part.
+        $cartCO = $entireProcessData['cartCO'];
+        $cacheCart = $cartCO->data;
+        $cart = null;
+        $shouldCreateNewCart = true;
+
+        if (isset($cacheCart->id) && $cacheCart->id != 0) {
+            $cart = Cart::find($cacheCart->id);
+            if ($cart->is_active) {
+                $shouldCreateNewCart = false;
+            }
+        }
+        if ($shouldCreateNewCart) {
+            $cart = new Cart();
+        }
+
+        $cart->user_id = $entireProcessData['userId'];
+        $cart->stripe_payment_intent_id = $entireProcessData['stripePaymentIntent']->id;
+        $cart->save();
+
+        $status = OrderStatusCacheObject::getDataByName('DB_CART_CREATED');
+        $entireProcessData['resultCode'] = $status->code;
+        $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+
+
+        // Cache-cart part.
+        $cacheCart->id = $cart->id;
+        $cacheCart->paymentIntentId = $entireProcessData['stripePaymentIntent']->id;
+        $cartCO->data = $cacheCart;
+        $cartCO->save();
+
+        $entireProcessData['cartId'] = $cart->id;
+        $entireProcessData['cartCO'] = $cartCO;
+
+
+        $status = OrderStatusCacheObject::getDataByName('CACHE_CART_UPDATED_TO_LATEST_VERSION');
+        $entireProcessData['resultCode'] = $status->code;
+        $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+    }
+
+
+
+    private function checkCartItems(&$entireProcessData) {
+        if (count($entireProcessData['cartCO']->data->cartItems) == 0) {
+            $status = OrderStatusCacheObject::getDataByName('CART_HAS_NO_ITEM');
+            $entireProcessData['resultCode'] = $status->code;
+            $entireProcessData['entireProcessLogs'][] = $status->readable_name;
+            throw new Exception($status->readable_name);
+        }
+    }
+
+
+    
+    private function updateCartItems(&$entireProcessData)
+    {
+        // Delete all associated cart-items from cart.
+        $cartId = $entireProcessData['cartId'];
+        DB::table('cart_items')->where('cart_id', $cartId)->delete();
+
+
+        // Create and associate cart-items to db-cart.
+        foreach ($entireProcessData['cartCO']->data->cartItems as $i) {
+            $cartItem = new CartItem();
+            $cartItem->cart_id = $cartId;
+            $cartItem->product_id = $i->productId;
+            $cartItem->quantity = $i->quantity;
+            $cartItem->product_seller_id = $i->sellerProductId;
+            $cartItem->size_availability_id = $i->sizeAvailabilityId;
+            $cartItem->save();
+        }
+
+
+        $status = OrderStatusCacheObject::getDataByName('DB_CART_ITEMS_CREATED');
+        $entireProcessData['resultCode'] = $status->code;
+        $entireProcessData['entireProcessLogs'][] = $status->readable_name;
     }
 
 
@@ -190,12 +238,15 @@ class CheckoutController extends Controller
 
 
         // Initialize entire-process-data (params and data).
+        $cacheCartKey = 'cart?userId=' . $userId;
         $entireProcessData = [
             'userId' => $userId,
             'user' => $user,
+            'cartId' => 0,
+            'cartCO' => new CartCacheObject($cacheCartKey),
             'stripeObj' => new \Stripe\StripeClient(env('STRIPE_SK')), // BMD-ON-STAGING
             'stripePaymentMethod' => null,
-            'cartId' => 0,
+            'stripePaymentIntent' => null,
             'entireProcessLogs' => [
                 OrderStatusCacheObject::getReadableNameByName('START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT')
             ],
@@ -212,49 +263,13 @@ class CheckoutController extends Controller
             // BMD-TODO: On DEV-ITER-003: FEAT: Checkout
             // Validate the request-params.
 
-
+            $this->checkCartItems($entireProcessData);
             $this->validateStripePaymentMethod($entireProcessData);
-            // BMD-ISH
-            // Create Stripe-payment-intent.
             $this->createStripePaymentIntent($entireProcessData);
+            $this->updateOrCreateCart($entireProcessData);
+            $this->updateCartItems($entireProcessData);
 
-
-            // Create db-cart.
-            $cart = new Cart();
-            $cart->user_id = $user->id;
-            $cart->stripe_payment_intent_id = $paymentIntent->id;
-            $cart->save();
-            $orderProcessStatusCode = OrderStatus::getIdByName('VALID_CART');
-
-            $customeMsgs[] = 'cart created';
-
-
-
-
-            // Check pseudo-cart-items existence.
-            if (!self::checkCartItemExistence($request->cartItemsInfo)) {
-                $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_NO_ITEM');
-                throw new Exception("CART_HAS_NO_ITEM");
-            }
-            $orderProcessStatusCode = OrderStatus::getIdByName('CART_HAS_ITEM');
-            $customeMsgs[] = 'cart has at least one item';
-
-
-
-            // Create and associate cart-items to db-cart.
-            foreach ($request->cartItemsInfo as $i) {
-                $i = json_decode($i);
-                $cartItem = new CartItem();
-                $cartItem->cart_id = $cart->id;
-                $cartItem->product_id = $i->productId;
-                $cartItem->quantity = $i->quantity;
-                $cartItem->save();
-            }
-
-            $customeMsgs[] = 'cart-items created';
-
-
-
+            // BMD-ISH
             // Charge customer.
             $stripe->paymentIntents->confirm(
                 $paymentIntent->id
