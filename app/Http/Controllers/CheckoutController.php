@@ -348,6 +348,8 @@ class CheckoutController extends Controller
         $order->cart_id = $params['cartId'];
         $order->stripe_payment_intent_id = $params['cartCO']->data->paymentIntentId;
 
+        $order->first_name = $r->firstName;
+        $order->last_name = $r->lastName;
         $order->street = $r->street;
         $order->city = $r->city;
         $order->province = $r->province;
