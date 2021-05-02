@@ -391,7 +391,6 @@ class CustomizedEasyPost extends Controller
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
             $entireProcessData['destinationAddress'] = $this->setDestinationAddress($entireProcessParams);
             $entireProcessData['parcel'] = $this->setParcel($entireProcessParams);
-            // BMD-ISH
             $entireProcessData['packageInfo'] = $entireProcessParams['packageInfo'];
 
             $shipmentObj = $this->setShipment($entireProcessData);

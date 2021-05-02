@@ -137,7 +137,7 @@ class CheckoutController extends Controller
                 'chargedTotal' => $chargedTotal,
                 'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
 
-                // BMD-TODO: Include cart and cart-items data as well.
+                // BMD-TODO: on DEV-ITER-004: Include cart and cart-items data as well.
             ]
         ]);
 
@@ -258,6 +258,8 @@ class CheckoutController extends Controller
         $user = BmdAuthProvider::user();
         $cacheCartKey = 'cart?userId=' . $user->id;
         $entireProcessData = [
+            'hasUserBeenCharged' => false,
+            'cacheCartHasBeenReset' => false,
             'userId' => $user->id,
             'user' => $user,
             'cartObj' => null,
@@ -268,7 +270,6 @@ class CheckoutController extends Controller
             'stripePaymentMethod' => null,
             'stripePaymentIntent' => null,
             'stripePaymentIntentId' => null,
-            'hasUserBeenCharged' => false,
             'entireProcessLogs' => [
                 OrderStatusCacheObject::getReadableNameByName('START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT')
             ],
@@ -285,7 +286,6 @@ class CheckoutController extends Controller
             // Validate the request-params.
 
             
-            // BMD-ISH
             $this->checkCartItems($entireProcessData);
             $this->validateStripePaymentMethod($entireProcessData);
             $this->createStripePaymentIntent($entireProcessData);
@@ -318,13 +318,21 @@ class CheckoutController extends Controller
         }
 
 
+        // Make sure to reset cache-cart if user has been charged.
+        $updatedCart = $entireProcessData['cartCO']->data;
+        if ($entireProcessData['hasUserBeenCharged']) {
+            $this->doubleCheckCacheCartReset($entireProcessData);
+            $updatedCart = $entireProcessData['newCartCO']->data;
+        }
+
+
         return [
             'isResultOk' => $entireProcessData['hasUserBeenCharged'],
             'objs' => [
                 'paymentProcessStatusCode' => $entireProcessData['hasUserBeenCharged'] ? OrderStatusCacheObject::getCodeByName('PAYMENT_METHOD_CHARGED') : OrderStatusCacheObject::getCodeByName('PAYMENT_METHOD_NOT_CHARGED'),
                 'orderProcessStatusCode' => $entireProcessData['resultCode'],
                 'orderId' => $entireProcessData['orderId'],
-                'updatedCart' => $entireProcessData['hasUserBeenCharged'] ? $entireProcessData['newCartCO']->data : $entireProcessData['cartCO']->data
+                'updatedCart' => $updatedCart
             ],
             // BMD-FOR-DEBUG
             // BMD-ON-STAGING: Comment-out
@@ -522,6 +530,8 @@ class CheckoutController extends Controller
         $cartCO->resetData();
         $params['newCartCO'] = $cartCO;
 
+        $params['cacheCartHasBeenReset'] = true;
+
         $status = OrderStatusCacheObject::getDataByName('CACHE_CART_RESET_OK');
         $params['resultCode'] = $status->code;
         $params['entireProcessLogs'][] = $status->readable_name;
@@ -558,6 +568,16 @@ class CheckoutController extends Controller
 
 
 
+    private function doubleCheckCacheCartReset(&$params)
+    {
+        if (!$params['cacheCartHasBeenReset']) {
+            $this->resetCacheCart($params);
+            $params['entireProcessLogs'][] = 'cache cart has been double checkedly reset';
+        }
+    }
+
+
+
     public function finalizeOrder(Request $request)
     {
         BmdAuthProvider::setInstance($request->bmdToken, $request->authProviderId);
@@ -571,6 +591,7 @@ class CheckoutController extends Controller
 
         $entireProcessParams = [
             'hasUserBeenCharged' => true,
+            'cacheCartHasBeenReset' => false,
             'userId' => $userId,
             'user' => $user,
             'cartCO' => null,
@@ -589,7 +610,6 @@ class CheckoutController extends Controller
 
 
         try {
-            // BMD-ISH
             $this->checkCartCache($entireProcessParams);
             $this->updateInventoryQuantities($entireProcessParams);
             $this->updateInventoryOrderLimits($entireProcessParams);
@@ -608,6 +628,10 @@ class CheckoutController extends Controller
             $this->handleEntireProcessException($entireProcessParams);
             $entireProcessParams['resultCode'] = OrderStatusCacheObject::getCodeByName('ORDER_FINALIZATION_FAILED');
         }
+
+
+        //
+        $this->doubleCheckCacheCartReset($entireProcessParams);
 
 
         return [
