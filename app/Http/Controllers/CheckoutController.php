@@ -260,6 +260,7 @@ class CheckoutController extends Controller
         $entireProcessData = [
             'hasUserBeenCharged' => false,
             'cacheCartHasBeenReset' => false,
+            'hasOrderBeenCreated' => false,
             'userId' => $user->id,
             'user' => $user,
             'cartObj' => null,
@@ -298,12 +299,6 @@ class CheckoutController extends Controller
             
             $this->createOrder($entireProcessData);
 
-            $this->deactivateDbCart($entireProcessData);
-            $this->resetCacheCart($entireProcessData);
-
-            $this->updateOrderStatus($entireProcessData);
-
-
 
             // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
             // - EVENT: OrderFinalized
@@ -314,15 +309,25 @@ class CheckoutController extends Controller
             $entireProcessData['exception'] = $e;
             $this->handleEntireProcessException($entireProcessData);
 
-            $entireProcessData['resultCode'] = OrderStatusCacheObject::getCodeByName('ORDER_FINALIZATION_FAILED');
         }
 
 
         // Make sure to reset cache-cart if user has been charged.
         $updatedCart = $entireProcessData['cartCO']->data;
+
         if ($entireProcessData['hasUserBeenCharged']) {
-            $this->doubleCheckCacheCartReset($entireProcessData);
+
+            $this->deactivateDbCart($entireProcessData);
+            $this->resetCacheCart($entireProcessData);
+
             $updatedCart = $entireProcessData['newCartCO']->data;
+
+            if ($entireProcessData['hasOrderBeenCreated']) { 
+                $this->updateOrderStatus($entireProcessData);
+            }
+            else {
+                $this->createIncompleteOrderRecord($entireProcessData);
+            }
         }
 
 
@@ -353,7 +358,7 @@ class CheckoutController extends Controller
     {
         $cartCO = new CartCacheObject('cart?userId=' . $params['userId']);
         $params['cartCO'] = $cartCO;
-        $parmas['cartObj'] = Cart::find($cartCO->data->id);
+        $params['cartObj'] = Cart::find($cartCO->data->id);
         $params['cartId'] = $cartCO->data->id;
         $params['stripePaymentIntentId'] = $cartCO->data->paymentIntentId;
 
@@ -446,6 +451,7 @@ class CheckoutController extends Controller
 
         $params['orderId'] = $manuallyGeneratedOrderId;
         $params['order'] = $order;
+        $params['hasOrderBeenCreated'] = true;
 
 
         $params['resultCode'] = $status->code;
@@ -592,6 +598,7 @@ class CheckoutController extends Controller
         $entireProcessParams = [
             'hasUserBeenCharged' => true,
             'cacheCartHasBeenReset' => false,
+            'hasOrderBeenCreated' => false,
             'userId' => $userId,
             'user' => $user,
             'cartCO' => null,
@@ -614,9 +621,6 @@ class CheckoutController extends Controller
             $this->updateInventoryQuantities($entireProcessParams);
             $this->updateInventoryOrderLimits($entireProcessParams);
             $this->createOrder($entireProcessParams);
-            $this->deactivateDbCart($entireProcessParams);
-            $this->resetCacheCart($entireProcessParams);
-            $this->updateOrderStatus($entireProcessParams);
 
 
             // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
@@ -626,12 +630,18 @@ class CheckoutController extends Controller
         } catch (Exception $e) {
             $entireProcessParams['exception'] = $e;
             $this->handleEntireProcessException($entireProcessParams);
-            $entireProcessParams['resultCode'] = OrderStatusCacheObject::getCodeByName('ORDER_FINALIZATION_FAILED');
         }
 
 
-        //
-        $this->doubleCheckCacheCartReset($entireProcessParams);
+        $this->deactivateDbCart($entireProcessParams);
+        $this->resetCacheCart($entireProcessParams);
+
+        if ($entireProcessParams['hasOrderBeenCreated']) { 
+            $this->updateOrderStatus($entireProcessParams);
+        }
+        else {
+            $this->createIncompleteOrderRecord($entireProcessParams);
+        }
 
 
         return [
@@ -655,7 +665,8 @@ class CheckoutController extends Controller
 
         $e = $entireProcessParams['exception'];
 
-        $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_FAILED');
+        $status = OrderStatusCacheObject::getDataByName('ORDER_FINALIZATION_EXCEPTION');
+        $entireProcessParams['resultCode'] = $status->code;
         $entireProcessParams['entireProcessLogs'][] = $status->readable_name;
 
         $entireProcessParams['entireProcessLogs'][] = 'caught BMD-EXCEPTION ==> ...';
@@ -676,10 +687,6 @@ class CheckoutController extends Controller
             $entireProcessParams['entireProcessLogs'][] = $eTraceMsg;
         }
 
-
-        if ($entireProcessParams['hasUserBeenCharged']) {
-            $this->createIncompleteOrderRecord($entireProcessParams);
-        }
     }
 
 

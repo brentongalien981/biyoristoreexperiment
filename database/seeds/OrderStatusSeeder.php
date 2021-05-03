@@ -19,6 +19,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => -8002, 'name' => 'CART_HAS_NO_ITEM', 'readable_name' => 'Cart Has No Item']);
         DB::table('order_statuses')->insert(['code' => -8003, 'name' => 'INVALID_PAYMENT_METHOD', 'readable_name' => 'Invalid Payment Method']);
         DB::table('order_statuses')->insert(['code' => -8004, 'name' => 'ORDER_FINALIZATION_FAILED', 'readable_name' => 'Order Finalization Failed']);
+        DB::table('order_statuses')->insert(['code' => -8005, 'name' => 'ORDER_FINALIZATION_EXCEPTION', 'readable_name' => 'Order Finalization Exception']);
 
         DB::table('order_statuses')->insert(['code' => 7000, 'name' => 'WAITING_FOR_PAYMENT', 'readable_name' => 'Waiting for Payment']);
         DB::table('order_statuses')->insert(['code' => 7001, 'name' => 'PAYMENT_METHOD_VALIDATED', 'readable_name' => 'Payment Method Validated']);
@@ -29,6 +30,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8001, 'name' => 'VALID_CART', 'readable_name' => 'Valid Cart']);
         DB::table('order_statuses')->insert(['code' => 8002, 'name' => 'CART_HAS_ITEM', 'readable_name' => 'Cart Has item']);
         DB::table('order_statuses')->insert(['code' => 8003, 'name' => 'CART_CHECKEDOUT_OK', 'readable_name' => 'Cart Checked-out OK']);
+        DB::table('order_statuses')->insert(['code' => 8004, 'name' => 'ORDER_FINALIZATION_INCOMPLETE', 'readable_name' => 'Order Finalization Incomplete']);
 
 
         DB::table('order_statuses')->insert(['code' => 8006, 'name' => 'ORDER_CREATED', 'readable_name' => 'Order Created']);
