@@ -15,10 +15,21 @@ class BmdGlobalConstants
 
     public const TAX_RATE = 0.13;
 
-    
+
     /** BMD-TAGS: constants, consts, inventory, orders, cart */
     // BMD-ON-STAGING: Always set this to desired values.
     public const NUM_OF_DAILY_ORDERS_LIMIT = 50;
     public const NUM_OF_DAILY_ORDER_ITEMS_LIMIT = 200;
 
+
+
+    // BMD-TAGS: email, order, queue, order-received
+    // BMD-ON-STAGING
+    public const EMAIL_SENDER_FOR_ORDER_RECEIVED = 'no-reply@asbdev.com';
+
+
+
+    // BMD-TAGS: email, order, queue, order-received
+    // BMD-ON-STAGING
+    public const QUEUE_FOR_EMAILING_ORDER_DETAILS = 'TestBmd-QEmailUserOrderDetails';
 }

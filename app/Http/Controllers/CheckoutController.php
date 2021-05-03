@@ -30,6 +30,7 @@ use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
+use App\Jobs\EmailUserOrderDetails;
 
 class CheckoutController extends Controller
 {
@@ -301,8 +302,7 @@ class CheckoutController extends Controller
 
 
             // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
-            // - EVENT: OrderFinalized
-            // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
+            EmailUserOrderDetails::dispatch($entireProcessData['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
 
         } catch (Exception $e) {
 
@@ -624,8 +624,7 @@ class CheckoutController extends Controller
 
 
             // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
-            // - EVENT: OrderFinalized
-            // - EVENT-HANDLER (QUEUEABLE): EmailUserOfOrderDetails
+            EmailUserOrderDetails::dispatch($entireProcessParams['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
 
         } catch (Exception $e) {
             $entireProcessParams['exception'] = $e;
