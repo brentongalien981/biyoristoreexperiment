@@ -138,6 +138,11 @@ class CheckoutController extends Controller
                 'chargedTotal' => $chargedTotal,
                 'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
 
+                // BMD-TODO: Add fields:
+                // - earliest_delivery_date
+                // - latest_delivery_date
+
+                
                 // BMD-TODO: on DEV-ITER-004: Include cart and cart-items data as well.
             ]
         ]);
@@ -287,7 +292,7 @@ class CheckoutController extends Controller
             // BMD-TODO: On DEV-ITER-003: FEAT: Checkout
             // Validate the request-params.
 
-            
+
             $this->checkCartItems($entireProcessData);
             $this->validateStripePaymentMethod($entireProcessData);
             $this->createStripePaymentIntent($entireProcessData);
@@ -297,16 +302,14 @@ class CheckoutController extends Controller
 
             $this->updateInventoryQuantities($entireProcessData);
             $this->updateInventoryOrderLimits($entireProcessData);
-            
+
             $this->createOrder($entireProcessData);
 
             EmailUserOrderDetails::dispatch($entireProcessData['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
-
         } catch (Exception $e) {
 
             $entireProcessData['exception'] = $e;
             $this->handleEntireProcessException($entireProcessData);
-
         }
 
 
@@ -320,10 +323,9 @@ class CheckoutController extends Controller
 
             $updatedCart = $entireProcessData['newCartCO']->data;
 
-            if ($entireProcessData['hasOrderBeenCreated']) { 
+            if ($entireProcessData['hasOrderBeenCreated']) {
                 $this->updateOrderStatus($entireProcessData);
-            }
-            else {
+            } else {
                 $this->createIncompleteOrderRecord($entireProcessData);
             }
         }
@@ -441,6 +443,10 @@ class CheckoutController extends Controller
         $order->charged_shipping_fee = $spi->metadata->chargedShippingFee;
         $order->charged_tax = $spi->metadata->chargedTax;
         $order->projected_total_delivery_days = $spi->metadata->projectedTotalDeliveryDays;
+
+        // BMD-TODO: Add fields:
+        // - earliest_delivery_date
+        // - latest_delivery_date
 
         $status = OrderStatusCacheObject::getDataByName('ORDER_CREATED');
         $order->status_code = $status->code;
@@ -621,7 +627,6 @@ class CheckoutController extends Controller
             $this->createOrder($entireProcessParams);
 
             EmailUserOrderDetails::dispatch($entireProcessParams['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
-
         } catch (Exception $e) {
             $entireProcessParams['exception'] = $e;
             $this->handleEntireProcessException($entireProcessParams);
@@ -631,10 +636,9 @@ class CheckoutController extends Controller
         $this->deactivateDbCart($entireProcessParams);
         $this->resetCacheCart($entireProcessParams);
 
-        if ($entireProcessParams['hasOrderBeenCreated']) { 
+        if ($entireProcessParams['hasOrderBeenCreated']) {
             $this->updateOrderStatus($entireProcessParams);
-        }
-        else {
+        } else {
             $this->createIncompleteOrderRecord($entireProcessParams);
         }
 
@@ -681,7 +685,6 @@ class CheckoutController extends Controller
             $eTraceMsg .= 'LINE ==> ' . $eTrace[$i]['line'];
             $entireProcessParams['entireProcessLogs'][] = $eTraceMsg;
         }
-
     }
 
 

@@ -91,6 +91,10 @@ class PaymentIntentController extends Controller
                     'chargedTax' => $chargedTax,
                     'chargedTotal' => $chargedTotal,
                     'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
+
+                    // BMD-TODO: Add fields:
+                    // - earliest_delivery_date
+                    // - latest_delivery_date
                 ]
             ]);
 
