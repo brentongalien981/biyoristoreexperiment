@@ -300,8 +300,6 @@ class CheckoutController extends Controller
             
             $this->createOrder($entireProcessData);
 
-
-            // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
             EmailUserOrderDetails::dispatch($entireProcessData['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
 
         } catch (Exception $e) {
@@ -622,8 +620,6 @@ class CheckoutController extends Controller
             $this->updateInventoryOrderLimits($entireProcessParams);
             $this->createOrder($entireProcessParams);
 
-
-            // BMD-TODO: On DEV-ITER-002 / FEAT: Checkout / UC: app emails user of order-details.
             EmailUserOrderDetails::dispatch($entireProcessParams['order']->id)->onQueue(BmdGlobalConstants::QUEUE_FOR_EMAILING_ORDER_DETAILS);
 
         } catch (Exception $e) {
