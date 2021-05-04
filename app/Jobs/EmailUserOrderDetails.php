@@ -2,15 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Mail\OrderReceived;
 use App\Order;
 use Exception;
+use App\Mail\OrderReceived;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\SerializesModels;
+use App\MyConstants\BmdGlobalConstants;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use App\Http\BmdCacheObjects\OrderStatusCacheObject;
 
 class EmailUserOrderDetails implements ShouldQueue
 {
@@ -36,6 +38,11 @@ class EmailUserOrderDetails implements ShouldQueue
     public function handle()
     {
         $order = Order::find($this->orderId);
-        Mail::to($order->email)->send(new OrderReceived($order));
+        Mail::to($order->email)
+            ->bcc(BmdGlobalConstants::EMAIL_FOR_ORDER_EMAILS_TRACKER)
+            ->send(new OrderReceived($order));
+
+        $order->status_code = OrderStatusCacheObject::getCodeByName('ORDER_DETAILS_EMAILED_TO_USER');
+        $order->save();
     }
 }

@@ -12,6 +12,7 @@ class OrderStatusSeeder extends Seeder
      */
     public function run()
     {
+        // BAD-ORDER-STATUSES
         DB::table('order_statuses')->insert(['code' => -7001, 'name' => 'PAYMENT_METHOD_NOT_CHARGED', 'readable_name' => 'Payment Method Not Charged']);
 
 
@@ -20,7 +21,10 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => -8003, 'name' => 'INVALID_PAYMENT_METHOD', 'readable_name' => 'Invalid Payment Method']);
         DB::table('order_statuses')->insert(['code' => -8004, 'name' => 'ORDER_FINALIZATION_FAILED', 'readable_name' => 'Order Finalization Failed']);
         DB::table('order_statuses')->insert(['code' => -8005, 'name' => 'ORDER_FINALIZATION_EXCEPTION', 'readable_name' => 'Order Finalization Exception']);
+        DB::table('order_statuses')->insert(['code' => -8006, 'name' => 'ORDER_FINALIZATION_INCOMPLETE', 'readable_name' => 'Order Finalization Incomplete']);
 
+        
+        // REGULAR-ORDER-STATUSES
         DB::table('order_statuses')->insert(['code' => 7000, 'name' => 'WAITING_FOR_PAYMENT', 'readable_name' => 'Waiting for Payment']);
         DB::table('order_statuses')->insert(['code' => 7001, 'name' => 'PAYMENT_METHOD_VALIDATED', 'readable_name' => 'Payment Method Validated']);
         DB::table('order_statuses')->insert(['code' => 7002, 'name' => 'PAYMENT_METHOD_CHARGED', 'readable_name' => 'Payment Method Charged']);
@@ -30,7 +34,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8001, 'name' => 'VALID_CART', 'readable_name' => 'Valid Cart']);
         DB::table('order_statuses')->insert(['code' => 8002, 'name' => 'CART_HAS_ITEM', 'readable_name' => 'Cart Has item']);
         DB::table('order_statuses')->insert(['code' => 8003, 'name' => 'CART_CHECKEDOUT_OK', 'readable_name' => 'Cart Checked-out OK']);
-        DB::table('order_statuses')->insert(['code' => 8004, 'name' => 'ORDER_FINALIZATION_INCOMPLETE', 'readable_name' => 'Order Finalization Incomplete']);
+        
 
 
         DB::table('order_statuses')->insert(['code' => 8006, 'name' => 'ORDER_CREATED', 'readable_name' => 'Order Created']);
@@ -39,14 +43,17 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8009, 'name' => 'INVENTORY_ORDER_LIMITS_UPDATED', 'readable_name' => 'Inventory Order Limits Updated']);
         DB::table('order_statuses')->insert(['code' => 8010, 'name' => 'CACHE_CART_RESET_OK', 'readable_name' => 'Cache Cart Has Been Reset OK']);
         DB::table('order_statuses')->insert(['code' => 8011, 'name' => 'ORDER_BEING_PROCESSED', 'readable_name' => 'Order Being Processed']);
-
-        DB::table('order_statuses')->insert(['code' => 8012, 'name' => 'PROCESSING_FOR_SHIPMENT', 'readable_name' => 'Processing for Shipment']);
-        DB::table('order_statuses')->insert(['code' => 8013, 'name' => 'BEING_SHIPPED', 'readable_name' => 'Order Being Shipped']);
-        DB::table('order_statuses')->insert(['code' => 8014, 'name' => 'DELIVERED', 'readable_name' => 'Order Delivered']);
-        DB::table('order_statuses')->insert(['code' => 8015, 'name' => 'FINALIZED', 'readable_name' => 'Finalized']);
+        DB::table('order_statuses')->insert(['code' => 8012, 'name' => 'ORDER_DETAILS_EMAILED_TO_USER', 'readable_name' => 'Order Details Emailed To User']);
 
 
+        DB::table('order_statuses')->insert(['code' => 8013, 'name' => 'PROCESSING_FOR_SHIPMENT', 'readable_name' => 'Processing for Shipment']);
+        DB::table('order_statuses')->insert(['code' => 8014, 'name' => 'BEING_SHIPPED', 'readable_name' => 'Order Being Shipped']);
+        DB::table('order_statuses')->insert(['code' => 8015, 'name' => 'DELIVERED', 'readable_name' => 'Order Delivered']);
+        DB::table('order_statuses')->insert(['code' => 8016, 'name' => 'FINALIZED', 'readable_name' => 'Finalized']);
 
+
+
+        // PREDEFINED-PAYMENT-STATUSES
         DB::table('order_statuses')->insert(['code' => 7101, 'name' => 'STRIPE_PAYMENT_INTENT_CREATED', 'readable_name' => 'Stripe Payment Intent Created']);
 
         DB::table('order_statuses')->insert(['code' => 8100, 'name' => 'START_OF_FINALIZING_ORDER_WITH_PREDEFINED_PAYMENT', 'readable_name' => 'Start of Finalizing Order With Predefined Payment']);
@@ -56,6 +63,7 @@ class OrderStatusSeeder extends Seeder
 
 
 
+        // RETURN-STATUSES
         DB::table('order_statuses')->insert(['code' => 666001, 'name' => 'CANCELLED', 'readable_name' => 'Order Cancelled']);
         DB::table('order_statuses')->insert(['code' => 666002, 'name' => 'ORDER_APPLIED_FOR_REFUND', 'readable_name' => 'Order Applied For Refund']);
         DB::table('order_statuses')->insert(['code' => 666003, 'name' => 'ORDER_TO_BE_PICKED_UP_BY_CARRIER_FOR_REFUND', 'readable_name' => 'Ordrer to be Picked-up by Carrier for Refund']);

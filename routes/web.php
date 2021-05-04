@@ -1,5 +1,7 @@
 <?php
 
+use App\Mail\OrderReceived;
+use App\Order;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -68,4 +70,8 @@ Route::get('/mycache/test-get', 'MyCacheController@testGet');
 Route::get('/mycache/test-put', 'MyCacheController@testPut');
 Route::get('/', function () {
     return view('welcome');
+});
+Route::get('/test-email-views/OrderReceived', function () {
+    $o = Order::first();
+    return (new OrderReceived($o))->render();
 });

@@ -1,12 +1,43 @@
 @component('mail::message')
-<h3>Thank You! We've Received Your Order</h3>
 
-<h4>Order Details:</h4>
-<h6>order-id: {{ $order->id }}</h6>
-<h6>order-email: {{ $order->email }}</h6>
+<h3>Order Confirmation</h3>
 
 
+<p>
+Hello,
 
-Thanks,<br>
-{{ config('app.name') }}
+We're just letting you know that we've received your order and we'll be processing it soon.
+We'll send you another email once it's shipped.
+
+Thanks for shopping with us!
+</p>
+
+
+
+@component('mail::panel')
+Order ID: {{ $order->id }}
+
+Shipping-Info...
+@endcomponent
+
+
+
+@component('mail::panel')
+Order Amounts...
+@endcomponent
+
+
+
+
+@component('mail::panel')
+Order Items...
+@endcomponent
+
+@component('mail::table')
+| Laravel       | Table         | Example  |
+| ------------- |:-------------:| --------:|
+| Col 2 is      | Centered      | $10      |
+| Col 3 is      | Right-Aligned | $20      |
+@endcomponent
+
 @endcomponent
