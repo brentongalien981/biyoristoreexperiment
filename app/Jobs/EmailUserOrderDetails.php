@@ -35,11 +35,7 @@ class EmailUserOrderDetails implements ShouldQueue
      */
     public function handle()
     {
-        try {
-            $order = Order::find($this->orderId);
-            Mail::to($order->email)->send(new OrderReceived($order));
-        } catch (Exception $e) {
-            $customError = $e->getMessage();
-        }
+        $order = Order::find($this->orderId);
+        Mail::to($order->email)->send(new OrderReceived($order));
     }
 }

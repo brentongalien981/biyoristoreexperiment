@@ -36,13 +36,13 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         // 'redirect' => 'https://asbdev.com/google/receive-socialite-auth-code',
-        'redirect' => 'http://asbdev.com/google/receive-socialite-auth-code',
+        'redirect' => 'http://asbdev.com/google/receive-socialite-auth-code', // BMD-ON-STAGING: Don't hard-code this.
     ],
 
     'facebook' => [
         'client_id' => env('FACEBOOK_APP_ID'),
         'client_secret' => env('FACEBOOK_APP_SECRET'),
-        'redirect' => 'https://asbdev.com/facebook/receive-socialite-auth-code',
+        'redirect' => 'https://asbdev.com/facebook/receive-socialite-auth-code', // BMD-ON-STAGING: Don't hard-code this.
     ],
 
 ];
