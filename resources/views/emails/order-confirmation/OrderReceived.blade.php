@@ -7,7 +7,7 @@
 <br><br>
 
 
-<h2>Order ID: <a href='https://moonyago.com'>{{ $order->id }}</a></h2>
+<h2>Order ID: <a href="{{ $extraData['orderLink'] }}">{{ $order->id }}</a></h2>
 
 
 @component('mail::table')
@@ -27,6 +27,10 @@
 @foreach($order->orderItems as $i)
 | {{ $i->product->name }} <br> ${{ $i->price }} <br> x{{ $i->quantity }} ||${{ $i->price * $i->quantity }}|
 @endforeach
+@endcomponent
+@component('mail::table')
+| | | |
+|-|-|-|
 @endcomponent
 
 

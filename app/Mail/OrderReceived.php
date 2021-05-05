@@ -33,6 +33,7 @@ class OrderReceived extends Mailable
         $arrivesInMsg = 'Arrives in ' . $earliestDeliveryDays . '-' . $latestDeliveryDays . ' Business Days';
 
         $this->extraData = [
+            'orderLink' => BmdGlobalConstants::WEBSITE . '/order?id=' . $order->id,
             'total' => $total,
             'arrivesInMsg' => $arrivesInMsg,
             'earliestDeliveryDateInStr' => Order::getReadableDate($order->earliest_delivery_date),
