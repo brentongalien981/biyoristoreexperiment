@@ -52,6 +52,12 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8016, 'name' => 'FINALIZED', 'readable_name' => 'Finalized']);
 
 
+        // INTERNAL-POSSIBLE-ERROR
+        DB::table('order_statuses')->insert(['code' => 9001, 'name' => 'POSSIBLE_DOUBLE_PAYMENT', 'readable_name' => 'Possible Double Payment']);
+        DB::table('order_statuses')->insert(['code' => 9002, 'name' => 'MISSING_STRIPE_PAYMENT_INTENT_LINK', 'readable_name' => 'Missing Stripe Payment-Intent Link']);
+        DB::table('order_statuses')->insert(['code' => 9003, 'name' => 'CUSTOMER_HAS_TO_BE_REFUNDED', 'readable_name' => 'Customer Has To Be Refunded']);
+
+
 
         // PREDEFINED-PAYMENT-STATUSES
         DB::table('order_statuses')->insert(['code' => 7101, 'name' => 'STRIPE_PAYMENT_INTENT_CREATED', 'readable_name' => 'Stripe Payment Intent Created']);

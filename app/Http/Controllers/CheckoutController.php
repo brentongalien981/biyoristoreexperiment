@@ -366,7 +366,7 @@ class CheckoutController extends Controller
         $params['cartId'] = $cartCO->data->id;
         $params['stripePaymentIntentId'] = $cartCO->data->paymentIntentId;
 
-        if (!isset($cartCO->data->id) || !isset($cartCO->data->cartItems)) {
+        if (!isset($cartCO->data->id) || $cartCO->data->id == 0 || !isset($cartCO->data->cartItems)) {
             $status = OrderStatusCacheObject::getDataByName('INVALID_CART');
             $params['resultCode'] = $status->code;
             $params['entireProcessLogs'][] = $status->readable_name;
@@ -396,10 +396,21 @@ class CheckoutController extends Controller
     private function deactivateDbCart(&$params)
     {
         $cart = $params['cartObj'];
-        $cart->is_active = 0;
-        $cart->save();
 
-        $params['cartObj'] = $cart;
+        if (isset($cart)) { 
+            
+            $cart->is_active = 0;
+            $cart->save();
+    
+            $params['cartObj'] = $cart;
+    
+            $status = OrderStatusCacheObject::getDataByName('INVALID_CART');
+            $params['resultCode'] = $status->code;
+            $params['entireProcessLogs'][] = $status->readable_name;
+
+            return; 
+        }
+
 
         $status = OrderStatusCacheObject::getDataByName('CART_CHECKEDOUT_OK');
         $params['resultCode'] = $status->code;
@@ -569,6 +580,13 @@ class CheckoutController extends Controller
 
     private function createIncompleteOrderRecord(&$params)
     {
+        if (!isset($params['stripePaymentIntent'])) { 
+            $status = OrderStatusCacheObject::getDataByName('MISSING_STRIPE_PAYMENT_INTENT_LINK');
+            $params['resultCode'] = $status->code;
+            $params['entireProcessLogs'][] = $status->readable_name;
+            return; 
+        }
+
         $io = new IncompleteOrder();
         $io->cart_id = $params['cartId'];
         $io->user_id = $params['userId'];
@@ -577,16 +595,7 @@ class CheckoutController extends Controller
         $io->result_code = $params['resultCode'];
         $io->entire_process_logs = implode(',', $params['entireProcessLogs']);
         $io->save();
-    }
 
-
-
-    private function doubleCheckCacheCartReset(&$params)
-    {
-        if (!$params['cacheCartHasBeenReset']) {
-            $this->resetCacheCart($params);
-            $params['entireProcessLogs'][] = 'cache cart has been double checkedly reset';
-        }
     }
 
 
