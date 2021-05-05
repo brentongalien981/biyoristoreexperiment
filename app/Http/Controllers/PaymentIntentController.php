@@ -67,7 +67,12 @@ class PaymentIntentController extends Controller
             $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
             $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
             $chargedTotalInCents = round($chargedTotal, 2) * 100;
+
             $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
+            $projectedShortestDeliveryDays = $projectedTotalDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;
+
+            $earliestDeliveryDate = Order::getDeliveryDate($projectedShortestDeliveryDays);
+            $latestDeliveryDate = Order::getDeliveryDate($projectedTotalDeliveryDays);
 
 
             $paymentIntent = \Stripe\PaymentIntent::create([
@@ -90,11 +95,10 @@ class PaymentIntentController extends Controller
                     'chargedShippingFee' => $chargedShippingFee,
                     'chargedTax' => $chargedTax,
                     'chargedTotal' => $chargedTotal,
-                    'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
 
-                    // BMD-TODO: Add fields:
-                    // - earliest_delivery_date
-                    // - latest_delivery_date
+                    'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays,
+                    'earliestDeliveryDate' => $earliestDeliveryDate,
+                    'latestDeliveryDate' => $latestDeliveryDate
                 ]
             ]);
 

@@ -21,6 +21,38 @@ class Order extends Model
 
 
 
+    public static function getDeliveryDate($numOfBusinessDeliveryDays)
+    {
+        $incrementalDays = 0;
+        $limit = 30;
+
+        for ($i = 0; $i < $limit; $i++) {
+
+            $aDateTime = now()->addDays($i);
+
+            if ($incrementalDays == $numOfBusinessDeliveryDays) {
+                return $aDateTime;
+            }
+
+            if (self::isWeekDay($aDateTime)) {
+                $incrementalDays++;
+            } else {
+                continue;
+            }
+        }
+    }
+
+
+
+    private static function isWeekDay($aDateTime) {
+        $aDate = getdate(strtotime($aDateTime));
+
+        if ($aDate['wday'] > 5) { return false; }
+        return true;
+    }
+
+
+
     public static function getUserOrdersDataFromCache($user, $pageNum)
     {
 

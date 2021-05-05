@@ -112,7 +112,12 @@ class CheckoutController extends Controller
         $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
         $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
         $chargedTotalInCents = round($chargedTotal, 2) * 100;
+
         $projectedTotalDeliveryDays = $r->projectedTotalDeliveryDays;
+        $projectedShortestDeliveryDays = $projectedTotalDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;
+
+        $earliestDeliveryDate = Order::getDeliveryDate($projectedShortestDeliveryDays);
+        $latestDeliveryDate = Order::getDeliveryDate($projectedTotalDeliveryDays);
 
         $paymentIntent = $entireProcessData['stripeObj']->paymentIntents->create([
             'amount' => $chargedTotalInCents,
@@ -136,11 +141,10 @@ class CheckoutController extends Controller
                 'chargedShippingFee' => $chargedShippingFee,
                 'chargedTax' => $chargedTax,
                 'chargedTotal' => $chargedTotal,
-                'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays
 
-                // BMD-TODO: Add fields:
-                // - earliest_delivery_date
-                // - latest_delivery_date
+                'projectedTotalDeliveryDays' => $projectedTotalDeliveryDays,
+                'earliestDeliveryDate' => $earliestDeliveryDate,
+                'latestDeliveryDate' => $latestDeliveryDate
 
                 
                 // BMD-TODO: on DEV-ITER-004: Include cart and cart-items data as well.
@@ -442,11 +446,10 @@ class CheckoutController extends Controller
         $order->charged_subtotal = $spi->metadata->chargedSubtotal;
         $order->charged_shipping_fee = $spi->metadata->chargedShippingFee;
         $order->charged_tax = $spi->metadata->chargedTax;
-        $order->projected_total_delivery_days = $spi->metadata->projectedTotalDeliveryDays;
 
-        // BMD-TODO: Add fields:
-        // - earliest_delivery_date
-        // - latest_delivery_date
+        $order->projected_total_delivery_days = $spi->metadata->projectedTotalDeliveryDays;
+        $order->earliest_delivery_date = $spi->metadata->earliestDeliveryDate;
+        $order->latest_delivery_date = $spi->metadata->latestDeliveryDate;
 
         $status = OrderStatusCacheObject::getDataByName('ORDER_CREATED');
         $order->status_code = $status->code;

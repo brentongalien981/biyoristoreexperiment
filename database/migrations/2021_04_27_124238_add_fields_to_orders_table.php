@@ -17,7 +17,11 @@ class AddFieldsToOrdersTable extends Migration
             $table->decimal('charged_subtotal', 8, 2)->after('email');
             $table->decimal('charged_shipping_fee', 8, 2)->after('charged_subtotal');
             $table->decimal('charged_tax', 8, 2)->after('charged_shipping_fee');
-            $table->unsignedTinyInteger('projected_total_delivery_days')->after('charged_tax');
+
+            $table->timestamp('earliest_delivery_date')->after('charged_tax');
+            $table->timestamp('latest_delivery_date')->after('earliest_delivery_date');
+
+            $table->unsignedTinyInteger('projected_total_delivery_days')->after('latest_delivery_date');
         });
     }
 

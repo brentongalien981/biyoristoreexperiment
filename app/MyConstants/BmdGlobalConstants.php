@@ -21,6 +21,11 @@ class BmdGlobalConstants
     public const NUM_OF_DAILY_ORDERS_LIMIT = 50;
     public const NUM_OF_DAILY_ORDER_ITEMS_LIMIT = 200;
 
+    // BMD-ON-STAGING
+    // NOTE: Whenever you change this, make sure to edit both frontend and backend constant values.
+    public const PAYMENT_TO_FUNDS_PERIOD = 1;
+    public const ORDER_PROCESSING_PERIOD = 1;
+
 
 
     // BMD-TAGS: email, order, queue, order-received
