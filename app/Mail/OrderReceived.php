@@ -2,11 +2,12 @@
 
 namespace App\Mail;
 
-use App\MyConstants\BmdGlobalConstants;
+use App\Order;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\MyConstants\BmdGlobalConstants;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
 class OrderReceived extends Mailable
 {
@@ -24,8 +25,18 @@ class OrderReceived extends Mailable
     public function __construct($order)
     {
         $this->order = $order;
+
+        $total = $order->charged_subtotal + $order->charged_shipping_fee + $order->charged_tax;
+
+        $latestDeliveryDays = $order->projected_total_delivery_days;
+        $earliestDeliveryDays = $latestDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;
+        $arrivesInMsg = 'Arrives in ' . $earliestDeliveryDays . '-' . $latestDeliveryDays . ' Business Days';
+
         $this->extraData = [
-            'latestEstimatedArrival' => 'May 15, 2021'
+            'total' => $total,
+            'arrivesInMsg' => $arrivesInMsg,
+            'earliestDeliveryDateInStr' => Order::getReadableDate($order->earliest_delivery_date),
+            'latestDeliveryDateInStr' => Order::getReadableDate($order->latest_delivery_date)
         ];
     }
 

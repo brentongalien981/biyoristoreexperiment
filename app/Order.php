@@ -43,6 +43,15 @@ class Order extends Model
 
 
 
+    public static function getReadableDate($dateTime) {
+        $d = getdate(strtotime($dateTime));
+
+        $str = $d['weekday'] . ', ' . $d['month'] . ' ' . $d['mday'] . ', ' . $d['year'];
+        return $str;
+    }
+
+
+
     private static function isWeekDay($aDateTime)
     {
         $aDate = getdate(strtotime($aDateTime));
