@@ -72,7 +72,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/test-email-views/OrderReceived', function () {
-    // $o = Order::first();
-    $o = Order::find('7193216c-443a-4af1-a6ec-dfb8f7b5548c');
+    $o = Order::first();
+    // $o = Order::find('7193216c-443a-4af1-a6ec-dfb8f7b5548c');
     return (new OrderReceived($o))->render();
 });

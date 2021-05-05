@@ -28,14 +28,13 @@ class Order extends Model
 
         for ($i = 0; $i < $limit; $i++) {
 
-            $aDateTime = now()->addDays($i);
-
-            if ($incrementalDays == $numOfBusinessDeliveryDays) {
-                return $aDateTime;
-            }
+            $aDateTime = now()->addDays($i+1);
 
             if (self::isWeekDay($aDateTime)) {
                 $incrementalDays++;
+                if ($incrementalDays == $numOfBusinessDeliveryDays) {
+                    return $aDateTime;
+                }
             } else {
                 continue;
             }
@@ -44,11 +43,18 @@ class Order extends Model
 
 
 
-    private static function isWeekDay($aDateTime) {
+    private static function isWeekDay($aDateTime)
+    {
         $aDate = getdate(strtotime($aDateTime));
 
-        if ($aDate['wday'] > 5) { return false; }
-        return true;
+        switch ($aDate['wday']) {
+            case 0:
+            case 6:
+                return false;
+
+            default:
+                return true;
+        }
     }
 
 
