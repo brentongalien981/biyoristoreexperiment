@@ -54,7 +54,7 @@ class OrderController extends Controller
         $user = BmdAuthProvider::user();
         $overallProcessLogs = ['In CLASS: OrderController, METHOD: read()'];
 
-
+        // BMD-ISH
         $readData = Order::getUserOrdersDataFromCache($user, $r->pageNum);
         $orders = $readData['mainData'];
         $totalNumOfItems = $readData['totalNumOfItems'];
@@ -63,7 +63,7 @@ class OrderController extends Controller
 
         return [
             'isResultOk' => true,
-            // 'overallProcessLogs' => $overallProcessLogs,
+            'overallProcessLogs' => $overallProcessLogs, // BMD-ON-STAGING: Comment out.
             'objs' => [
                 'orders' => $orders,
                 'ordersMetaData' => [

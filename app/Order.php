@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Cache;
 
 class Order extends Model
 {
+    // BMD-ON-STAGING
     const NUM_OF_ITEMS_PER_PAGE = 2;
+    const ALL_USER_ORDERS_LIFESPAN_IN_MIN = 1;
 
 
 
@@ -84,7 +86,7 @@ class Order extends Model
             $allUserOrders = $user->orders()->orderBy('created_at', 'desc')->get();
             $processLogs[] = 'allUserOrders has been read from db';
 
-            Cache::store('redisprimary')->put($cacheKey, $allUserOrders, now()->addDays(2));
+            Cache::store('redisprimary')->put($cacheKey, $allUserOrders, now()->addMinutes(self::ALL_USER_ORDERS_LIFESPAN_IN_MIN));
 
             $processLogs[] = 'allUserOrders has been saved to cache';
         }

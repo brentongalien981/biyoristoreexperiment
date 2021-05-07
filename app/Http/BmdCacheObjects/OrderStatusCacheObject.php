@@ -25,6 +25,21 @@ class OrderStatusCacheObject extends BmdCacheObject
 
 
 
+    public static function getDataByCode($code) {
+
+        $cacheKey = 'orderStatus?code=' . $code;
+        $orderStatusCO = new self($cacheKey);
+
+        if (!isset($orderStatusCO->entireData) || !isset($orderStatusCO->data) || $orderStatusCO->shouldRefresh()) {
+            $orderStatusCO->data = OrderStatus::where('code', $code)->get()[0] ?? null;
+            $orderStatusCO->save();
+        }
+
+        return $orderStatusCO->data;
+    }
+
+
+
     public static function getCodeByName($name) {
         return self::getDataByName($name)->code;
     }
@@ -33,6 +48,12 @@ class OrderStatusCacheObject extends BmdCacheObject
 
     public static function getReadableNameByName($name) {
         return self::getDataByName($name)->readable_name;
+    }
+
+
+
+    public static function getReadableNameByCode($code) {
+        return self::getDataByCode($code)->readable_name;
     }
 
 }
