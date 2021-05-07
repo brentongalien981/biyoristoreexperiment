@@ -30,6 +30,11 @@ class OrderResource extends JsonResource
             // 'statusId' => $this->status_id,
             'status' => OrderStatusCacheObject::getDataByCode($this->status_code),
             'orderItems' => OrderItemResource::collection($this->orderItems),
+
+            'chargedSubtotal' => $this->charged_subtotal,
+            'chargedShippingFee' => $this->charged_shipping_fee,
+            'chargedTax' => $this->charged_tax,
+
             'createdAt' => Carbon::parse($this->created_at)->diffForHumans() 
         ];
     }

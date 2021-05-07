@@ -95,7 +95,7 @@ class Order extends Model
         $chunkOrders = [];
         $skipNumOfItems = self::NUM_OF_ITEMS_PER_PAGE * ($pageNum - 1);
         $startIndexOfPageOrders = $skipNumOfItems;
-        $endIndexOfPageOrders = $skipNumOfItems + self::NUM_OF_ITEMS_PER_PAGE - 1;
+        $endIndexOfPageOrders = $skipNumOfItems + self::NUM_OF_ITEMS_PER_PAGE;
 
         for ($i = $startIndexOfPageOrders; $i < $endIndexOfPageOrders; $i++) {
             if (!isset($allUserOrders[$i])) {

@@ -13,15 +13,16 @@ class OrderController extends Controller
 {
     public function show($id)
     {
-
+        // BMD-TODO: Use cache.
         $order = Order::find($id);
         $paymentInfo = null;
-
 
 
         try {
             if (isset($order)) {
 
+                // BMD-ON-STAGING
+                // BMD-TODO: Use cache.
                 $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
 
                 $paymentIntent = $stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
@@ -40,7 +41,7 @@ class OrderController extends Controller
             'message' => 'From CLASS: OrderController, METHOD: show()',
             'orderId' => $id,
             'objs' => [
-                'order' => isset($order) ? new OrderResource($order) : null,
+                'order' => isset($order) ? new OrderResource($order) : null, // BMD-TODO: Use cache.
                 'paymentInfo' => $paymentInfo
             ]
         ];
