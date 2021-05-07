@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\BmdCacheObjects\SizeAvailabilityModelCacheObject;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderItemResource extends JsonResource
@@ -19,6 +20,7 @@ class OrderItemResource extends JsonResource
             'productId' => $this->product_id,
             'price' => $this->price,
             'quantity' => $this->quantity,
+            'sizeAvailability' => SizeAvailabilityModelCacheObject::getUpdatedModelCacheObjWithId($this->size_availability_id)->data ?? [],
             'product' => new ProductResource($this->product)
         ];
     }
