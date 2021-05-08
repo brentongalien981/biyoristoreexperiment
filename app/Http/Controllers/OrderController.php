@@ -73,7 +73,8 @@ class OrderController extends Controller
         $user = BmdAuthProvider::user();
         $overallProcessLogs = ['In CLASS: OrderController, METHOD: read()'];
 
-        // BMD-ISH
+        // BMD-TODO: On DEV-ITER-004 / FEAT: Order
+        // Re-implement with the use of BmdCacheObjects...
         $readData = Order::getUserOrdersDataFromCache($user, $r->pageNum);
         $orders = $readData['mainData'];
         $totalNumOfItems = $readData['totalNumOfItems'];
@@ -99,7 +100,6 @@ class OrderController extends Controller
     {
         $user = BmdAuthProvider::user();
 
-        // BMD-TODO: On DEV-ITER-002 / FEAT: Orders
         // Get the user orders based on the request's order-page-number.
         $skipNumOfItems = Order::NUM_OF_ITEMS_PER_PAGE * ($request->pageNum - 1);
         $userOrders = $user->orders()->orderBy('created_at', 'desc')->skip($skipNumOfItems)->take(Order::NUM_OF_ITEMS_PER_PAGE)->get();

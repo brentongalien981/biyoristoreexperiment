@@ -24,7 +24,7 @@ class ProfileController extends Controller
         $overallProcessLogs = ['In CLASS: ProfileController, METHOD: save()'];
         $isResultOk = false;
 
-        // BMD-DELETE: On ITER-DEV-005: Delete.
+        // BMD-DELETE: On ITER-DEV-004: Delete.
         // $emailValidationCriteria = "email|min:8|max:64";
         // if ($user->email != $request->email) {
         //     $emailValidationCriteria .= "|unique:users";
