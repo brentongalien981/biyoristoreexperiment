@@ -19,7 +19,7 @@ class OrderController extends Controller
         $order = $orderCO->data;
         $paymentInfo = null;
         $processLogs = [];
-        $paymentMethod = null;
+        $isResultOk = false;
 
 
         try {
@@ -47,6 +47,7 @@ class OrderController extends Controller
                 }
 
                 $paymentInfo = $ospiCO->data['paymentMethodObj'];
+                $isResultOk = true;
             }
         } catch (Exception $e) {
             $processLogs[] = $e->getMessage();
@@ -55,7 +56,7 @@ class OrderController extends Controller
 
 
         return [
-            'isResultOk' => true,
+            'isResultOk' => $isResultOk,
             'objs' => [
                 'order' => $order,
                 'paymentInfo' => $paymentInfo
