@@ -2,48 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Order;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
-use Exception;
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\Http\BmdCacheObjects\OrderResourceCacheObject;
+use App\Http\BmdCacheObjects\OrderStripePaymentIntentCacheObject;
 
 class OrderController extends Controller
 {
     public function show($id)
     {
-        // BMD-TODO: Use cache.
-        $order = Order::find($id);
+        $orderCO = OrderResourceCacheObject::getUpdatedResourceCacheObjWithId($id);
+        $order = $orderCO->data;
         $paymentInfo = null;
+        $processLogs = [];
+        $paymentMethod = null;
 
 
         try {
-            if (isset($order)) {
+            if (isset($order) && isset($order->stripe_payment_intent_id)) {
 
-                // BMD-ON-STAGING
-                // BMD-TODO: Use cache.
-                $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+                $cacheKey = 'orderStripePaymentIntent?id=' . $order->stripe_payment_intent_id;
+                $ospiCO = new OrderStripePaymentIntentCacheObject($cacheKey);
 
-                $paymentIntent = $stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
 
-                $paymentMethodId = $paymentIntent->payment_method;
+                if (!isset($ospiCO->data['paymentMethodObj'])) {
 
-                $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
-                $paymentInfo = $paymentMethod;
+                    // BMD-ON-STAGING
+                    $stripe = new \Stripe\StripeClient(env('STRIPE_SK'));
+
+                    $paymentIntent = $stripe->paymentIntents->retrieve($order->stripe_payment_intent_id);
+
+                    $paymentMethodId = $paymentIntent->payment_method;
+
+                    $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
+
+                    $ospiCO->data = [
+                        'paymentMethodObj' => $paymentMethod
+                    ];
+                    $ospiCO->save();
+                }
+
+                $paymentInfo = $ospiCO->data['paymentMethodObj'];
             }
         } catch (Exception $e) {
+            $processLogs[] = $e->getMessage();
         }
 
 
 
         return [
-            'message' => 'From CLASS: OrderController, METHOD: show()',
-            'orderId' => $id,
+            'isResultOk' => true,
             'objs' => [
-                'order' => isset($order) ? new OrderResource($order) : null, // BMD-TODO: Use cache.
+                'order' => $order,
                 'paymentInfo' => $paymentInfo
-            ]
+            ],
+            'processLogs' => $processLogs
         ];
     }
 
@@ -51,7 +68,7 @@ class OrderController extends Controller
 
 
     public function read(Request $r)
-    {        
+    {
         $user = BmdAuthProvider::user();
         $overallProcessLogs = ['In CLASS: OrderController, METHOD: read()'];
 
