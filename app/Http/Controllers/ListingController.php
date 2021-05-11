@@ -338,7 +338,6 @@ class ListingController extends Controller
 
 
         return [
-            'msg' => 'METHOD: readDataFromQueryWithPriceSort()',
             'validatedData' => $validatedData,
             'productIdsSortedByPrice' => $productIdsSortedByPrice,
             'urlQueryExcludingPageFilter' => $urlQueryExcludingPageFilter,
@@ -365,7 +364,6 @@ class ListingController extends Controller
 
 
 
-        //
         if (isset($selectedCategoryId)) {
             $category = Category::find($selectedCategoryId);
             $productsEloquentBuilder = $category->products();
@@ -463,7 +461,7 @@ class ListingController extends Controller
                 'products' => $dataFromQuery['products'],
                 'paginationData' => $dataFromQuery['paginationData'],
                 'retrievedDataFrom' => $retrievedDataFrom,
-                // 'extraData' => $extraData // FOR-DEBUG.
+                // 'extraData' => $extraData // BMD-FOR-DEBUG.
             ]
         ];
     }
