@@ -81,7 +81,7 @@ Route::post('/address/save', 'AddressController@save')->middleware('bmdauth');
 
 
 /** reviews */
-Route::middleware('auth:api')->post('/reviews/save', 'ReviewController@save');
+Route::middleware('bmdauth')->post('/reviews/save', 'ReviewController@save');
 Route::get('/reviews/read', 'ReviewController@read');
 
 

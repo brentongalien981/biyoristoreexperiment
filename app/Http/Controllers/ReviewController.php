@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Review;
 use App\Product;
 use Illuminate\Http\Request;
@@ -130,17 +131,21 @@ class ReviewController extends Controller
             'message' => 'string|min:1|max:1024',
         ]);
 
+        $isResultOk = false;
+
 
         $review = new Review();
         $review->product_id = $v['productId'];
-        $review->user_id = Auth::user()->id;
+        $review->user_id = BmdAuthProvider::user()->id;
         $review->rating = $v['rating'];
         $review->message = $v['message'];
         $review->save();
 
+        $isResultOk = true;
+
 
         return [
-            'isResultOk' => true,
+            'isResultOk' => $isResultOk,
             'msg' => 'In CLASS: ReviewController, METHOD: save()',
         ];
     }
