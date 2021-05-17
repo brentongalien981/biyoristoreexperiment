@@ -71,4 +71,11 @@ class BmdAuthProvider
     {
         return self::$instance->user;
     }
+
+
+
+    public static function bmdAuth()
+    {
+        return self::$instance;
+    }
 }
