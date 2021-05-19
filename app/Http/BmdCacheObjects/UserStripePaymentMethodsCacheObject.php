@@ -6,7 +6,7 @@ use App\Http\BmdHelpers\BmdAuthProvider;
 
 class UserStripePaymentMethodsCacheObject extends BmdModelCacheObject
 {
-    protected $lifespanInMin = 1440;
+    protected $lifespanInMin = 2;
 
 
     /**

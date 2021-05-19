@@ -45,7 +45,7 @@ class StripeCustomer extends Model
             $processLogs[] = 'has just read mainData from stripe.com';
 
 
-            Cache::store('redisprimary')->put($cacheKey, $mainData, now()->addDays(7));
+            Cache::store('redisprimary')->put($cacheKey, $mainData, now()->addMinutes(2));
             $processLogs[] = 'has just saved mainData to cache';
         }
 

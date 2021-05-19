@@ -7,7 +7,7 @@ use App\Profile;
 
 class ProfileResourceCacheObject extends BmdResourceCacheObject
 {
-    protected $lifespanInMin = 1440;
+    protected $lifespanInMin = 2;
     protected static $modelPath = Profile::class;
     protected static $jsonResourcePath = ProfileResource::class;
 }
