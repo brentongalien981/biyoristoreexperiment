@@ -26,6 +26,8 @@ class CustomizedEasyPost extends Controller
     private const NUM_OF_DAILY_ORDERS_LIMIT_REACHED = ['code' => -6, 'name' => 'NUM_OF_DAILY_ORDERS_LIMIT_REACHED'];
     private const NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED = ['code' => -7, 'name' => 'NUM_OF_DAILY_ORDER_ITEMS_LIMIT_REACHED'];
 
+    private const INVALID_DESTINATION_COUNTRY_EXCEPTION = ['code' => -8, 'name' => 'INVALID_DESTINATION_COUNTRY_EXCEPTION'];
+
     private const EMPTY_REQUEST_PARAMS = ['code' => -400, 'name' => 'EMPTY_REQUEST_PARAMS'];
 
     private const ENTIRE_PROCESS_OK = ['code' => 1, 'name' => 'ENTIRE_PROCESS_OK'];
@@ -131,6 +133,26 @@ class CustomizedEasyPost extends Controller
 
 
         return $originAddress;
+    }
+
+
+
+    private function validateDestinationAddress(&$params)
+    {
+        $shippingInfo = json_decode($params['shippingInfo']);
+
+        switch (strtolower($shippingInfo->country)) {
+            case 'us':
+            case 'usa':
+            case 'united states':
+            case 'united states of america':
+            case 'united states america':
+            case 'ca':
+            case 'canada':
+                return true;
+            default:
+                return false;
+        }
     }
 
 
@@ -347,7 +369,8 @@ class CustomizedEasyPost extends Controller
 
 
 
-    private function checkInventoryOrderLimits(&$entireProcessParams) {
+    private function checkInventoryOrderLimits(&$entireProcessParams)
+    {
         $cacheKey = 'inventoryOrderLimits';
         $inventoryOrderLimitsCO = new InventoryOrderLimitsCacheObject($cacheKey);
 
@@ -368,10 +391,10 @@ class CustomizedEasyPost extends Controller
     {
         $entireProcessData = [];
         $entireProcessParams = [
-            'entireProcessComments' => [], 
-            'customErrors' => [], 
-            'resultCode' => self::DEFAULT_INITIAL_RESULT['code'], 
-            'reducedCartItemsData' => $request->reducedCartItemsData, 
+            'entireProcessComments' => [],
+            'customErrors' => [],
+            'resultCode' => self::DEFAULT_INITIAL_RESULT['code'],
+            'reducedCartItemsData' => $request->reducedCartItemsData,
             'shippingInfo' => $request->shippingInfo
         ];
 
@@ -385,6 +408,13 @@ class CustomizedEasyPost extends Controller
                 $entireProcessParams['resultCode'] = self::EMPTY_CART_EXCEPTION['code'];
                 throw new Exception(self::EMPTY_CART_EXCEPTION['name']);
             }
+
+
+            if (!$this->validateDestinationAddress($entireProcessParams)) {
+                $entireProcessParams['resultCode'] = self::INVALID_DESTINATION_COUNTRY_EXCEPTION['code'];
+                throw new Exception(self::INVALID_DESTINATION_COUNTRY_EXCEPTION['name']);
+            }
+
 
             \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
 
@@ -440,7 +470,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-    
+
     private function extractToJsonifiedData(&$entireProcessData)
     {
         return [
