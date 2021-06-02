@@ -44,6 +44,11 @@ Route::middleware('bmdauth')->post('/checkout/readCheckoutRequiredData', 'Checko
 
 
 
+/** exchange-rates */
+Route::get('/exchange-rates/getRate', 'ExchangeRateController@getRate');
+
+
+
 /* payment */
 Route::post('/stripePaymentMethod/delete', 'StripePaymentMethodController@delete')->middleware('bmdauth');
 Route::post('/stripePaymentMethod/save', 'StripePaymentMethodController@save')->middleware('bmdauth');
