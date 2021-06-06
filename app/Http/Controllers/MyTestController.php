@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Cache;
 
 class MyTestController extends Controller
 {
-    public function testbmdauth(Request $r) {
+    public function testbmdauth(Request $r)
+    {
         $bmdAuth = BmdAuthProvider::getInstance();
 
         return [
@@ -21,7 +22,8 @@ class MyTestController extends Controller
 
 
 
-    public function getHttpInfo(Request $r) {
+    public function getHttpInfo(Request $r)
+    {
         $theHeaders = getallheaders();
 
         return [
@@ -36,13 +38,13 @@ class MyTestController extends Controller
             'Origin (HOST-OF-FRONTEND)' => $theHeaders['Origin'] ?? null,
             'Referer (HOST-OF-FRONTEND?)' => $theHeaders['Referer'] ?? null,
         ];
-
     }
 
 
 
-    
-    public function yo() {
+
+    public function yo()
+    {
 
         return [
             'msg' => 'METHOD: yo()',
@@ -52,11 +54,26 @@ class MyTestController extends Controller
 
 
 
-    public function flushCache() {
+    public function forMBMDBE(Request $r)
+    {
+        return [
+            'isResultOk' => true,
+            'objs' => [
+                'r->a' => $r->a,
+                'r->b' => $r->b,
+                'testDispatchVal' => rand()
+            ]
+        ];
+    }
+
+
+
+    public function flushCache()
+    {
 
         Cache::store('redisreader')->flush();
         Cache::store('redisprimary')->flush();
-        
+
         return [
             'msg' => 'METHOD: flushCache()'
         ];

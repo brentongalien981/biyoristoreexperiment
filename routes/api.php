@@ -144,5 +144,6 @@ Route::get('/test', function (Request $request) {
         'comment' => 'random shit bruh'
     ];
 });
+Route::get('/mytest/forMBMDBE', 'MyTestController@forMBMDBE');
 Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo')->middleware('allow-frontend-only');
 Route::post('/mytest/testbmdauth', 'MyTestController@testbmdauth')->middleware('bmdauth');
