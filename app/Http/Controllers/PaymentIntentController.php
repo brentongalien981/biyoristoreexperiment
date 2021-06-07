@@ -9,6 +9,7 @@ use Exception;
 use App\Product;
 use App\CartItem;
 use App\Http\BmdCacheObjects\CartCacheObject;
+use App\Http\BmdCacheObjects\ExchangeRateCacheObject;
 use App\Http\BmdCacheObjects\SellerProductCacheObject;
 use App\OrderStatus;
 use Illuminate\Http\Request;
@@ -63,10 +64,18 @@ class PaymentIntentController extends Controller
 
             // order-meta-data
             $chargedSubtotal = $cartCO->getOrderSubtotal();
-            $chargedShippingFee = $request->shipmentRateAmount;
+
+            $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
+            $chargedShippingFee = floatval($request->shipmentRateAmount) * floatval($exchangeRate);
+            $chargedShippingFee = round($chargedShippingFee, 2);
+
             $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
+            $chargedTax = round($chargedTax, 2);
+
             $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
-            $chargedTotalInCents = round($chargedTotal, 2) * 100;
+            $chargedTotal = round($chargedTotal, 2);
+
+            $chargedTotalInCents = $chargedTotal * 100;
 
             $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
             $projectedShortestDeliveryDays = $projectedTotalDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;

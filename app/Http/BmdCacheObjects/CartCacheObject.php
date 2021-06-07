@@ -127,7 +127,7 @@ class CartCacheObject extends BmdModelCacheObject
     {
         $cartItems = $this->data->cartItems ?? [];
 
-        $orderSubtotal = 0;
+        $orderSubtotal = 0.0;
 
         foreach ($cartItems as $i) {
             $i = json_decode($i);
@@ -140,7 +140,7 @@ class CartCacheObject extends BmdModelCacheObject
             $orderSubtotal += $itemTotalPrice;
         }
 
-        return $orderSubtotal;
+        return round($orderSubtotal, 2);
     }
 
 
