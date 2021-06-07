@@ -16,6 +16,7 @@ use App\SizeAvailability;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\EmailUserOrderDetails;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Resources\AddressResource;
@@ -24,13 +25,13 @@ use App\MyConstants\BmdGlobalConstants;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdCacheObjects\CartCacheObject;
 use App\Http\BmdCacheObjects\OrderStatusCacheObject;
+use App\Http\BmdCacheObjects\ExchangeRateCacheObject;
 use App\Http\BmdCacheObjects\SellerProductCacheObject;
 use App\Http\BmdCacheObjects\ProductResourceCacheObject;
 use App\Http\BmdCacheObjects\ProfileResourceCacheObject;
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
 use App\Http\BmdCacheObjects\UserStripePaymentMethodsCacheObject;
 use App\Http\BmdCacheObjects\AddressResourceCollectionCacheObject;
-use App\Jobs\EmailUserOrderDetails;
 
 class CheckoutController extends Controller
 {
@@ -108,10 +109,18 @@ class CheckoutController extends Controller
         $r = $entireProcessData['request'];
 
         $chargedSubtotal = $entireProcessData['cartCO']->getOrderSubtotal();
-        $chargedShippingFee = $r->shipmentRateAmount;
+
+        $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
+        $chargedShippingFee = floatval($r->shipmentRateAmount) * floatval($exchangeRate);
+        $chargedShippingFee = round($chargedShippingFee, 2);
+
         $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
+        $chargedTax = round($chargedTax, 2);
+
         $chargedTotal = $chargedSubtotal + $chargedShippingFee + $chargedTax;
-        $chargedTotalInCents = round($chargedTotal, 2) * 100;
+        $chargedTotal = round($chargedTotal, 2);
+
+        $chargedTotalInCents = $chargedTotal * 100;
 
         $projectedTotalDeliveryDays = $r->projectedTotalDeliveryDays;
         $projectedShortestDeliveryDays = $projectedTotalDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;
@@ -146,7 +155,7 @@ class CheckoutController extends Controller
                 'earliestDeliveryDate' => $earliestDeliveryDate,
                 'latestDeliveryDate' => $latestDeliveryDate
 
-                
+
                 // BMD-TODO: on DEV-ITER-004: Include cart and cart-items data as well.
             ]
         ]);
@@ -397,18 +406,18 @@ class CheckoutController extends Controller
     {
         $cart = $params['cartObj'];
 
-        if (isset($cart)) { 
-            
+        if (isset($cart)) {
+
             $cart->is_active = 0;
             $cart->save();
-    
+
             $params['cartObj'] = $cart;
-    
+
             $status = OrderStatusCacheObject::getDataByName('INVALID_CART');
             $params['resultCode'] = $status->code;
             $params['entireProcessLogs'][] = $status->readable_name;
 
-            return; 
+            return;
         }
 
 
@@ -580,11 +589,11 @@ class CheckoutController extends Controller
 
     private function createIncompleteOrderRecord(&$params)
     {
-        if (!isset($params['stripePaymentIntent'])) { 
+        if (!isset($params['stripePaymentIntent'])) {
             $status = OrderStatusCacheObject::getDataByName('MISSING_STRIPE_PAYMENT_INTENT_LINK');
             $params['resultCode'] = $status->code;
             $params['entireProcessLogs'][] = $status->readable_name;
-            return; 
+            return;
         }
 
         $io = new IncompleteOrder();
@@ -595,7 +604,6 @@ class CheckoutController extends Controller
         $io->result_code = $params['resultCode'];
         $io->entire_process_logs = implode(',', $params['entireProcessLogs']);
         $io->save();
-
     }
 
 
