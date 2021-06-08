@@ -386,7 +386,7 @@ class CustomizedEasyPost extends Controller
     }
 
 
-    // BMD-ISH
+    
     public function getRates(Request $request)
     {
         $entireProcessData = [];
