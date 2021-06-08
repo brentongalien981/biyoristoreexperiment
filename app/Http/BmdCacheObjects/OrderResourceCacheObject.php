@@ -7,7 +7,7 @@ use App\Order;
 
 class OrderResourceCacheObject extends BmdResourceCacheObject
 {
-    protected $lifespanInMin = 1440;
+    protected $lifespanInMin = 120;
     protected static $modelPath = Order::class;
     protected static $jsonResourcePath = OrderResource::class;
 }
