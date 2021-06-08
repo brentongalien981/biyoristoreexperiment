@@ -302,8 +302,8 @@ class CheckoutController extends Controller
 
         try {
 
-            // BMD-TODO: On DEV-ITER-003: FEAT: Checkout
-            // Validate the request-params.
+            // BMD-TODO: On DEV-ITER-004: FEAT: Checkout
+            // Validate the other request-params.
 
 
             $this->checkCartItems($entireProcessData);
