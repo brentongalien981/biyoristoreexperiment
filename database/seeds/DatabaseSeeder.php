@@ -1,6 +1,7 @@
 <?php
 
 use App\PackageItemType;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
             AuthProviderTypeSeeder::class,
             BmdAuthSeeder::class,
             ExchangeRateSeeder::class,
+            RoleSeeder::class
         ]);
     }
 }
