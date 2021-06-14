@@ -17,7 +17,7 @@ class AllowFrontendOnly
     {
         $theHeaders = getallheaders();
         $frontendUrl = $theHeaders['Origin'] ?? null;
-        $frontendUrl = substr($frontendUrl, 0, strlen(env('APP_FRONTEND_URL')));
+        $frontendUrl = substr($frontendUrl, 0, strlen(env('APP_FRONTEND_URL'))); // BMD-ON-STAGING
 
         if (
             isset($frontendUrl)
