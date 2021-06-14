@@ -108,7 +108,7 @@ class JoinController extends Controller
         $possibleUser = User::where('email', $validatedData['email'])->get()[0];
 
         $isResultOk = false;
-        $bmdAuth = [];
+        $bmdAuth = null;
         $overallProcessLogs = [];
         $resultCode = 0;
 
@@ -116,8 +116,10 @@ class JoinController extends Controller
         try {
 
             // Check if BmdAuth has auth-provider-type Bmd.
-            $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0];
-            if ($bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
+            $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0] ?? null;
+            if (!isset($bmdAuth) || 
+                $bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
+
                 $resultCode = self::LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER;
                 throw new Exception('Invalid bmd-auth provider');
             }
@@ -158,9 +160,11 @@ class JoinController extends Controller
             } else {
                 $overallProcessLogs[] = 'invalid password';
                 $resultCode = self::LOGIN_RESULT_CODE_INVALID_PASSWORD;
+                $bmdAuth = null;
             }
         } catch (Exception $e) {
             $overallProcessLogs[] = 'caught-custom-error: ' . $e->getMessage();
+            $bmdAuth = null;
         }
 
 
@@ -172,10 +176,10 @@ class JoinController extends Controller
             'resultCode' => $resultCode,
             'objs' => [
                 'email' => $possibleUser->email,
-                'bmdToken' => $bmdAuth->token,
-                'bmdRefreshToken' => $bmdAuth->refresh_token,
-                'expiresIn' => $bmdAuth->expires_in,
-                'authProviderId' => $bmdAuth->auth_provider_type_id,
+                'bmdToken' => $bmdAuth ? $bmdAuth->token : null,
+                'bmdRefreshToken' => $bmdAuth ? $bmdAuth->refresh_token : null,
+                'expiresIn' => $bmdAuth ? $bmdAuth->expires_in : null,
+                'authProviderId' => $bmdAuth ? $bmdAuth->auth_provider_type_id : null
             ],
         ];
     }
