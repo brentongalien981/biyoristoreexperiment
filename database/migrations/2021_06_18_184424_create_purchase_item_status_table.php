@@ -14,7 +14,10 @@ class CreatePurchaseItemStatusTable extends Migration
     public function up()
     {
         Schema::create('purchase_item_status', function (Blueprint $table) {
-            $table->id();
+            $table->tinyIncrements('id');
+            $table->bigInteger('code');
+            $table->string('name', 128);
+            $table->string('description', 128)->nullable();
             $table->timestamps();
         });
     }
