@@ -42,7 +42,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8008, 'name' => 'INVENTORY_QUANTITIES_UPDATED', 'readable_name' => 'Inventory Quantities Updated']);
         DB::table('order_statuses')->insert(['code' => 8009, 'name' => 'INVENTORY_ORDER_LIMITS_UPDATED', 'readable_name' => 'Inventory Order Limits Updated']);
         DB::table('order_statuses')->insert(['code' => 8010, 'name' => 'CACHE_CART_RESET_OK', 'readable_name' => 'Cache Cart Has Been Reset OK']);
-        DB::table('order_statuses')->insert(['code' => 8011, 'name' => 'ORDER_BEING_PROCESSED', 'readable_name' => 'Order Being Processed']);
+        DB::table('order_statuses')->insert(['code' => 8011, 'name' => 'ORDER_CONFIRMED', 'readable_name' => 'Order Confirmed']);
         DB::table('order_statuses')->insert(['code' => 8012, 'name' => 'ORDER_DETAILS_EMAILED_TO_USER', 'readable_name' => 'Order Details Emailed To User']);
 
 
@@ -67,6 +67,23 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8102, 'name' => 'CACHE_CART_UPDATED_TO_LATEST_VERSION', 'readable_name' => 'Cache Cart Updated To Latest Version']);
         DB::table('order_statuses')->insert(['code' => 8103, 'name' => 'DB_CART_ITEMS_CREATED', 'readable_name' => 'Db Cart Items Created']);
 
+
+
+        // ORDER-PURCHASING-and-INVENTORY-related STATUSES
+        DB::table('order_statuses')->insert(['code' => -8301, 'name' => 'EVALUATED_INCOMPLETELY_FOR_PURCHASE', 'readable_name' => 'Evaluated Incompletely for Purchase']);
+        DB::table('order_statuses')->insert(['code' => -8304, 'name' => 'PURCHASE_INCOMPLETELY_RECEIVED', 'readable_name' => 'Purchase Incompletely Received']);
+
+        DB::table('order_statuses')->insert(['code' => 8300, 'name' => 'BEING_EVALUATED_FOR_PURCHASE', 'readable_name' => 'Being Evaluated for Purchase']);
+        DB::table('order_statuses')->insert(['code' => 8301, 'name' => 'TO_BE_PURCHASED', 'readable_name' => 'To be Purchased']);
+        DB::table('order_statuses')->insert(['code' => 8302, 'name' => 'PURCHASED', 'readable_name' => 'Purchased']);
+        DB::table('order_statuses')->insert(['code' => 8303, 'name' => 'TO_BE_PURCHASE_RECEIVED', 'readable_name' => 'To be Purchase-Received']);
+        DB::table('order_statuses')->insert(['code' => 8304, 'name' => 'PURCHASE_RECEIVED', 'readable_name' => 'Purchase-Received']);
+        DB::table('order_statuses')->insert(['code' => 8305, 'name' => 'IN_STOCK', 'readable_name' => 'In-Stock']);
+        DB::table('order_statuses')->insert(['code' => 8306, 'name' => 'TO_BE_PACKAGED', 'readable_name' => 'To be Packaged']);
+        DB::table('order_statuses')->insert(['code' => 8307, 'name' => 'PACKAGED', 'readable_name' => 'Packaged']);
+        DB::table('order_statuses')->insert(['code' => 8308, 'name' => 'TO_BE_DISPATCHED', 'readable_name' => 'To be Dispatched']);
+        DB::table('order_statuses')->insert(['code' => 8309, 'name' => 'DISPATCHED', 'readable_name' => 'Dispatched']);
+        
 
 
         // RETURN-STATUSES
