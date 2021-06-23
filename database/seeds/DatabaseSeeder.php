@@ -37,7 +37,8 @@ class DatabaseSeeder extends Seeder
             AuthProviderTypeSeeder::class,
             BmdAuthSeeder::class,
             ExchangeRateSeeder::class,
-            RoleSeeder::class
+            RoleSeeder::class,
+            ScheduledTaskStatusSeeder::class
         ]);
     }
 }

@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class OneTimeSeeder extends Seeder
+class ScheduledTaskStatusSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -19,6 +19,5 @@ class OneTimeSeeder extends Seeder
 
 
         DB::table('scheduled_task_statuses')->insert(['code' => 'STS-6002', 'name' => 'PROCESS_FAILED', 'readable_name' => 'Process Failed']);
-
     }
 }
