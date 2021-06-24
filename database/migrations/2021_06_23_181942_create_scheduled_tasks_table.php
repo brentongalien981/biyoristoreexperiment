@@ -17,7 +17,7 @@ class CreateScheduledTasksTable extends Migration
             $table->id();
             $table->string('command_signature', 64);
             $table->string('status_code', 8);
-            $table->string('description', 8);
+            $table->string('description', 8)->nullable();
             $table->timestamps();
         });
     }
