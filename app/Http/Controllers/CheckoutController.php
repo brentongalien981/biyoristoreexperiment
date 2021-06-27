@@ -576,7 +576,7 @@ class CheckoutController extends Controller
     {
         $order = $params['order'];
         if (isset($order)) {
-            $status = OrderStatusCacheObject::getDataByName('ORDER_BEING_PROCESSED');
+            $status = OrderStatusCacheObject::getDataByName('ORDER_CONFIRMED');
             $order->status_code = $status->code;
             $order->save();
 
