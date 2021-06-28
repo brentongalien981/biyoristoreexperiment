@@ -1,6 +1,5 @@
 <?php
 
-use App\ScheduledTaskStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -13,5 +12,6 @@ class OneTimeSeeder extends Seeder
      */
     public function run()
     {
+        
     }
 }
