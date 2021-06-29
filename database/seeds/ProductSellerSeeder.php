@@ -17,5 +17,10 @@ class ProductSellerSeeder extends Seeder
 
         DB::table('product_seller')->insert(['product_id' => 4, 'seller_id' => 5, 'buy_price' => 994.99, 'sell_price' => 1000, 'restock_days' => 7, 'quantity' => 2]);
         DB::table('product_seller')->insert(['product_id' => 4, 'seller_id' => 6, 'buy_price' => 999, 'sell_price' => 1050, 'restock_days' => 3, 'quantity' => 8, 'discount_sell_price' => 1030]);
+
+
+        DB::table('product_seller')->insert(['product_id' => 2, 'seller_id' => 1, 'buy_price' => 1949.99, 'sell_price' => 1999.99, 'restock_days' => 0, 'quantity' => 50]);
+        DB::table('product_seller')->insert(['product_id' => 3, 'seller_id' => 1, 'buy_price' => 1199.99, 'sell_price' => 1249.99, 'restock_days' => 0, 'quantity' => 50]);
+        DB::table('product_seller')->insert(['product_id' => 4, 'seller_id' => 1, 'buy_price' => 1450, 'sell_price' => 1499.99, 'restock_days' => 0, 'quantity' => 50]);
     }
 }

@@ -26,5 +26,33 @@ class SizeAvailabilitySeeder extends Seeder
         DB::table('size_availabilities')->insert(['seller_product_id' => 3, 'size' => '11.0', 'quantity' => '1']);
         DB::table('size_availabilities')->insert(['seller_product_id' => 3, 'size' => '11.5', 'quantity' => '2']);
 
+
+
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => 'S', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => 'M', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => 'L', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => 'XL', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => '2XL', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => '3XL', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 5, 'size' => '5XL', 'quantity' => '50']);
+
+
+        DB::table('size_availabilities')->insert(['seller_product_id' => 6, 'size' => 'M', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 6, 'size' => 'L', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 6, 'size' => '2XL', 'quantity' => '50']);
+
+
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '6.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '7.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '7.5', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '8.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '8.5', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '9.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '10.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '10.5', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '11.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '11.5', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '13.0', 'quantity' => '50']);
+        DB::table('size_availabilities')->insert(['seller_product_id' => 7, 'size' => '16.0', 'quantity' => '50']);
     }
 }
