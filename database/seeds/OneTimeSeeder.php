@@ -13,9 +13,6 @@ class OneTimeSeeder extends Seeder
      */
     public function run()
     {
-        foreach (SizeAvailability::all() as $sa) {
-            $sa->daily_reset_quantity = 20;
-            $sa->save();
-        }
+        
     }
 }
