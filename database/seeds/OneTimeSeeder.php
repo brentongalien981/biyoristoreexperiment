@@ -13,6 +13,5 @@ class OneTimeSeeder extends Seeder
      */
     public function run()
     {
-        
     }
 }

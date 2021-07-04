@@ -16,5 +16,8 @@ class RoleSeeder extends Seeder
         DB::table('roles')->insert(['name' => 'OrderManager']);
         DB::table('roles')->insert(['name' => 'PurchaseManager']);
         DB::table('roles')->insert(['name' => 'InventoryManager']);
+
+        DB::table('roles')->insert(['name' => 'SalesManager']);
+        DB::table('roles')->insert(['name' => 'FinanceManager']);
     }
 }
