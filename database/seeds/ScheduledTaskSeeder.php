@@ -19,5 +19,7 @@ class ScheduledTaskSeeder extends Seeder
         DB::table('scheduled_tasks')->insert(['command_signature' => 'BmdPurchases:Prepare', 'status_code' => $availableStatus->code, 'description' => '']);
         DB::table('scheduled_tasks')->insert(['command_signature' => 'SyncBmdSellerProductsWithInventory:Execute', 'status_code' => $availableStatus->code, 'description' => '']);
         DB::table('scheduled_tasks')->insert(['command_signature' => 'ResetSizeAvailabilityQuantitiesOfNonBmdSellerProducts:Execute', 'status_code' => $availableStatus->code, 'description' => '']);
+
+        DB::table('scheduled_tasks')->insert(['command_signature' => 'GenerateOPIs:Execute', 'status_code' => $availableStatus->code, 'description' => '']);
     }
 }
