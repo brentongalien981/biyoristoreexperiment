@@ -22,6 +22,14 @@ class Order extends Model
     public $incrementing = false;
 
 
+    /**
+     * The "type" of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+
 
     public static function getDeliveryDate($numOfBusinessDeliveryDays)
     {
@@ -30,7 +38,7 @@ class Order extends Model
 
         for ($i = 0; $i < $limit; $i++) {
 
-            $aDateTime = now()->addDays($i+1);
+            $aDateTime = now()->addDays($i + 1);
 
             if (self::isWeekDay($aDateTime)) {
                 $incrementalDays++;
@@ -45,7 +53,8 @@ class Order extends Model
 
 
 
-    public static function getReadableDate($dateTime) {
+    public static function getReadableDate($dateTime)
+    {
         $d = getdate(strtotime($dateTime));
 
         $str = $d['weekday'] . ', ' . $d['month'] . ' ' . $d['mday'] . ', ' . $d['year'];
