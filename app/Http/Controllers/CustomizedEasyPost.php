@@ -425,6 +425,7 @@ class CustomizedEasyPost extends Controller
 
             $shipmentObj = $this->setShipment($entireProcessData);
 
+
             // Check.
             if (!$this->doesShipmentHaveRates($shipmentObj)) {
                 // Re-create the parcel & shipment.
@@ -433,12 +434,14 @@ class CustomizedEasyPost extends Controller
 
                 $shipmentObj = $this->setShipment($entireProcessData);
             }
+            
 
             // 2nd check.
             if (!$this->doesShipmentHaveRates($shipmentObj)) {
                 $params['resultCode'] = self::COULD_NOT_FIND_SHIPMENT_RATES['code'];
                 throw new Exception(self::COULD_NOT_FIND_SHIPMENT_RATES['name']);
             }
+
 
             $entireProcessData['shipment'] = $shipmentObj;
             $entireProcessData['parsedRateObjs'] = $this->getParsedRateObjs($entireProcessData['shipment']->rates);
