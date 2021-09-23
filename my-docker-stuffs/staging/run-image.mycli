@@ -1,0 +1,6 @@
+// Build image.
+docker build --tag bmd:stage-1.0 --file my-docker-stuffs/staging/bmdbe.staging.dockerfile .
+
+
+// Run container.
+docker run -dtp 8001:80 --env-file my-envs/.env.stage bmd:stage-1.0
