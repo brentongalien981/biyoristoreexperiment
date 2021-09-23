@@ -11,6 +11,7 @@ node_modules/
 # 
 /vendor
 .git
+.gitignore
 /my-envs
 /my-docker-stuffs
 
