@@ -137,6 +137,7 @@ Route::post('/users/update', 'UserController@update')->middleware('bmdauth');
 // BMD-ON-STAGING: Comment-out.
 // BMD-TAGS: test, testing, debug, tinker, cors, http, https, auth
 // fruitcake/laravel-cors middleware setup.
+/*
 Route::get('/test', function (Request $request) {
     return [
         'isResultOk' => true,
@@ -144,6 +145,7 @@ Route::get('/test', function (Request $request) {
         'comment' => 'random shit bruh'
     ];
 });
+*/
 Route::get('/mytest/forMBMDBE', 'MyTestController@forMBMDBE');
 Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo')->middleware('allow-frontend-only');
 Route::post('/mytest/testbmdauth', 'MyTestController@testbmdauth')->middleware('bmdauth');
