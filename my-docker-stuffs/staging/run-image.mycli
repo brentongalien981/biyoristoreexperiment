@@ -3,4 +3,4 @@ docker build --tag bmd:stage-1.0 --file my-docker-stuffs/staging/bmdbe.staging.d
 
 
 // Run container.
-docker run -dtp 8001:80 --env-file my-envs/.env.stage bmd:stage-1.0
+docker run -dtp 9001:80 --env-file my-envs/.env.stage odox700/bmd:stage-1.0

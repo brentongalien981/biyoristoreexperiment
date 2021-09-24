@@ -1,4 +1,7 @@
 #!/bin/sh
+
+cp /app/config/cors.php /app/vendor/fruitcake/laravel-cors/config/cors.php
+
 cd /app
 touch .env
 
@@ -46,6 +49,9 @@ echo "PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER}" >> .env
 echo "MIX_PUSHER_APP_KEY=${MIX_PUSHER_APP_KEY}" >> .env
 echo "MIX_PUSHER_APP_CLUSTER=${MIX_PUSHER_APP_CLUSTER}" >> .env
 echo "WEB_DOCUMENT_ROOT=${WEB_DOCUMENT_ROOT}" >> .env
+
+
+
 
 
 
