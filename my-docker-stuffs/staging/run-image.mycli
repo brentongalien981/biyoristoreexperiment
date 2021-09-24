@@ -1,5 +1,5 @@
 // Build image.
-docker build --tag bmd:stage-1.0 --file my-docker-stuffs/staging/bmdbe.staging.dockerfile .
+docker build --tag odox700/bmd:stage-1.0 --file my-docker-stuffs/staging/bmdbe.staging.dockerfile .
 
 
 // Run container.
