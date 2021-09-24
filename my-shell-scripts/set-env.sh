@@ -2,9 +2,8 @@
 cd /app
 touch .env
 
-echo "##################### MY SHIT ####################"
+echo "##################### START MY SHIT ####################"
 echo "Setting FILE: .env"
-echo "##################### MY SHIT ####################"
 
 echo "APP_NAME=${APP_NAME}" >> .env
 echo "APP_ENV=${APP_ENV}" >> .env
@@ -82,18 +81,18 @@ echo "PASSPORT_PRIVATE_KEY=${PASSPORT_PRIVATE_KEY}" >> .env
 echo "PASSPORT_PUBLIC_KEY=${PASSPORT_PUBLIC_KEY}" >> .env
 echo "WEB_DOCUMENT_ROOT=${WEB_DOCUMENT_ROOT}" >> .env
 
-echo "##################### MY SHIT ####################"
+# 
 echo "FILE: .env has been set."
-echo "##################### MY SHIT ####################"
+
 
 
 
 
 chown -R application:application .
 
-echo "##################### MY SHIT ####################"
+
 echo "File ownerships have been set."
-echo "##################### MY SHIT ####################"
+echo "##################### END MY SHIT ####################"
 
 
 
