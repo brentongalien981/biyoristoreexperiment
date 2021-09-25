@@ -9,6 +9,10 @@ node_modules/
 
 
 # 
+storage/*.key
+
+
+# 
 /vendor
 .git
 .gitignore

@@ -172,7 +172,7 @@ class JoinController extends Controller
         //
         return [
             'isResultOk' => $isResultOk,
-            // 'overallProcessLogs' => $overallProcessLogs,
+            'overallProcessLogs' => $overallProcessLogs, // BMD-ON-ITER: Staging, Deployment: Comment this out.
             'resultCode' => $resultCode,
             'objs' => [
                 'email' => $possibleUser->email,
