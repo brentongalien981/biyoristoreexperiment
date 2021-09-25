@@ -1,0 +1,24 @@
+// Build image.
+docker build --tag odox700/bmd:dev-1.0 --file my-docker-stuffs/development/bmdbe.development.dockerfile .
+
+docker push odox700/bmd:dev-1.0
+
+docker pull odox700/bmd:dev-1.0
+
+// Run container locally.
+docker run -itp 9000:80 --env-file my-envs/.env.dev odox700/bmd:dev-1.0 sh
+
+// Run container on server.
+docker run -dtp 9000:80 --env-file my-envs/.env.dev odox700/bmd:dev-1.0
+
+
+// Passport
+php artisan passport:install --force
+
+
+// Run the SHELL-SCRIPT: set-env.dev.sh
+sh my-shell-scripts/set-env.dev.sh
+
+
+// Run artisan server
+php artisan serve --host=0.0.0.0 --port=80
