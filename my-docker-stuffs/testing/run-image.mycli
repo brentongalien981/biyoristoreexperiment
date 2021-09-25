@@ -1,9 +1,17 @@
-// Build image.
+// Build image locally.
 docker build --tag odox700/bmd:test-1.0 --file my-docker-stuffs/testing/bmdbe.testing.dockerfile .
 
+
+// Locally
 docker push odox700/bmd:test-1.0
 
+
+// On the server
 docker pull odox700/bmd:test-1.0
+
+
+// Set the .env.test FILE to the server.
+
 
 // Run container.
 docker run -dtp 9001:80 --env-file my-envs/.env.test odox700/bmd:test-1.0
