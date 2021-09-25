@@ -12,12 +12,13 @@ docker run -itp 9000:80 --env-file my-envs/.env.dev odox700/bmd:dev-1.0 sh
 docker run -dtp 9000:80 --env-file my-envs/.env.dev odox700/bmd:dev-1.0
 
 
-// Passport
-php artisan passport:install --force
-
-
 // Run the SHELL-SCRIPT: set-env.dev.sh
 sh my-shell-scripts/set-env.dev.sh
+
+
+// Set the FILE ".env" to add:
+PASSPORT_PRIVATE_KEY
+PASSPORT_PUBLIC_KEY
 
 
 // Run artisan server

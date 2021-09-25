@@ -87,6 +87,18 @@ echo "PASSPORT_PRIVATE_KEY=${PASSPORT_PRIVATE_KEY}" >> .env
 echo "PASSPORT_PUBLIC_KEY=${PASSPORT_PUBLIC_KEY}" >> .env
 echo "WEB_DOCUMENT_ROOT=${WEB_DOCUMENT_ROOT}" >> .env
 
+
+echo "PASSPORT_PRIVATE_KEY=\"" >> .env
+cat /app/storage/oauth-private.key >> .env
+echo "\"" >> .env
+
+
+
+echo "PASSPORT_PUBLIC_KEY=\"" >> .env
+cat /app/storage/oauth-public.key >> .env
+echo "\"" >> .env
+
+
 echo "##################### MY SHIT ####################"
 echo "FILE: .env has been set."
 echo "##################### MY SHIT ####################"
