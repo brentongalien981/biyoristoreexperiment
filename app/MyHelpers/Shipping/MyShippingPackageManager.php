@@ -8,6 +8,7 @@ use App\Product;
 class MyShippingPackageManager
 {
     /**
+     * BMD-ON-ITER: Staging, Deployment: Make sure the weightLimits, itemTypeLimits, dimensions are still up-to-date with the carriers.
      * weightLimit is in oz
      * dimensions are in inches
      * itemTypeLimits are in number of pieces
