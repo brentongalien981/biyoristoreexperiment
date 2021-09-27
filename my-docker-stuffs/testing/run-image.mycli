@@ -15,3 +15,7 @@ docker pull odox700/bmd:test-1.0
 
 // Run container.
 docker run -dtp 9001:80 --env-file my-envs/.env.test odox700/bmd:test-1.0
+
+
+// Run Swarm Service
+docker service create --replicas 6 -tp 9002:80 --env-file my-envs/.env.test odox700/bmd:test-1.0

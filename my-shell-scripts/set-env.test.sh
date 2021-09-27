@@ -81,6 +81,10 @@ echo "PASSPORT_PRIVATE_KEY=${PASSPORT_PRIVATE_KEY}" >> .env
 echo "PASSPORT_PUBLIC_KEY=${PASSPORT_PUBLIC_KEY}" >> .env
 echo "WEB_DOCUMENT_ROOT=${WEB_DOCUMENT_ROOT}" >> .env
 
+echo "MY_RANDOM_CONTAINER_NUMBER=${RANDOM}" >> .env
+
+echo "MY_NUMBER=647123" >> .env
+
 
 echo "PASSPORT_PRIVATE_KEY=\"" >> .env
 cat /app/storage/oauth-private.key >> .env
@@ -105,3 +109,4 @@ echo "##################### END MY SHIT ####################"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan config:clear
