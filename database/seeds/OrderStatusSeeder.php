@@ -102,6 +102,7 @@ class OrderStatusSeeder extends Seeder
         DB::table('order_statuses')->insert(['code' => 8309, 'name' => 'DISPATCHED', 'readable_name' => 'Dispatched']);
 
         DB::table('order_statuses')->insert(['code' => 8310, 'name' => 'BEING_PACKAGED', 'readable_name' => 'Being Packaged']);
+        DB::table('order_statuses')->insert(['code' => 8311, 'name' => 'SHIPPING_LABEL_BOUGHT', 'readable_name' => 'Shipping Label Bought']);
 
 
 
