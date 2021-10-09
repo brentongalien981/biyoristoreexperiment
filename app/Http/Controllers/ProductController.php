@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Brand;
+use Exception;
 use App\Product;
 use App\Category;
+use App\Http\Resources\BrandResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\ProductResource;
-use Exception;
+use stdClass;
 
 class ProductController extends Controller
 {
@@ -75,10 +78,27 @@ class ProductController extends Controller
 
     public function featured()
     {
+        $featuredBrands = Brand::orderBy('name', 'asc')->take(10)->get();
+
+        $modifiedFeaturedBrands = [];
+
+        foreach ($featuredBrands as $b) {                
+
+            $aModifiedBrand = new stdClass;
+            $aModifiedBrand->id = $b->id;
+            $aModifiedBrand->name = $b->name;
+            $aModifiedBrand->featuredProductPhotoUrl = $b->products[0]->productPhotoUrls[0];
+
+            $modifiedFeaturedBrands[] = $aModifiedBrand;
+        }
+        
+
         return [
             'isResultOk' => true,
             'comment' => "CLASS: ProductController, METHOD: featured()",
-            'objs' => ProductResource::collection(Product::take(9)->get())
+            'objs' => [
+                'featuredBrands' => $modifiedFeaturedBrands
+            ]
         ];
     }
 
