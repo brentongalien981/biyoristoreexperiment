@@ -119,6 +119,7 @@ Route::get('/categories', 'CategoryController@index');
 Route::post('/join/verify', 'JoinController@verify')->middleware('bmdauth');
 Route::post('/join/save', 'JoinController@save');
 Route::post('/join/login', 'JoinController@login');
+Route::post('/join/emailUserResetLink', 'JoinController@emailUserResetLink');
 
 
 

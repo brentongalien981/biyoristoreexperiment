@@ -11,11 +11,12 @@ use App\AuthProviderType;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\BmdHelpers\BmdAuthProvider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
+use App\Http\BmdHelpers\BmdAuthProvider;
+use App\Http\BmdHttpResponseCodes\GeneralHttpResponseCodes;
 
 class JoinController extends Controller
 {
@@ -41,6 +42,37 @@ class JoinController extends Controller
                 'expiresIn' => $bmdAuth->expires_in,
                 'authProviderId' => $bmdAuth->auth_provider_type_id,
             ],
+        ];
+    }
+
+
+    
+    public function emailUserResetLink(Request $r)
+    {
+
+        $isResultOk = false;
+        $resultCode = null;
+
+
+        try {
+            if (BmdAuthProvider::check()) {
+                throw new Exception('This functionality is for guest users only.');
+            }
+
+            $isResultOk = true;
+        } catch (\Throwable $th) {
+            $resultCode = GeneralHttpResponseCodes::getGeneralExceptionCode($th);
+        }
+
+        return [
+            'isResultOk' => $isResultOk,
+            'objs' => [
+            ],
+            // BMD-DELETE
+            'requestData' => [
+                'email' => $r->email
+            ],
+            'resultCode' => $resultCode
         ];
     }
 
