@@ -6,17 +6,20 @@ use App\User;
 use Exception;
 use App\BmdAuth;
 use App\Profile;
+use App\PasswordReset;
 use App\StripeCustomer;
 use App\AuthProviderType;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdHttpResponseCodes\GeneralHttpResponseCodes;
+use App\Mail\PasswordResetLink;
 
 class JoinController extends Controller
 {
@@ -46,18 +49,35 @@ class JoinController extends Controller
     }
 
 
-    
+
     public function emailUserResetLink(Request $r)
     {
 
         $isResultOk = false;
         $resultCode = null;
 
+        // BMD-TODO:
+        // $v = $r->validate([
+        //     'email' => 'email|exists:users'
+        // ]);
+
 
         try {
             if (BmdAuthProvider::check()) {
                 throw new Exception('This functionality is for guest users only.');
             }
+
+            // Set user's password-reset-token
+            $passwordReset = new PasswordReset();
+            $passwordReset->email = $r->email;
+            $passwordReset->token = Str::uuid()->toString();
+            $passwordReset->save();
+
+
+            // Send email.
+            $link = env('APP_FRONTEND_URL') . '/password-reset?t=' . $passwordReset->token;
+            Mail::to($r->email)
+                ->send(new PasswordResetLink($link));
 
             $isResultOk = true;
         } catch (\Throwable $th) {
@@ -66,12 +86,7 @@ class JoinController extends Controller
 
         return [
             'isResultOk' => $isResultOk,
-            'objs' => [
-            ],
-            // BMD-DELETE
-            'requestData' => [
-                'email' => $r->email
-            ],
+            'objs' => [],
             'resultCode' => $resultCode
         ];
     }
@@ -130,7 +145,7 @@ class JoinController extends Controller
 
     public function login(Request $request)
     {
-        
+
         $validatedData = $request->validate([
             'email' => 'email|exists:users',
             'password' => 'max:32',
@@ -149,8 +164,10 @@ class JoinController extends Controller
 
             // Check if BmdAuth has auth-provider-type Bmd.
             $bmdAuth = BmdAuth::where('user_id', $possibleUser->id)->get()[0] ?? null;
-            if (!isset($bmdAuth) || 
-                $bmdAuth->auth_provider_type_id != AuthProviderType::BMD) {
+            if (
+                !isset($bmdAuth) ||
+                $bmdAuth->auth_provider_type_id != AuthProviderType::BMD
+            ) {
 
                 $resultCode = self::LOGIN_RESULT_CODE_INVALID_BMD_AUTH_PROVIDER;
                 throw new Exception('Invalid bmd-auth provider');

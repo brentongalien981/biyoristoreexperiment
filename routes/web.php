@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\OrderReceived;
+use App\Mail\PasswordResetLink;
 use App\Order;
 use Illuminate\Support\Facades\Route;
 
@@ -73,10 +74,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 */
-/*
-Route::get('/test-email-views/OrderReceived', function () {
-    $o = Order::first();
+
+// BMD-ON-ITER: Staging, Deployment: Comment-out.
+Route::get('/test-render-mailable', function () {
+    // $o = Order::first();
     // $o = Order::find('7193216c-443a-4af1-a6ec-dfb8f7b5548c');
-    return (new OrderReceived($o))->render();
+    // return (new OrderReceived($o))->render();
+    // return new PasswordResetLink();
 });
-*/
+
