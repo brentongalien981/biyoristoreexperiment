@@ -55,18 +55,18 @@ class JoinController extends Controller
 
         $isResultOk = false;
         $resultCode = null;
-
-        // BMD-TODO:
-        // $v = $r->validate([
-        //     'email' => 'email|exists:users'
-        // ]);
+        
+        
+        $v = $r->validate([
+            'email' => 'email|exists:users'
+        ]);
 
 
         try {
             if (BmdAuthProvider::check()) {
                 throw new Exception('This functionality is for guest users only.');
             }
-
+            
             // Set user's password-reset-token
             $passwordReset = new PasswordReset();
             $passwordReset->email = $r->email;
