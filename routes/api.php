@@ -134,6 +134,12 @@ Route::post('/profile/save', 'ProfileController@save')->middleware('bmdauth');
 Route::post('/users/update', 'UserController@update')->middleware('bmdauth');
 
 
+
+/** returns */
+Route::post('/returns/requestForReturn', 'ReturnController@requestForReturn');
+
+
+
 /* test */
 // BMD-FOR-DEBUG
 // BMD-ON-STAGING: Comment-out.
