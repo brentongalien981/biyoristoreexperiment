@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdHttpResponseCodes\GeneralHttpResponseCodes;
+use App\Http\BmdHttpResponseCodes\JoinHttpResponseCodes;
 use App\Mail\PasswordResetLink;
 
 class JoinController extends Controller
@@ -55,8 +56,8 @@ class JoinController extends Controller
 
         $isResultOk = false;
         $resultCode = null;
-        
-        
+
+
         $v = $r->validate([
             'email' => 'email|exists:users'
         ]);
@@ -66,7 +67,7 @@ class JoinController extends Controller
             if (BmdAuthProvider::check()) {
                 throw new Exception('This functionality is for guest users only.');
             }
-            
+
             // Set user's password-reset-token
             $passwordReset = new PasswordReset();
             $passwordReset->email = $r->email;
@@ -90,6 +91,118 @@ class JoinController extends Controller
             'resultCode' => $resultCode
         ];
     }
+
+
+
+
+    public function updatePassword(Request $r)
+    {
+
+        $v = $r->validate([
+            'resetToken' => 'required|string|max:64',
+            'password' => 'required|alpha_num|min:8|max:32',
+        ]);
+
+
+        $isResultOk = false;
+        $resultCode = null;
+        $user = null;
+        $bmdAuth = null;
+        $returnObjs = [];
+        $overallProcessLogs = [];
+
+        try {
+
+            DB::beginTransaction();
+
+
+            // Reference the user through the reset-password-token.
+            $pr = PasswordReset::where('token', $r->resetToken)->orderBy('created_at', 'desc')->get()[0] ?? null;
+            if (!$pr) {
+                $resultCode = JoinHttpResponseCodes::INVALID_RESET_TOKEN;
+                throw new Exception('Invalid Reset Token');
+            }
+
+            if ($pr->isExpired()) {
+                $resultCode = JoinHttpResponseCodes::EXPIRED_RESET_TOKEN;
+                throw new Exception('Reset Token is expired.');
+            }
+
+            $user = User::where('email', $pr->email)->get()[0] ?? null;
+            if (!$user) {
+                $resultCode = JoinHttpResponseCodes::USER_NOT_FOUND;
+                throw new Exception('User not found.');
+            }
+
+            $overallProcessLogs[] = 'Referenced user.';
+
+
+            // Update the user's password.
+            $user->password = Hash::make($v['password']);
+            $user->save();
+            $overallProcessLogs[] = 'Updated password.';
+
+
+            // Revoke all user's old tokens.
+            self::revokeAllPassportTokens($user->id);
+            $overallProcessLogs[] = 'user-tokens revoked';
+
+
+            // Create a new oauth-token record for user.
+            $oauthProps = self::createPasswordAccessPassportToken($user->email, $r->password, $r);
+            $overallProcessLogs[] = 'created new user-token';
+
+
+            // Delete the old bmd-auth cache-record
+            $bmdAuth = BmdAuth::where('user_id', $user->id)->get()[0] ?? null;
+            $bmdAuth->deleteOldCacheRecord();
+            $overallProcessLogs[] = 'deleted old-bmd-auth cache-record';
+
+
+            // Update BmdAuth's token.
+            $bmdAuth->token = $oauthProps['access_token'];
+            $bmdAuth->refresh_token = $oauthProps['refresh_token'];
+            $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
+            $bmdAuth->save();
+            $overallProcessLogs[] = 'updated bmd-auth record';
+
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
+
+
+            //
+            DB::commit();
+            $overallProcessLogs[] = 'commited db-transaction';
+            $isResultOk = true;
+
+
+            $returnObjs = [
+                'email' => $user->email,
+                'bmdToken' => $bmdAuth->token,
+                'bmdRefreshToken' => $bmdAuth->refresh_token,
+                'expiresIn' => $bmdAuth->expires_in,
+                'authProviderId' => $bmdAuth->auth_provider_type_id,
+            ];
+        } catch (Exception $e) {
+
+            DB::rollBack();
+            $overallProcessLogs[] = 'rolled-back db-transaction';
+            $overallProcessLogs[] = 'Exception ==> ' . $e->getMessage();
+        }
+
+
+
+
+        return [
+            'isResultOk' => $isResultOk,
+            'objs' => $returnObjs,
+            'resultCode' => $resultCode,
+            // BMD-ON-ITER: Staging, Deployment: Comment-out.
+            'overallProcessLogs' => $overallProcessLogs,
+        ];
+    }
+
 
 
 
