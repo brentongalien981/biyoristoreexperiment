@@ -4,10 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-
-class OrderStatus extends Model
+class ReturnStatus extends Model
 {
-
     public static function getIdByName($name) {
         return self::where('name', $name)->get()[0]->id ?? null;
     }
@@ -17,6 +15,4 @@ class OrderStatus extends Model
     public static function getCodeByName($name) {
         return self::where('name', $name)->get()[0]->code ?? null;
     }
-
-
 }

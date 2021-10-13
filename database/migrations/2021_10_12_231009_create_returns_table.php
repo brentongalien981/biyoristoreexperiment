@@ -17,12 +17,12 @@ class CreateReturnsTable extends Migration
             $table->id();
             $table->uuid('order_id')->nullable();
             $table->bigInteger('user_id')->unsigned()->nullable();
-            $table->string('ep_shipment_id', 128);
+            $table->string('ep_shipment_id', 128)->nullable();
             $table->bigInteger('status_code');
 
             $table->string('first_name', 128)->nullable();
             $table->string('last_name', 128)->nullable() ;
-            
+
             $table->string('street', 128)->nullable();
             $table->string('city', 64)->nullable();
             $table->string('province', 32)->nullable();
