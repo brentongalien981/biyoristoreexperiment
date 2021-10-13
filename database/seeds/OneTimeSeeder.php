@@ -14,6 +14,5 @@ class OneTimeSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('order_statuses')->insert(['code' => 8311, 'name' => 'SHIPPING_LABEL_BOUGHT', 'readable_name' => 'Shipping Label Bought']);
     }
 }

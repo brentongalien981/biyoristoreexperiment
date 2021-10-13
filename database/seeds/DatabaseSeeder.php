@@ -39,7 +39,8 @@ class DatabaseSeeder extends Seeder
             ExchangeRateSeeder::class,
             RoleSeeder::class,
             ScheduledTaskStatusSeeder::class,
-            ScheduledTaskSeeder::class
+            ScheduledTaskSeeder::class,
+            ReturnStatusSeeder::class
         ]);
     }
 }
