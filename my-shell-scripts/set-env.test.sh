@@ -38,6 +38,7 @@ echo "REDIS_PRIMARY_PROD=${REDIS_PRIMARY_PROD}" >> .env
 echo "REDIS_READER_PROD=${REDIS_READER_PROD}" >> .env
 echo "REDIS_PASSWORD=${REDIS_PASSWORD}" >> .env
 echo "REDIS_PORT=${REDIS_PORT}" >> .env
+echo "REDIS_HOST=${REDIS_HOST}" >> .env
 echo "REDIS_PRIMARY=${REDIS_PRIMARY}" >> .env
 echo "REDIS_READER=${REDIS_READER}" >> .env
 echo "MAIL_MAILER=${MAIL_MAILER}" >> .env
@@ -109,4 +110,4 @@ echo "##################### END MY SHIT ####################"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan config:clear
+# php artisan config:clear
