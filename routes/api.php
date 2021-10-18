@@ -140,6 +140,11 @@ Route::post('/returns/requestForReturn', 'ReturnController@requestForReturn');
 
 
 
+/** search */
+Route::get('/search', 'SearchController@index');
+
+
+
 /* test */
 // BMD-FOR-DEBUG
 // BMD-ON-STAGING: Comment-out.
