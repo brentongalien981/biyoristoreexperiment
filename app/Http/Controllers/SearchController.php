@@ -31,11 +31,6 @@ class SearchController extends Controller
             'isResultOk' => $isResultOk,
             'objs' => [
                 'searchPageProducts' => $searchPageProducts
-            ],
-            // BMD-DELETE
-            'requestData' => [
-                'searchPhrase' => $r->searchPhrase,
-                'pageNum' => $r->pageNum
             ]
         ];
     }
