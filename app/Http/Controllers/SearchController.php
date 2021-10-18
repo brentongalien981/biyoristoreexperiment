@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Product;
+use Exception;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -14,10 +15,11 @@ class SearchController extends Controller
             'searchPhrase' => $r->searchPhrase,
             'pageNum' => $r->pageNum
         ];
-        $searchPageProducts = null;
+        $searchPageProducts = null;        
 
 
         try {
+            
             $searchPageProducts = Product::readSearchedProductsWithParams($searchParams);
             $isResultOk = true;
         } catch (\Throwable $th) {
