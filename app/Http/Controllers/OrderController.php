@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Order;
 use Exception;
+use EasyPost\EasyPost;
+use EasyPost\Shipment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use App\Http\BmdCacheObjects\OrderResourceCacheObject;
 use App\Http\BmdCacheObjects\OrderStripePaymentIntentCacheObject;
+use App\MyHelpers\General\GeneralHelper2;
 
 class OrderController extends Controller
 {
@@ -18,6 +21,7 @@ class OrderController extends Controller
         $orderCO = OrderResourceCacheObject::getUpdatedResourceCacheObjWithId($id);
         $order = $orderCO->data;
         $paymentInfo = null;
+        $epShipment = null;
         $processLogs = [];
         $isResultOk = false;
 
@@ -47,10 +51,22 @@ class OrderController extends Controller
                 }
 
                 $paymentInfo = $ospiCO->data['paymentMethodObj'];
+
                 $isResultOk = true;
             }
         } catch (Exception $e) {
             $processLogs[] = $e->getMessage();
+        }
+
+
+        try {
+            // BMD-ON-ITER: Development, Staging
+            EasyPost::setApiKey(env('EASYPOST_TK'));
+
+            $epShipment = Shipment::retrieve($order->ep_shipment_id) ?? null;
+            $epShipment = GeneralHelper2::pseudoJsonify($epShipment);
+        } catch (\Throwable $th) {
+            $processLogs[] = $th->getMessage();
         }
 
 
@@ -59,7 +75,8 @@ class OrderController extends Controller
             'isResultOk' => $isResultOk,
             'objs' => [
                 'order' => $order,
-                'paymentInfo' => $paymentInfo
+                'paymentInfo' => $paymentInfo,
+                'epShipment' => $epShipment
             ],
             'processLogs' => $processLogs
         ];
