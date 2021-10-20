@@ -77,4 +77,11 @@ class GeneralHelper2
                 return env('APP_FRONTEND_URL_FOR_DEVELOPMENT');
         }
     }
+
+
+
+    public static function getAppFrontendUrl2()
+    {
+        return env('APP_FRONTEND_URL');
+    }
 }

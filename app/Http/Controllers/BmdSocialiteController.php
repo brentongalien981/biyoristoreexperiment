@@ -8,6 +8,7 @@ use App\BmdAuth;
 use App\Profile;
 use App\StripeCustomer;
 use App\AuthProviderType;
+use App\MyHelpers\General\GeneralHelper2;
 use App\TestSocialiteUser;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -21,15 +22,29 @@ class BmdSocialiteController extends Controller
     // BMD-ON-STAGING: Edit this..
     // NOTE: The Laravel env() function doesn't work outside a function.
     // private const TEST_APP_FRONTEND_SIGNUP_RESULT_URL = 'http://localhost:3000/bmd-socialite-signup-result';
-    private const APP_FRONTEND_URL = 'http://localhost:3000';
-    private const APP_FRONTEND_SIGNUP_RESULT_URL = self::APP_FRONTEND_URL . '/bmd-socialite-signup-result';
-    private const APP_FRONTEND_LOGIN_RESULT_URL = self::APP_FRONTEND_URL . '/bmd-socialite-login-result';
+    // private const APP_FRONTEND_URL = 'http://localhost:3000';
+    // private const APP_FRONTEND_SIGNUP_RESULT_URL = GeneralHelper2::getAppFrontendUrl2() . '/bmd-socialite-signup-result';
+    // private const APP_FRONTEND_LOGIN_RESULT_URL = GeneralHelper2::getAppFrontendUrl2() . '/bmd-socialite-login-result';
 
     private const AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER = 1;
     private const AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP = 2;
     private const AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP = 3;
     private const AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN = 4;
     private const AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN = 5;
+
+
+
+    public static function getTestSignupResultUrl()
+    {
+        return GeneralHelper2::getAppFrontendUrl2() . '/bmd-socialite-signup-result';
+    }
+
+
+
+    public static function getTestLoginpResultUrl()
+    {
+        return GeneralHelper2::getAppFrontendUrl2() . '/bmd-socialite-login-result';
+    }
 
 
 
@@ -65,6 +80,23 @@ class BmdSocialiteController extends Controller
 
 
 
+    public function loginWithAuthProvider(Request $r)
+    {
+        $provider = $r->provider;
+
+        switch ($provider) {
+            case 'google':
+            case 'facebook':
+                return Socialite::driver($provider)->redirect();
+                break;
+            default:
+                return 'Invalid request.';
+                break;
+        }
+    }
+
+
+
     public function redirectForAuthResult($data)
     {
         $urlParams = '';
@@ -84,7 +116,9 @@ class BmdSocialiteController extends Controller
                 $urlParams .= '&authProviderId=' . $bmdAuth->auth_provider_type_id;
                 $urlParams .= '&email=' . $socialiteUser->email;
                 $urlParams .= '&stayLoggedIn=' . $stayLoggedIn;
-                if (isset($data['resultCode'])) { $urlParams .= '&resultCode=' . $data['resultCode']; }
+                if (isset($data['resultCode'])) {
+                    $urlParams .= '&resultCode=' . $data['resultCode'];
+                }
                 break;
 
             case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
@@ -102,11 +136,11 @@ class BmdSocialiteController extends Controller
             case self::AUTH_RESULT_FOR_EXISTING_SOCIALITE_USER:
             case self::AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN:
             case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN:
-                $url = self::APP_FRONTEND_LOGIN_RESULT_URL . $urlParams;
+                $url = self::getTestLoginpResultUrl() . $urlParams;
                 break;
             case self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP:
             case self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP:
-                $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
+                $url = self::getTestSignupResultUrl() . $urlParams;
                 break;
         }
 
@@ -136,11 +170,13 @@ class BmdSocialiteController extends Controller
 
             // BMD-ON-STAGING: Test and make sure that this workflow happens.
             // If the user has no existing record, redirect him to a sign-up workflow.
-            if (!isset($possibleUsers) 
+            if (
+                !isset($possibleUsers)
                 || count($possibleUsers) === 0 // BMD-ON-STAGING: This should be just ==> count() !== 1
-                || !isset($possibleUsers[0])) {
-                    $isComingFromLoginWorkflow = true;
-                    return $this->testhandleProviderCallback($r, $isComingFromLoginWorkflow);
+                || !isset($possibleUsers[0])
+            ) {
+                $isComingFromLoginWorkflow = true;
+                return $this->testhandleProviderCallback($r, $isComingFromLoginWorkflow);
             }
 
             $user = $possibleUsers[0];
@@ -205,7 +241,7 @@ class BmdSocialiteController extends Controller
         if ($isComingFromLoginWorkflow) {
             $overallProcessLogs[] = 'Oops! User was trying to sign-in without existing record';
         }
-        
+
         $stripeInstance = null;
         $stripeCustomer = null;
 
@@ -328,57 +364,39 @@ class BmdSocialiteController extends Controller
 
 
 
+    public function handleProviderCallbackFromFacebook(Request $r)
+    {
+        // BMD-TODO: Handle signup process.
+        // BMD-TODO: Handle login process
+    }
+
+
+
     public function handleProviderCallbackFromGoogle(Request $r)
     {
+        // BMD-TODO: Make sure the dynamodb session/cache driver is configured.
         try {
 
-            // BMD-ON-STAGING: Make sure the dynamodb session/cache driver is configured.
-            // BMD-ON-STAGING: Add the missing steps from the METHOD: testhandleProviderCallback().
-            // BMD-ON-STAGING: Modify this method to resemble the method above "testhandleProviderCallback()".
-
-            /** 1) */
             $socialiteUser = Socialite::driver('google')->user();
 
+            if (User::doesExistWithEmail($socialiteUser->email)) {
+                // BMD-TODO: Handle login process
+                return $this->handleProductionSocialiteLoginProviderCallback($socialiteUser);
+            }
 
-            /** 2) Create a reference-only-type user-obj (not really signed-up user using Laravel app). */
-            $uObj = new User();
-            $uObj->email = $socialiteUser->email;
-            $uObj->password = Hash::make(Str::random(16)); // random-password
-            $uObj->save();
-
-
-            /** 3) */
-            $bmdAuth = new BmdAuth();
-            $bmdAuth->user_id = $uObj->id;
-            $bmdAuth->token = $socialiteUser->token;
-            $bmdAuth->refresh_token = $socialiteUser->refresh_token;
-            $bmdAuth->expires_in = getdate()[0] + BmdAuth::NUM_OF_SECS_PER_MONTH;
-            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
-            $bmdAuth->auth_provider_type_id = AuthProviderType::GOOGLE;
-            $bmdAuth->save();
-
-            $bmdAuth->saveToCache();
-            $overallProcessLogs[] = 'saved bmd-auth to cache';
-
-
-            /** 4) */
-            $urlParams = '?accessToken=' . $socialiteUser->token;
-            $urlParams .= '&bmdRefreshToken=' . $socialiteUser->refresh_token;
-            $urlParams .= '&expiresIn=' . $socialiteUser->expires_in;
-            $urlParams .= '&authProviderId=2';
-
-            $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
-
-            return Redirect::to($url);
+            return $this->handleProductionSocialiteSignupProviderCallback($socialiteUser);
         } catch (Exception $e) {
-
-            $customError = "Oops, there's a problem on our end. Please try again.";
-            $urlParams = '?customError=' . $customError;
-            $urlParams .= '&exception=' . $e->getMessage();
-
-            $url = self::APP_FRONTEND_SIGNUP_RESULT_URL . $urlParams;
-
-            return Redirect::to($url);
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP,
+                'caughtCustomError' => $e->getMessage(),
+            ]);
         }
+    }
+
+
+
+    private function handleProductionSocialiteSignupProviderCallback($socialiteUser)
+    {
+        // BMD-TODO: Handle signup process.
     }
 }

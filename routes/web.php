@@ -20,13 +20,14 @@ use Illuminate\Support\Facades\Route;
 
 /** socialite */
 Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
-    // BMD-ON-STAGING: UNCOMMENT
-    // Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
-    // Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
 
-    // BMD-ON-STAGING: COMMENT-OUT
-    Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
-    Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@testloginWithAuthProvider');
+    if (env('APP_ENV') === 'production') {
+        Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
+        Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
+    } else {
+        Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
+        Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@testloginWithAuthProvider');
+    }
 });
 // BMD-ON-STAGING: Tinker if you can add middleware on these to only allow callbacks from referer-urls facebook.com or google.com.
 Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
