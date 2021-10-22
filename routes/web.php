@@ -21,7 +21,10 @@ use Illuminate\Support\Facades\Route;
 /** socialite */
 Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
 
-    if (env('APP_ENV') === 'production') {
+    if (env('APP_ENV') === 'production'
+        || env('APP_ENV') === 'prestaging'
+        || env('APP_ENV') === 'staging') 
+    {
         Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
         Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
     } else {
