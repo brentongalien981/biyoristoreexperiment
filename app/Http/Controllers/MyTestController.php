@@ -37,9 +37,9 @@ class MyTestController extends Controller
             'Host (CLOSEST-NODE-TO-SERVER)' => $theHeaders['Host'] ?? null,
             'Origin (HOST-OF-FRONTEND)' => $theHeaders['Origin'] ?? null,
             'Referer (HOST-OF-FRONTEND?)' => $theHeaders['Referer'] ?? null,
-            'MY_NUMBER' => env('MY_NUMBER', 'wala'),
-            'MY_RANDOM_CONTAINER_NUMBER' => env('MY_RANDOM_CONTAINER_NUMBER', 'wala'),
-            'DB_HOST1' => env('DB_HOST1', 'wala')
+            // 'MY_NUMBER' => env('MY_NUMBER', 'wala'),
+            // 'MY_RANDOM_CONTAINER_NUMBER' => env('MY_RANDOM_CONTAINER_NUMBER', 'wala'),
+            // 'DB_HOST1' => env('DB_HOST1', 'wala')
         ];
     }
 
