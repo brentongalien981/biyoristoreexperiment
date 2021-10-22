@@ -6,7 +6,6 @@ namespace App\MyConstants;
 class BmdGlobalConstants
 {
     // BMD-ON-STAGING
-    public const WEBSITE = 'https://bmd.com';
     public const BMD_SELLER_NAME = 'ASB Inc.';
 
 

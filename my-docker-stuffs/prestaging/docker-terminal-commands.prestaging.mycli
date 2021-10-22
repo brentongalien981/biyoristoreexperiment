@@ -1,0 +1,24 @@
+// Setup the private Docker Hub repository.
+
+
+// Build image locally.
+docker build --tag odox700/bmdbe:prestaging-1.0 --file my-docker-stuffs/prestaging/bmdbe.prestaging.dockerfile .
+
+
+// Locally, push the image to Docker Hub.
+docker push odox700/bmdbe:prestaging-1.0
+
+
+// Set the .env FILE on the server / locally / ECS.
+
+
+// On the server, pull the image.
+docker pull odox700/bmdbe:prestaging-1.0
+
+
+// Run container locally.
+docker run -dtp 9001:80 --env-file my-envs/.env.prestaging odox700/bmdbe:prestaging-1.0
+
+
+// Run Swarm Service
+docker service create --replicas 6 -tp 9001:80 --env-file my-envs/.env.prestaging odox700/bmdbe:prestaging-1.0

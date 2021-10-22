@@ -18,32 +18,17 @@ RUN docker-php-ext-install \
 # Copy Composer binary from the Composer official Docker image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-ENV WEB_DOCUMENT_ROOT /app/public
-ENV APP_ENV production
+# ENV WEB_DOCUMENT_ROOT /app/public
+# ENV APP_ENV production
+
 WORKDIR /app
 COPY . .
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-COPY ./my-shell-scripts/set-env.sh .
-RUN chmod 777 set-env.sh
-
-# COPY .env.example .
-# RUN mv .env.example .env
-# RUN touch .env.actual
-
-
-
-# # Optimizing Configuration loading
-# RUN php artisan config:cache
-# # Optimizing Route loading
-# RUN php artisan route:cache
-# # Optimizing View loading
-# RUN php artisan view:cache
-
-# RUN chown -R application:application .
-
+COPY ./my-shell-scripts/set-prestaging-env.sh .
+RUN chmod 777 set-prestaging-env.sh
 
 
 WORKDIR /opt/docker/provision/entrypoint.d 
-RUN echo "sh /app/set-env.sh" >> 20-nginx.sh
+RUN echo "sh /app/set-prestaging-env.sh" >> 20-nginx.sh
