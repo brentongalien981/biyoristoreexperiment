@@ -129,7 +129,7 @@ class BmdSocialiteController extends Controller
 
 
         $urlParams .= '&authResult=' . $data['authResult'];
-        $urlParams .= '&overallProcessLogs=' . implode(':::', $data['overallProcessLogs']);
+        $urlParams .= '&overallProcessLogs=' . implode(':::', $data['overallProcessLogs'] ?? '');
         $url = null;
 
         switch ($data['authResult']) {
