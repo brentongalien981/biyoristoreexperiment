@@ -18,8 +18,8 @@ RUN docker-php-ext-install \
 # Copy Composer binary from the Composer official Docker image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# ENV WEB_DOCUMENT_ROOT /app/public
-# ENV APP_ENV production
+ENV WEB_DOCUMENT_ROOT /app/public
+ENV APP_ENV local
 
 WORKDIR /app
 COPY . .
@@ -28,6 +28,9 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 COPY ./my-shell-scripts/set-prestaging-env.sh .
 RUN chmod 777 set-prestaging-env.sh
+
+
+RUN php artisan passport:keys
 
 
 WORKDIR /opt/docker/provision/entrypoint.d 
