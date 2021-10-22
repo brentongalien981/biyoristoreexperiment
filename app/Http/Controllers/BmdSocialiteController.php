@@ -366,25 +366,32 @@ class BmdSocialiteController extends Controller
 
     public function handleProviderCallbackFromFacebook(Request $r)
     {
-        // BMD-TODO: Handle signup process.
-        // BMD-TODO: Handle login process
+        return $this->handleProviderCallback(['provider' => 'facebook']);
     }
 
 
 
     public function handleProviderCallbackFromGoogle(Request $r)
     {
+        return $this->handleProviderCallback(['provider' => 'google']);
+    }
+
+
+
+    private function handleProviderCallback($data)
+    {
         // BMD-TODO: Make sure the dynamodb session/cache driver is configured.
         try {
 
-            $socialiteUser = Socialite::driver('google')->user();
+            $socialiteUser = Socialite::driver($data['provider'])->user();
+
+            $data['socialiteUser'] = $socialiteUser;
 
             if (User::doesExistWithEmail($socialiteUser->email)) {
-                // BMD-TODO: Handle login process
-                return $this->handleProductionSocialiteLoginProviderCallback($socialiteUser);
+                return $this->handleProductionSocialiteLoginProviderCallback($data);
             }
 
-            return $this->handleProductionSocialiteSignupProviderCallback($socialiteUser);
+            return $this->handleProductionSocialiteSignupProviderCallback($data);
         } catch (Exception $e) {
             return $this->redirectForAuthResult([
                 'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP,
@@ -395,8 +402,145 @@ class BmdSocialiteController extends Controller
 
 
 
-    private function handleProductionSocialiteSignupProviderCallback($socialiteUser)
+    private function handleProductionSocialiteSignupProviderCallback($data)
     {
-        // BMD-TODO: Handle signup process.
+        $overallProcessLogs[] = 'In METHOD: handleProductionSocialiteSignupProviderCallback()';
+        $stripeInstance = null;
+        $stripeCustomer = null;
+
+
+        try {
+
+            $socialiteUser = $data['socialiteUser'];
+            DB::beginTransaction();
+            $overallProcessLogs[] = 'began db-transaction';
+
+            // Create user. Create a reference-only-type user-obj (not really signed-up user using Laravel app).
+            $uObj = new User();
+            $uObj->email = $socialiteUser->email;
+            $uObj->password = Hash::make(Str::random(16)); // random-password
+            $uObj->save();
+            $overallProcessLogs[] = 'created user';
+
+
+            // Create bmdauth.
+            $bmdAuth = new BmdAuth();
+            $bmdAuth->user_id = $uObj->id;
+            $bmdAuth->token = $socialiteUser->token;
+            $bmdAuth->refresh_token = $socialiteUser->refresh_token;
+            $bmdAuth->expires_in = $socialiteUser->expires_in;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
+            $bmdAuth->auth_provider_type_id = AuthProviderType::getProviderTypeId($data['provider']);
+            $bmdAuth->save();
+            $overallProcessLogs[] = 'created bmd-auth obj';
+
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
+
+
+            // Create profile.
+            Profile::create(['user_id' => $uObj->id]);
+            $overallProcessLogs[] = 'created profile obj';
+
+
+            // Create stripe-objs.
+            $stripeInstance = GeneralHelper2::getStripeInstanceBasedOnAppEnv();
+            $stripeCustomer = $stripeInstance->customers->create([
+                'email' => $uObj->email,
+                'description' => 'Created from the backend.'
+            ]);
+            $overallProcessLogs[] = 'created stripe obj';
+
+
+            $stripeCustomerMapObj = new StripeCustomer();
+            $stripeCustomerMapObj->user_id = $uObj->id;
+            $stripeCustomerMapObj->stripe_customer_id = $stripeCustomer->id;
+            $stripeCustomerMapObj->save();
+            $overallProcessLogs[] = 'created stripe-map obj';
+
+
+            DB::commit();
+            $overallProcessLogs[] = 'commited db-transaction';
+
+
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_OK_SOCIALITE_SIGNUP,
+                'bmdAuth' => $bmdAuth,
+                'socialiteUser' => $socialiteUser,
+                'providerTypeId' => $bmdAuth->auth_provider_type_id,
+                'overallProcessLogs' => $overallProcessLogs,
+            ]);
+        } catch (Exception $e) {
+
+            $overallProcessLogs[] = 'caught exception ==> ' . $e->getMessage();
+            DB::rollBack();
+            $overallProcessLogs[] = 'rolled-back db-transaction';
+
+            // Delete the created stripe.com's customer-obj.
+            $deletionData = JoinController::deleteStripeDotComCustomer($stripeInstance, $stripeCustomer);
+            $overallProcessLogs[] = $deletionData['resultMsg'];
+
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_SIGNUP,
+                'overallProcessLogs' => $overallProcessLogs,
+                'caughtCustomError' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
+
+    private function handleProductionSocialiteLoginProviderCallback($data)
+    {
+        $overallProcessLogs[] = 'In METHOD: handleProductionSocialiteLoginProviderCallback()';
+
+
+        try {
+            $socialiteUser = $data['socialiteUser'];
+            $user = User::where('email', $socialiteUser->email)->get()[0];
+            $overallProcessLogs[] = 'referenced an existing user';
+
+
+            // Delete the old bmd-auth cache-record
+            $bmdAuth = BmdAuth::where('user_id', $user->id)->get()[0];
+            $bmdAuth->deleteOldCacheRecord();
+            $overallProcessLogs[] = 'deleted old-bmd-auth cache-record';
+
+
+            // Update BmdAuth's token.
+            $bmdAuth->token = $socialiteUser->token;
+            $bmdAuth->refresh_token = $socialiteUser->refresh_token;
+            $bmdAuth->expires_in = $socialiteUser->expires_in;
+            $bmdAuth->frontend_pseudo_expires_in = $bmdAuth->expires_in;
+            $bmdAuth->save();
+            $overallProcessLogs[] = 'updated bmd-auth record';
+
+
+            // saved bmd-auth to cache
+            $bmdAuth->saveToCache();
+            $overallProcessLogs[] = 'saved bmd-auth to cache';
+
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_OK_SOCIALITE_LOGIN,
+                'bmdAuth' => $bmdAuth,
+                'socialiteUser' => $socialiteUser,
+                'overallProcessLogs' => $overallProcessLogs,
+                // 'stayLoggedIn' => $stayLoggedIn,
+                'resultCode' => JoinController::LOGIN_RESULT_CODE_SUCCESS,
+            ]);
+        } catch (Exception $e) {
+
+            $overallProcessLogs[] = 'caught exception ==> ' . $e->getMessage();
+
+            return $this->redirectForAuthResult([
+                'authResult' => self::AUTH_RESULT_FOR_FAIL_SOCIALITE_LOGIN,
+                'overallProcessLogs' => $overallProcessLogs,
+                'caughtCustomError' => $e->getMessage(),
+                'resultCode' => JoinController::LOGIN_RESULT_CODE_FAIL,
+            ]);
+        }
     }
 }
