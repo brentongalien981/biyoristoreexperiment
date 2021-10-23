@@ -50,7 +50,8 @@ class BmdSocialiteController extends Controller
 
     public function testloginWithAuthProvider(Request $r)
     {
-        return $this->testhandleSocialiteLoginCallback($r);
+        // return $this->testhandleSocialiteLoginCallback($r);
+        return $this->testhandleProviderCallback($r);
     }
 
 
