@@ -86,7 +86,7 @@ class PaymentIntentController extends Controller
 
             $paymentIntent = \Stripe\PaymentIntent::create([
                 'amount' => $chargedTotalInCents,
-                'currency' => 'usd',
+                'currency' => 'cad',
                 'customer' => (isset($user) ? $user->stripeCustomer->stripe_customer_id : null),
                 'metadata' => [
                     'storeUserId' => $userId,

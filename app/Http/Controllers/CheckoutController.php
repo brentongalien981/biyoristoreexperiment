@@ -130,7 +130,7 @@ class CheckoutController extends Controller
 
         $paymentIntent = $entireProcessData['stripeObj']->paymentIntents->create([
             'amount' => $chargedTotalInCents,
-            'currency' => 'usd',
+            'currency' => 'cad',
             'payment_method_types' => ['card'],
             'customer' => $entireProcessData['user']->stripeCustomer->stripe_customer_id,
             'payment_method' => $entireProcessData['stripePaymentMethod']->id,
