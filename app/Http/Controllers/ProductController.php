@@ -84,10 +84,13 @@ class ProductController extends Controller
 
         foreach ($featuredBrands as $b) {                
 
+            $firstProductOfBrand = $b->products[0] ?? null;
+            if (!$firstProductOfBrand) { continue; }
+
             $aModifiedBrand = new stdClass;
             $aModifiedBrand->id = $b->id;
             $aModifiedBrand->name = $b->name;
-            $aModifiedBrand->featuredProductPhotoUrl = $b->products[0]->productPhotoUrls[0];
+            $aModifiedBrand->featuredProductPhotoUrl = $firstProductOfBrand->productPhotoUrls[0];
 
             $modifiedFeaturedBrands[] = $aModifiedBrand;
         }
