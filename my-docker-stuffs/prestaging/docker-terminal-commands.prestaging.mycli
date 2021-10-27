@@ -1,7 +1,7 @@
 // Setup the private Docker Hub repository.
 
 
-// Build image locally.
+// Build Docker Hub image.
 docker build --tag odox700/bmdbe:prestaging-1.0 --file my-docker-stuffs/prestaging/bmdbe.prestaging.dockerfile .
 
 
