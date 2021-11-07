@@ -20,5 +20,9 @@ docker pull odox700/bmdbe:prestaging-1.0
 docker run -dtp 9001:80 --env-file my-envs/.env.prestaging odox700/bmdbe:prestaging-1.0
 
 
+// Run for Job Portfolio Demo.
+docker run -dtp 9001:80 --env-file my-envs/.env.jobportfolio odox700/bmdbe:prestaging-1.0
+
+
 // Run Swarm Service
 docker service create --replicas 6 -tp 9001:80 --env-file my-envs/.env.prestaging odox700/bmdbe:prestaging-1.0
