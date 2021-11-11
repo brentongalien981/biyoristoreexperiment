@@ -50,6 +50,7 @@ Route::get('/reviews/test2', 'ReviewController@test2');
 Route::get('/reviews/test', 'ReviewController@test');
 Route::get('/mytest/get-http-info', 'MyTestController@getHttpInfo');
 Route::get('/mytest/flush-cache', 'MyTestController@flushCache');
+Route::get('/mytest/forMBMDBE', 'MyTestController@forMBMDBE');
 Route::get('/test-redis/put', 'TestRedisController@put');
 Route::get('/test-redis/get', 'TestRedisController@get');
 Route::get('/test-redis/get-connection', 'TestRedisController@getConnection');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Brand;
 use App\Http\BmdHelpers\BmdAuthProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -62,9 +63,7 @@ class MyTestController extends Controller
         return [
             'isResultOk' => true,
             'objs' => [
-                'r->a' => $r->a,
-                'r->b' => $r->b,
-                'testDispatchVal' => rand()
+                'brands' => Brand::all()
             ]
         ];
     }

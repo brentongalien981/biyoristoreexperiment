@@ -27,5 +27,6 @@ class AllowFrontendOnly
         }
 
         return response("BmdException: Bad Frontend URL.", 501);
+    }
 
 }
