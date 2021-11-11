@@ -60,8 +60,7 @@ class OrderController extends Controller
 
 
         try {
-            // BMD-ON-ITER: Development, Staging
-            EasyPost::setApiKey(env('EASYPOST_TK'));
+            GeneralHelper2::setEasyPostApiKey();
 
             $epShipment = Shipment::retrieve($order->ep_shipment_id) ?? null;
             $epShipment = GeneralHelper2::pseudoJsonify($epShipment);

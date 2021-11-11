@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\BmdCacheObjects\InventoryOrderLimitsCacheObject;
 use App\Http\BmdCacheObjects\ShippingServiceLevelModelCollectionCacheObject;
 use App\MyConstants\BmdGlobalConstants;
+use App\MyHelpers\General\GeneralHelper2;
 use App\MyHelpers\Shipping\MyShippingPackageManager;
 use Exception;
 use Illuminate\Http\Request;
@@ -415,8 +416,7 @@ class CustomizedEasyPost extends Controller
                 throw new Exception(self::INVALID_DESTINATION_COUNTRY_EXCEPTION['name']);
             }
 
-
-            \EasyPost\EasyPost::setApiKey(env('EASYPOST_TK'));
+            GeneralHelper2::setEasyPostApiKey();
 
             $entireProcessData['originAddress'] = $this->setOriginAddress($entireProcessParams);
             $entireProcessData['destinationAddress'] = $this->setDestinationAddress($entireProcessParams);
