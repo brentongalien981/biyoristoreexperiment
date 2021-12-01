@@ -18,6 +18,8 @@ class BmdGlobalConstants
 
 
     public const TAX_RATE = 0.13;
+    public const NUM_OF_SEC_IN_DAY = 60 * 60 * 24;
+    public const NUM_OF_ORDER_RETURN_WINDOW_DAYS = 45;
 
 
     /** BMD-TAGS: constants, consts, inventory, orders, cart */
