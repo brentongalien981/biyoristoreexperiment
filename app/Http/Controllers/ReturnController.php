@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\BmdReturn;
+use App\ReturnStatus;
 use Illuminate\Http\Request;
 use App\Http\BmdHelpers\BmdAuthProvider;
-use App\Http\BmdHttpResponseCodes\BmdReturnHttpResponseCodes;
+use App\Rules\ValidOrderReturnDateWindow;
+use App\Rules\AllowedOrderStatusForOrderReturn;
+use App\Http\BmdResponseCodes\OrderBmdResponseCodes;
 use App\Http\BmdHttpResponseCodes\GeneralHttpResponseCodes;
-use App\ReturnStatus;
-use Exception;
+use App\Http\BmdHttpResponseCodes\BmdReturnHttpResponseCodes;
 
 class ReturnController extends Controller
 {
@@ -52,6 +55,42 @@ class ReturnController extends Controller
             'objs' => [
                 'bmdReturn' => $bmdReturn
             ],
+            'resultCode' => $resultCode
+        ];
+    }
+
+
+
+    public function create(Request $r)
+    {
+        $isResultOk = false;
+        $resultCode = null;
+
+        $extraValidationData = [
+            'orderId' => $r->orderId
+        ];
+
+
+        try {
+            if (!AllowedOrderStatusForOrderReturn::bmdValidate($extraValidationData)) {
+                $resultCode = OrderBmdResponseCodes::NOT_ALLOWED_ORDER_STATUS_FOR_ORDER_RETURN;
+                throw new Exception();
+            }
+
+            if (!ValidOrderReturnDateWindow::bmdValidate($extraValidationData)) {
+                $resultCode = OrderBmdResponseCodes::INVALID_ORDER_RETURN_DATE_WINDOW;
+                throw new Exception();
+            }
+
+            $isResultOk = true;
+        } catch (Exception $e) {
+            $isResultOk = false;
+        }
+
+
+        return [
+            'isResultOk' => $isResultOk,
+            'objs' => [],
             'resultCode' => $resultCode
         ];
     }

@@ -160,4 +160,11 @@ class Order extends Model
     {
         return $this->hasMany('App\OrderItem');
     }
+
+
+
+    public function returns()
+    {
+        return $this->hasMany('App\OrderReturn');
+    }
 }

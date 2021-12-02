@@ -9,7 +9,7 @@ class ValidOrderReturnDateWindow
 {
 
     /**
-     * @param $d: validation-data
+     * @param $d validation-data
      */
     public static function bmdValidate($d)
     {

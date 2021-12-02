@@ -40,6 +40,8 @@ class BmdGlobalConstants
     public const EMAIL_SENDER_FOR_ORDER_RECEIVED = 'no-reply@asbdev.com';
     public const EMAIL_FOR_ORDER_EMAILS_TRACKER = 'bren.baga@asbdev.com'; // Maybe change this to orderemailstracker@bmd.com
 
+    public const CUSTOMER_SERVICE_EMAIL = 'customerservice@penguinjam.com';
+
 
 
     // BMD-TAGS: email, order, queue, order-received
