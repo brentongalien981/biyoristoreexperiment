@@ -22,13 +22,15 @@ class MinimumCombinedTotalQuantityOfOrderItemsAvailableLeftForOrderReturn
         foreach ($o->orderItems as $oi) {
             $orderItemsTotalQty += $oi->quantity;
         }
-        
+
         foreach ($o->returns as $r) {
             foreach ($r->returnItems as $ri) {
                 $returnItemsCombinedTotalQty += $ri->quantity;
             }
         }
-        // dd($returnItemsCombinedTotalQty);
+
+        // dump($returnItemsCombinedTotalQty);
+        // dump($orderItemsTotalQty);
 
 
         if ($returnItemsCombinedTotalQty < $orderItemsTotalQty) {

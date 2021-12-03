@@ -13,7 +13,7 @@ class CreateOrderReturnsTable extends Migration
      */
     public function up()
     {
-        Schema::create('order_returns', function (Blueprint $table) {            
+        Schema::create('order_returns', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('order_id')->nullable();
             $table->bigInteger('user_id')->unsigned()->nullable();
@@ -28,9 +28,16 @@ class CreateOrderReturnsTable extends Migration
             $table->string('city', 64);
             $table->string('province', 32);
             $table->string('country', 32);
-            $table->string('postal_code', 16);            
+            $table->string('postal_code', 16);
             $table->string('email', 128);
             $table->string('phone', 16)->nullable();
+
+            $table->string('notes', 512)->nullable();
+
+            $table->decimal('refund_subtotal', 8, 2)->nullable();
+            $table->decimal('charged_shipping_fee', 8, 2)->nullable();
+            $table->decimal('charged_other_fee', 8, 2)->nullable();
+            $table->decimal('charged_tax', 8, 2)->nullable();
 
             $table->timestamps();
         });

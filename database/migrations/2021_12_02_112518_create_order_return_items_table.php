@@ -15,6 +15,14 @@ class CreateOrderReturnItemsTable extends Migration
     {
         Schema::create('order_return_items', function (Blueprint $table) {
             $table->id();
+            $table->uuid('order_return_id');
+            $table->bigInteger('order_item_id')->unsigned()->nullable();
+            $table->bigInteger('seller_product_id')->unsigned()->nullable();
+            $table->bigInteger('size_availability_id')->unsigned()->nullable();
+
+            $table->decimal('price', 8, 2)->nullable();
+            $table->integer('quantity')->unsigned();
+            $table->bigInteger('status_code');
             $table->timestamps();
         });
     }

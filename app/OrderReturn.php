@@ -20,4 +20,10 @@ class OrderReturn extends Model
      * @var string
      */
     protected $keyType = 'string';
+
+
+    public function returnItems()
+    {
+        return $this->hasMany('App\OrderReturnItem');
+    }
 }

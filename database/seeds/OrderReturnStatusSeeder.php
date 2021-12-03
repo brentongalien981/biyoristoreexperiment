@@ -12,6 +12,7 @@ class OrderReturnStatusSeeder extends Seeder
      */
     public function run()
     {
+        DB::table('order_return_statuses')->insert(['code' => -302, 'name' => 'RETURN_ITEMS_INCOMPLETELY_RETURNED']);
         DB::table('order_return_statuses')->insert(['code' => -301, 'name' => 'NOT_ACCEPTABLE_PACKAGE_CONDITION_FOR_REFUND']);
 
         DB::table('order_return_statuses')->insert(['code' => 300, 'name' => 'DEFAULT']);
