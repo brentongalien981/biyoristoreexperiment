@@ -48,7 +48,6 @@ class OrderReceived extends Mailable
      */
     public function build()
     {
-        // BMD-ON-STAGING: bcc the appropriate @bmd.com email.
         return $this->from(BmdGlobalConstants::EMAIL_SENDER_FOR_ORDER_RECEIVED)
             ->subject($this->subject)
             ->markdown('emails.order-confirmation.OrderReceived');
