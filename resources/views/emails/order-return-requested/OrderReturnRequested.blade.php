@@ -7,7 +7,7 @@
 <p>
 Here's the details of the order being returned:
 
-Order ID: {{ $order->id }}
+Order ID: <a href="{{ $orderLink }}" target="blank">{{ $order->id }}</a>
 <br>
 Order Email: {{ $order->email }}
 <br>

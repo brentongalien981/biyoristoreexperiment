@@ -14,6 +14,7 @@ class OrderReturnRequested extends Mailable
 
     public $order;
     public $subject;
+    public $orderLink;
 
 
     /**
@@ -25,6 +26,7 @@ class OrderReturnRequested extends Mailable
     {
         $this->order = $order;
         $this->subject = 'Order Return Requested - Order ID: ' . $order->id;
+        $this->orderLink = env('BMDFE_WEBSITE_LINK') . '/order?id=' . $order->id;
     }
 
     /**
