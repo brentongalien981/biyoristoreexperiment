@@ -100,7 +100,8 @@ class JoinController extends Controller
 
         $v = $r->validate([
             'resetToken' => 'required|string|max:64',
-            'password' => 'required|alpha_num|min:8|max:32',
+            'password' => 'string|min:8|max:32',
+            // 'password' => 'required|alpha_num|min:8|max:32',
         ]);
 
 
@@ -382,7 +383,8 @@ class JoinController extends Controller
         // 0) Validate
         $validatedData = $request->validate([
             'email' => 'email|min:8|max:64|unique:users',
-            'password' => 'alpha_num|min:8|max:32',
+            'password' => 'string|min:8|max:32',
+            // 'password' => 'alpha_num|min:8|max:32',
         ]);
 
 
