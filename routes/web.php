@@ -20,19 +20,19 @@ use Illuminate\Support\Facades\Route;
 
 
 /** socialite */
-Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
+// Route::middleware(['allow-frontend-referer-only', 'throttle:20,1'])->group(function () {
 
-    if (env('APP_ENV') === 'production') {
-        Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
-        Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
-    } else {
-        Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
-        Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@testloginWithAuthProvider');
-    }
-});
+//     if (env('APP_ENV') === 'production') {
+//         Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@signupWithAuthProvider');
+//         Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@loginWithAuthProvider');
+//     } else {
+//         Route::get('/bmd-socialite/signup-with-auth-provider', 'BmdSocialiteController@testsignupWithAuthProvider');
+//         Route::get('/bmd-socialite/login-with-auth-provider', 'BmdSocialiteController@testloginWithAuthProvider');
+//     }
+// });
 // BMD-ON-STAGING: Tinker if you can add middleware on these to only allow callbacks from referer-urls facebook.com or google.com.
-Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
-Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromGoogle');
+// Route::get('/facebook/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromFacebook');
+// Route::get('/google/receive-socialite-auth-code', 'BmdSocialiteController@handleProviderCallbackFromGoogle');
 
 
 
@@ -78,13 +78,13 @@ Route::get('/', function () {
 });
 */
 
-// BMD-ON-ITER: Prestaging, Staging, Deployment: Comment-out.
-Route::get('/test-render-mailable', function () {
-    $o = Order::first();
-    // $o = Order::find('7193216c-443a-4af1-a6ec-dfb8f7b5548c');
+// // BMD-ON-ITER: Prestaging, Staging, Deployment: Comment-out.
+// Route::get('/test-render-mailable', function () {
+//     $o = Order::first();
+//     // $o = Order::find('7193216c-443a-4af1-a6ec-dfb8f7b5548c');
 
-    return (new OrderReturnRequested($o))->render();
-    // return (new OrderReceived($o))->render();
-    // return new PasswordResetLink();
-});
+//     return (new OrderReturnRequested($o))->render();
+//     // return (new OrderReceived($o))->render();
+//     // return new PasswordResetLink();
+// });
 
