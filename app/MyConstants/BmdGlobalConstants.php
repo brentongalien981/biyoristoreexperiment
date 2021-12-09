@@ -6,7 +6,7 @@ namespace App\MyConstants;
 class BmdGlobalConstants
 {
     // BMD-ON-STAGING
-    public const BMD_SELLER_NAME = 'ASB Inc.';
+    public const BMD_SELLER_NAME = 'Penguin Jam';
 
 
     public const RETRIEVED_DATA_FROM_DB = 1001;
