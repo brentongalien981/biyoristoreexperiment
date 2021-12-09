@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Http\Resources\OrderResource;
+use App\MyConstants\BmdGlobalConstants;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -40,7 +41,7 @@ class Order extends Model
 
             $aDateTime = now()->addDays($i + 1);
 
-            if (self::isWeekDay($aDateTime)) {
+            if (!self::isHoliday($aDateTime) && self::isWeekDay($aDateTime)) {
                 $incrementalDays++;
                 if ($incrementalDays == $numOfBusinessDeliveryDays) {
                     return $aDateTime;
@@ -75,6 +76,21 @@ class Order extends Model
             default:
                 return true;
         }
+    }
+
+
+
+    public static function isHoliday($aDateTime)
+    {
+        $aDate = getdate(strtotime($aDateTime));
+        $aDateInStr = $aDate['year'] . '-' . $aDate['mon'] . '-' . $aDate['mday'];
+
+        if (in_array($aDateInStr, BmdGlobalConstants::CANADIAN_HOLIDAYS)) {
+            return true;
+        }
+
+        return false;
+
     }
 
 

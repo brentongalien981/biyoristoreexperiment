@@ -110,8 +110,8 @@ class CheckoutController extends Controller
 
         $chargedSubtotal = $entireProcessData['cartCO']->getOrderSubtotal();
 
-        $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
-        $chargedShippingFee = floatval($r->shipmentRateAmount) * floatval($exchangeRate);
+        // $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
+        $chargedShippingFee = floatval($r->shipmentRateAmount); // * floatval($exchangeRate);
         $chargedShippingFee = round($chargedShippingFee, 2);
 
         $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;

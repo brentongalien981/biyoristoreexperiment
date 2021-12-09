@@ -64,9 +64,9 @@ class PaymentIntentController extends Controller
 
             // order-meta-data
             $chargedSubtotal = $cartCO->getOrderSubtotal();
-
-            $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
-            $chargedShippingFee = floatval($request->shipmentRateAmount) * floatval($exchangeRate);
+            
+            // $exchangeRate = ExchangeRateCacheObject::getConversionRate('CAD', 'USD')->rate;
+            $chargedShippingFee = floatval($request->shipmentRateAmount);// * floatval($exchangeRate);
             $chargedShippingFee = round($chargedShippingFee, 2);
 
             $chargedTax = ($chargedSubtotal + $chargedShippingFee) * BmdGlobalConstants::TAX_RATE;
@@ -76,10 +76,11 @@ class PaymentIntentController extends Controller
             $chargedTotal = round($chargedTotal, 2);
 
             $chargedTotalInCents = $chargedTotal * 100;
-
+            
             $projectedTotalDeliveryDays = $request->projectedTotalDeliveryDays;
             $projectedShortestDeliveryDays = $projectedTotalDeliveryDays - BmdGlobalConstants::PAYMENT_TO_FUNDS_PERIOD - BmdGlobalConstants::ORDER_PROCESSING_PERIOD;
 
+            // BMD-TODO
             $earliestDeliveryDate = Order::getDeliveryDate($projectedShortestDeliveryDays);
             $latestDeliveryDate = Order::getDeliveryDate($projectedTotalDeliveryDays);
 
