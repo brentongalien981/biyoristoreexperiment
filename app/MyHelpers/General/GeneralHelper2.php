@@ -89,11 +89,11 @@ class GeneralHelper2
 
     public static function getStripeInstanceBasedOnAppEnv()
     {
-        if (env('APP_ENV') === 'production') {
-            // BMD-ON-ITER: Staging, Deployment: Edit this.
-            throw new Exception('Trying to use Stripes Primary Key!');
-            // return new \Stripe\StripeClient(env('STRIPE_SK'));
-        }
+        // if (env('APP_ENV') === 'production') {
+        //     // BMD-ON-ITER: Staging, Deployment: Edit this.
+        //     throw new Exception('Trying to use Stripes Primary Key!');
+        //     // return new \Stripe\StripeClient(env('STRIPE_SK'));
+        // }
 
         return new \Stripe\StripeClient(env('STRIPE_SK'));
     }
