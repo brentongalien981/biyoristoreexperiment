@@ -19,7 +19,7 @@ class UserController extends Controller
     {
         $v = $r->validate([
             'oldPassword' => 'max:32',
-            'newPassword' => 'max:32',
+            'newPassword' => 'string|min:8|max:32',
         ]);
 
 
