@@ -30,7 +30,7 @@ class BmdGlobalConstants
     // BMD-ON-STAGING
     // NOTE: Whenever you change this, make sure to edit both frontend and backend constant values.
     public const PAYMENT_TO_FUNDS_PERIOD = 1;
-    public const ORDER_PROCESSING_PERIOD = 2;
+    public const ORDER_PROCESSING_PERIOD = 3;
 
 
 
