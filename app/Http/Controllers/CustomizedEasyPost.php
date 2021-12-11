@@ -38,14 +38,14 @@ class CustomizedEasyPost extends Controller
      * BMD-ON-STAGING: Update this everytime when it's needed.
      */
     private const COMPANY_INFO = [
-        'owner_name' => 'Bren Baga',
-        'street1' => '50 Thorncliffe Park Drive',
-        'street2' => 'Unit 105',
+        'company' => 'Penguin Jam',
+        'street1' => '82 Laird Dr',
+        'street2' => 'Unit 126',
         'city' => 'East York',
         'state' => 'ON',
         'country' => 'CA',
-        'zip' => 'M4H1K4',
-        'phone' => '4164604026'
+        'zip' => 'M4G3V1',
+        'phone' => '6475607078'
     ];
 
 
@@ -88,9 +88,9 @@ class CustomizedEasyPost extends Controller
     {
         $originAddressParams = [
             'verify' => [true],
-            'name' => self::COMPANY_INFO['owner_name'],
-            // 'company' => self::COMPANY_INFO['company'], // BMD-ON-STAGING
+            // 'name' => self::COMPANY_INFO['owner_name'],            
             // 'email' => self::COMPANY_INFO['email'], // BMD-ON-STAGING
+            'company' => self::COMPANY_INFO['company'],
             'street1' => self::COMPANY_INFO['street1'],
             'street2' => self::COMPANY_INFO['street2'],
             'city' => self::COMPANY_INFO['city'],
