@@ -143,11 +143,11 @@ class CustomizedEasyPost extends Controller
         $shippingInfo = json_decode($params['shippingInfo']);
 
         switch (strtolower($shippingInfo->country)) {
-            case 'us':
-            case 'usa':
-            case 'united states':
-            case 'united states of america':
-            case 'united states america':
+            // case 'us':
+            // case 'usa':
+            // case 'united states':
+            // case 'united states of america':
+            // case 'united states america':
             case 'ca':
             case 'canada':
                 return true;
