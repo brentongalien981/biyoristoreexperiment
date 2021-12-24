@@ -484,7 +484,8 @@ class ListingController extends Controller
         } else {
             $brands = Brand::all();
             $categories = Category::all();
-            $teams = Team::all();
+            // $teams = Team::all();
+            $teams = Team::orderBy('name', 'asc')->get();
 
             Cache::store('redisprimary')->put('brands', $brands, now()->addWeeks(1));
             Cache::store('redisprimary')->put('categories', $categories, now()->addWeeks(1));
